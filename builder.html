@@ -191,22 +191,31 @@ window.addEventListener('DOMContentLoaded',()=>{
   const env=document.querySelector('.envelope');
   const paper=env.querySelector('.paper');
   let flipped=false;
-  const vh=window.innerHeight,maskH=env.clientHeight*0.6,
-        fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
+  const vh=window.innerHeight,
+        maskH=env.clientHeight*0.6,
+        fullH=paper.scrollHeight,
+        extra=50,
+        totalH=maskH+fullH+extra;
   paper.style.height='0px';
 
   window.addEventListener('scroll',()=>{
-    const y=window.scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
-    if(y>10)env.classList.add('open');
+    const y=window.scrollY,
+          unroll=7.5*vh,
+          pause=0.5*vh,
+          retract=7.5*vh;
+
+    if(y>10) env.classList.add('open');
+
     if(y<=unroll){
-      paper.style.height=\`\${totalH*(y/unroll)}px\`;
+      paper.style.height= (totalH*(y/unroll)) + 'px';
     }else if(y<=unroll+pause){
-      paper.style.height=\`\${totalH}px\`;
+      paper.style.height= totalH + 'px';
     }else if(y<=unroll+pause+retract){
       const r=(y-unroll-pause)/retract;
-      paper.style.height=\`\${totalH*(1-r)}px\`;
+      paper.style.height= (totalH*(1-r)) + 'px';
     }else if(!flipped){
-      flipped=true;env.classList.remove('open');
+      flipped=true;
+      env.classList.remove('open');
       setTimeout(()=>{
         env.classList.add('flip');
         setInterval(()=>{
@@ -214,7 +223,7 @@ window.addEventListener('DOMContentLoaded',()=>{
             const c=document.createElement('div');
             c.className='confetti';
             c.style.left=Math.random()*100+'vw';
-            c.style.backgroundColor=\`hsl(\${Math.random()*360},100%,60%)\`;
+            c.style.backgroundColor='hsl('+(Math.random()*360)+',100%,60%)';
             c.style.animationDelay=Math.random()*0.8+'s';
             document.body.appendChild(c);
           }
@@ -235,8 +244,8 @@ generateBtn.onclick=()=>{
   }
   const json=encodeURIComponent(JSON.stringify(data));
   const base64=btoa(json);
-  const viewer='ecard.html';           // rename here if you renamed the viewer
-  const url=\`\${location.origin}/\${viewer}?d=\${base64}\`;
+  const viewer='ecard.html';           // rename here if you rename the viewer
+  const url=location.origin + '/' + viewer + '?d=' + base64;
   shareBox.textContent=url;
   shareBox.hidden=false;
 };
