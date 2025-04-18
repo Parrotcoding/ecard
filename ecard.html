@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style id="dynamicVars"></style>
   <style>
-    /* static CSS identical to builder’s viewerCSS() */
+    /* static CSS – unchanged */
     *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
     body{background:var(--bg,#f0f0f0);min-height:1800vh}
     .envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px;transform-style:preserve-3d;transition:top .6s ease,transform .8s ease;z-index:10}
@@ -40,76 +40,106 @@
 
 <script>
 (function(){
-  // --- decode data ---
-  const params=new URLSearchParams(location.search);
-  const dStr=params.get('d');
+  /* -------- decode data from ?d= -------- */
+  const params  = new URLSearchParams(location.search);
+  const dStr    = params.get('d');
   if(!dStr){
-    document.body.innerHTML='<h2 style="padding:2rem;text-align:center">No card data provided.</h2>';return;
+    document.body.innerHTML =
+      '<h2 style="padding:2rem;text-align:center">No card data provided.</h2>';
+    return;
   }
   let data;
   try{
-    data=JSON.parse(decodeURIComponent(atob(dStr)));
+    data = JSON.parse(decodeURIComponent(atob(dStr)));
   }catch(e){
-    document.body.innerHTML='<h2 style="padding:2rem;text-align:center">Invalid card link.</h2>';return;
+    document.body.innerHTML =
+      '<h2 style="padding:2rem;text-align:center">Invalid card link.</h2>';
+    return;
   }
 
-  // --- apply colours as CSS vars ---
-  const style=document.getElementById('dynamicVars');
-  const shade=c=>{const num=parseInt(c.slice(1),16),amt=Math.round(-0.2*255);
-    const R=Math.max(0,Math.min(255,(num>>16)+amt)),
-          G=Math.max(0,Math.min(255,(num>>8&255)+amt)),
-          B=Math.max(0,Math.min(255,(num&255)+amt));
-    return "#"+((1<<24)+(R<<16)+(G<<8)+B).toString(16).slice(1);
+  /* -------- inject dynamic CSS vars -------- */
+  const styleEl = document.getElementById('dynamicVars');
+  const shade = hex => {
+    const num = parseInt(hex.slice(1),16),
+          amt = Math.round(-0.2*255);
+    const r  = Math.max(0,Math.min(255,(num>>16)+amt)),
+          g  = Math.max(0,Math.min(255,((num>>8)&255)+amt)),
+          b  = Math.max(0,Math.min(255,(num&255)+amt));
+    return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
   };
-  style.textContent=`
-    :root{
-      --body:${data.colors.body};
-      --flap:${data.colors.flap};
-      --paper:${data.colors.paper};
-      --bg:${data.colors.bg};
-      --body-border:${shade(data.colors.body)};
-      --flap-border:${shade(data.colors.flap)};
-    }`;
+  const css =
+    ':root{' +
+      '--body:'        + data.colors.body  + ';' +
+      '--flap:'        + data.colors.flap  + ';' +
+      '--paper:'       + data.colors.paper + ';' +
+      '--bg:'          + data.colors.bg    + ';' +
+      '--body-border:' + shade(data.colors.body) + ';' +
+      '--flap-border:' + shade(data.colors.flap) + ';' +
+    '}';
+  styleEl.textContent = css;
 
-  // --- fill sticker, lines, address ---
-  if(data.sticker) document.getElementById('st').src=data.sticker;
-  else document.getElementById('st').remove();
-  const paper=document.getElementById('paper');
+  /* -------- populate sticker, lines, address -------- */
+  const stickerImg = document.getElementById('st');
+  if(data.sticker) stickerImg.src = data.sticker;
+  else stickerImg.remove();
+
+  const paperEl = document.getElementById('paper');
   data.lines.forEach(txt=>{
-    const div=document.createElement('div');
-    div.className='line';div.textContent=txt;paper.appendChild(div);
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.textContent = txt;
+    paperEl.appendChild(div);
   });
-  document.getElementById('addr').innerHTML=
-    '<p>To: '+(data.to||'Someone')+'</p><p>From: '+(data.from||'Me')+'</p>';
+  document.getElementById('addr').innerHTML =
+    '<p>To: '   + (data.to   || 'Someone') + '</p>' +
+    '<p>From: ' + (data.from || 'Me')      + '</p>';
 
-  // --- animation logic (identical) ---
-  const env=document.getElementById('env');
-  let flipped=false;
-  const vh=window.innerHeight,maskH=env.clientHeight*0.6,fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
-  paper.style.height='0px';
+  /* -------- envelope animation -------- */
+  const env      = document.getElementById('env');
+  let   flipped  = false;
+  const vh       = window.innerHeight;
+  const maskH    = env.clientHeight * 0.6;
+  const fullH    = paperEl.scrollHeight;
+  const extra    = 50;
+  const totalH   = maskH + fullH + extra;
+  paperEl.style.height = '0px';
 
   window.addEventListener('scroll',()=>{
-    const y=window.scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
-    if(y>10)env.classList.add('open');
-    if(y<=unroll){paper.style.height=\`\${totalH*(y/unroll)}px\`;}
-    else if(y<=unroll+pause){paper.style.height=\`\${totalH}px\`;}
-    else if(y<=unroll+pause+retract){
-      const r=(y-unroll-pause)/retract;
-      paper.style.height=\`\${totalH*(1-r)}px\`;
+    const y       = window.scrollY;
+    const unroll  = 7.5 * vh;
+    const pause   = 0.5 * vh;
+    const retract = 7.5 * vh;
+
+    if(y > 10) env.classList.add('open');
+
+    if(y <= unroll){
+      paperEl.style.height = (totalH * (y / unroll)) + 'px';
+    }else if(y <= unroll + pause){
+      paperEl.style.height = totalH + 'px';
+    }else if(y <= unroll + pause + retract){
+      const r = (y - unroll - pause) / retract;
+      paperEl.style.height = (totalH * (1 - r)) + 'px';
     }else if(!flipped){
-      flipped=true;env.classList.remove('open');
-      setTimeout(()=>{env.classList.add('flip');
-        setInterval(()=>{for(let i=0;i<8;i++){
-          const c=document.createElement('div');c.className='confetti';
-          c.style.left=Math.random()*100+'vw';
-          c.style.backgroundColor=\`hsl(\${Math.random()*360},100%,60%)\`;
-          c.style.animationDelay=Math.random()*0.8+'s';
-          document.body.appendChild(c);
-        }},800);
+      flipped = true;
+      env.classList.remove('open');
+      setTimeout(()=>{
+        env.classList.add('flip');
+        setInterval(()=>{
+          for(let i=0;i<8;i++){
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = (Math.random()*100) + 'vw';
+            c.style.backgroundColor =
+              'hsl(' + (Math.random()*360) + ',100%,60%)';
+            c.style.animationDelay = (Math.random()*0.8) + 's';
+            document.body.appendChild(c);
+          }
+        },800);
       },600);
     }
   });
-  // ensure a tiny scroll so animation starts in mobile browsers
+
+  /* ensure a tiny scroll to kick things off on mobile */
   setTimeout(()=>window.scrollTo(0,1),50);
 })();
 </script>
