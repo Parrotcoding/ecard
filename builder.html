@@ -6,29 +6,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --body:#A8E6CF; --flap:#76C69C; --paper:#fff8e7;
-      --body-border:#82C9A1; --flap-border:#60A085; --bg:#f0f0f0;
-    }
+    :root{--body:#A8E6CF;--flap:#76C69C;--paper:#fff8e7;--bg:#f0f0f0}
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif}
     body{background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem;gap:2rem}
     h1{font-weight:700}
     form{display:grid;gap:1rem;width:100%;max-width:520px}
-    label{font-size:.9rem;font-weight:600;display:block}
+    label{font-size:.9rem;font-weight:600}
     input[type="text"]{width:100%;padding:.6rem 1rem;border:1px solid #ccc;border-radius:9999px}
     input[type="color"]{border:none;width:2.75rem;height:2.75rem;border-radius:50%;cursor:pointer;appearance:none}
     #lines li{display:flex;gap:.5rem;margin:.35rem 0}
     #lines input{flex:1}
-    button{padding:.6rem 1.4rem;border:none;border-radius:9999px;background:#60A085;color:#fff;font-weight:600;cursor:pointer;transition:.2s}
-    button:hover{filter:brightness(1.1)}
+    button{padding:.6rem 1.4rem;border:none;border-radius:9999px;background:#60A085;color:#fff;font-weight:600;cursor:pointer}
     .addLineBtn{background:#76C69C;font-size:.85rem;padding:.35rem 1rem}
     #previewWrap{border:1px dashed #bbb;border-radius:8px;padding:1rem;margin-top:1rem}
     iframe{width:100%;aspect-ratio:4/3;border:none;border-radius:6px}
-
-    /* link + copy pill */
     #linkWrap{margin-top:1rem;display:none;align-items:center;gap:.6rem}
     #linkField{flex:1;padding:.6rem 1rem;border:1px solid #ccc;border-radius:9999px;background:#f7f7f7;font-size:.85rem}
-    #copyBtn{background:#82C9A1;padding:.55rem 1.2rem;font-size:.85rem}
+    #copyBtn{background:#82C9A1;font-size:.85rem;padding:.55rem 1.2rem}
   </style>
 </head>
 <body>
@@ -66,64 +60,85 @@
 </div>
 
 <script>
-/* -------- line management -------- */
-addLineBtn.onclick=()=>{const li=document.createElement('li');
-  li.innerHTML='<input type=text><button class="addLineBtn">✕</button>';
-  li.lastChild.onclick=()=>li.remove();
-  linesUl.appendChild(li);
-  refreshPreview();
-};
+document.addEventListener('DOMContentLoaded',()=>{
 
-/* -------- refresh triggers -------- */
-['stickerUrl','toField','fromField','bodyCol','flapCol','paperCol','bgCol']
-  .forEach(id=>document.getElementById(id).addEventListener('input',refreshPreview));
-linesUl.addEventListener('input',refreshPreview);
+  /* ---- DOM refs ---- */
+  const addLineBtn=document.getElementById('addLine');
+  const linesUl   =document.getElementById('lines');
+  const stickerUrl=document.getElementById('stickerUrl');
+  const toField   =document.getElementById('toField');
+  const fromField =document.getElementById('fromField');
+  const bodyCol=document.getElementById('bodyCol');
+  const flapCol=document.getElementById('flapCol');
+  const paperCol=document.getElementById('paperCol');
+  const bgCol   =document.getElementById('bgCol');
+  const preview =document.getElementById('preview');
+  const linkWrap=document.getElementById('linkWrap');
+  const linkField=document.getElementById('linkField');
+  const copyBtn =document.getElementById('copyBtn');
+  const generate=document.getElementById('generate');
 
-/* -------- collect state -------- */
-function collect(){
-  return{
-    to:toField.value.trim(),
-    from:fromField.value.trim(),
-    lines:[...linesUl.querySelectorAll('input[type="text"]')].map(i=>i.value.trim()).filter(Boolean),
-    colors:{body:bodyCol.value,flap:flapCol.value,paper:paperCol.value,bg:bgCol.value},
-    sticker:stickerUrl.value.trim()
+  /* ---- add line ---- */
+  addLineBtn.onclick=()=>{
+    const li=document.createElement('li');
+    li.innerHTML='<input type=text><button class="addLineBtn">✕</button>';
+    li.lastChild.onclick=()=>li.remove();
+    linesUl.appendChild(li);
+    refreshPreview();
   };
-}
 
-/* -------- viewer preview -------- */
-function viewerCSS(){return`
+  /* ---- refresh triggers ---- */
+  [stickerUrl,toField,fromField,bodyCol,flapCol,paperCol,bgCol]
+    .forEach(el=>el.addEventListener('input',refreshPreview));
+  linesUl.addEventListener('input',refreshPreview);
+
+  /* ---- collect ---- */
+  function collect(){
+    return{
+      to:toField.value.trim(),
+      from:fromField.value.trim(),
+      lines:[...linesUl.querySelectorAll('input[type="text"]')].map(i=>i.value.trim()).filter(Boolean),
+      colors:{body:bodyCol.value,flap:flapCol.value,paper:paperCol.value,bg:bgCol.value},
+      sticker:stickerUrl.value.trim()
+    };
+  }
+
+  /* ---- preview ---- */
+  function viewerCSS(){return`
 *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
-body{background:var(--bg);min-height:1800vh}
-.envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px}
-.paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);background:var(--paper);padding:2rem 1rem 2rem;text-align:center}
+.envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%)}
+.paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);background:var(--paper);padding:2rem 1rem;text-align:center}
 .line{margin:1rem 0;font-size:1.25rem;}
 .body{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--body);border:2px solid var(--body-border)}
 .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap);border:2px solid var(--flap-border);clip-path:polygon(0 0,100% 0,50% 100%)}
 .mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:var(--body)}
 `;}
-function makeHTML(d){
-  const lines=d.lines.map(t=>`<div class="line">${t.replace(/</g,'&lt;')}</div>`).join('');
-  return`<!DOCTYPE html><html><head><style>:root{--body:${d.colors.body};--flap:${d.colors.flap};--paper:${d.colors.paper};--bg:${d.colors.bg};--body-border:#0000;--flap-border:#0000}
-  ${viewerCSS()}</style></head><body>
-  <div class=envelope><div class=body></div>${d.sticker?`<img src="${d.sticker}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:200px">`:''}
-  <div class=mask></div><div class=flap></div><div class=paper>${lines}</div></div></body></html>`;
-}
-function refreshPreview(){preview.srcdoc=makeHTML(collect());}
-refreshPreview();
+  function makeHTML(d){
+    const lines=d.lines.map(t=>`<div class="line">${t.replace(/</g,'&lt;')}</div>`).join('');
+    return`<!DOCTYPE html><html><head><style>:root{--body:${d.colors.body};--flap:${d.colors.flap};--paper:${d.colors.paper};--bg:${d.colors.bg};--body-border:#0000;--flap-border:#0000}${viewerCSS()}</style></head><body>
+    <div class=envelope><div class=body></div>
+    ${d.sticker?`<img src="${d.sticker}" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:200px">`:''}
+    <div class=mask></div><div class=flap></div><div class=paper>${lines}</div></div></body></html>`;
+  }
+  function refreshPreview(){preview.srcdoc=makeHTML(collect());}
+  refreshPreview();
 
-/* -------- generate & copy -------- */
-generate.onclick=()=>{
-  const data=collect();
-  if(!data.lines.length){alert('Add at least one message line.');return;}
-  const url=`${location.origin}/ecard.html?d=${btoa(encodeURIComponent(JSON.stringify(data)))}`;
-  linkField.value=url;
-  linkWrap.style.display='flex';
-};
-copyBtn.onclick=()=>{
-  navigator.clipboard.writeText(linkField.value).then(()=>{
-    const old=copyBtn.textContent;copyBtn.textContent='Copied!';setTimeout(()=>copyBtn.textContent=old,1200);
-  }).catch(()=>alert('Copy failed; select the text manually.'));
-};
+  /* ---- generate + copy ---- */
+  generate.onclick=()=>{
+    const data=collect();
+    if(!data.lines.length){alert('Add at least one message line');return;}
+    const url=`${location.origin}/ecard.html?d=${btoa(encodeURIComponent(JSON.stringify(data)))}`;
+    linkField.value=url;
+    linkWrap.style.display='flex';
+  };
+  copyBtn.onclick=()=>{
+    navigator.clipboard.writeText(linkField.value).then(()=>{
+      copyBtn.textContent='Copied!';
+      setTimeout(()=>copyBtn.textContent='Copy',1200);
+    }).catch(()=>alert('Copy failed'));
+  };
+
+});
 </script>
 </body>
 </html>
