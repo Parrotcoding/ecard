@@ -2,98 +2,221 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Seafoam E‑Card — Overview</title>
+  <title>Seafoam E‑Card — Live Demos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* ===== base ===== */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif}
-    body{background:#f0f4f4;color:#333;line-height:1.5;display:flex;flex-direction:column;min-height:100vh}
+    body{background:#f0f4f4;min-height:100vh;color:#333;display:flex;flex-direction:column}
 
     /* ===== header ===== */
-    header{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:1rem 2rem;background:#A8E6CF;border-bottom:2px solid #82C9A1
-    }
+    header{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;background:#A8E6CF;border-bottom:2px solid #82C9A1}
     header h1{font-size:1.5rem;font-weight:700;color:#155f46}
-    .pill{
-      background:#60A085;color:#fff;padding:.6rem 1.6rem;border:none;
-      border-radius:9999px;font-weight:600;cursor:pointer;font-size:1rem;
-      text-decoration:none;transition:.2s
-    }
+    .pill{background:#60A085;color:#fff;padding:.6rem 1.6rem;border:none;border-radius:9999px;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s}
     .pill:hover{filter:brightness(1.1)}
 
-    /* ===== main content ===== */
-    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:2rem}
-    .intro{max-width:760px;text-align:center;margin-bottom:2.5rem}
-    .demos{
-      width:100%;max-width:1100px;
-      display:grid;gap:2rem;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr))
-    }
+    /* ===== main layout ===== */
+    main{flex:1;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:2.5rem}
+    .demos{display:grid;gap:2rem;width:100%;max-width:1100px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 
-    /* demo canvas wrapper */
-    .demo{
-      position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;
-      box-shadow:0 6px 18px rgba(0,0,0,.1);background:#000
-    }
-    canvas, video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
-    video{pointer-events:none}
+    .demo{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+    .demo h3{margin-bottom:.75rem;font-size:1.1rem;font-weight:600;color:#155f46}
+
+    /* ===== DEMO 1 – builder typing ===== */
+    .builder-screen{width:100%;height:240px;border:2px solid #ccc;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:.4rem;position:relative;overflow:hidden}
+    .builder-line{height:18px;width:0;background:#e0e0e0;border-radius:4px}
+    .color-pick{width:22px;height:22px;border-radius:50%;position:absolute;bottom:1rem;left:1rem;opacity:0}
+    .sticker-thumb{position:absolute;bottom:1rem;right:1rem;width:38px;height:38px;border-radius:6px;background:url('https://picsum.photos/80') center/cover;opacity:0}
+    @keyframes typeLine{to{width:100%}}
+    @keyframes fadeIn{to{opacity:1}}
+    /* will be triggered via JS */
+
+    /* ===== DEMO 2 – envelope preview (scaled) ===== */
+    .preview-wrap{transform:scale(.55);transform-origin:top left}
+    /* envelope CSS (shrunk copy of real component) */
+    .envelope{position:relative;width:480px;height:360px;perspective:800px;transform-style:preserve-3d}
+    .body{position:absolute;top:0;left:0;width:100%;height:100%;background:#A8E6CF;border:2px solid #82C9A1;border-radius:4px;z-index:1}
+    .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:#76C69C;border:2px solid #60A085;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s ease;z-index:4}
+    .paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:#fff8e7;text-align:center;overflow:hidden;padding:2rem 1rem 2rem;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:height .1s linear;z-index:2}
+    .line{margin:.8rem 0;font-size:20px}
+    .mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:#A8E6CF;z-index:3}
+    .env-open .flap{transform:rotateX(180deg)}
+    .env-flip{transform:rotateY(180deg);transition:transform .8s ease}
+
+    /* confetti dots */
+    .confetti{position:absolute;width:10px;height:10px;border-radius:50%;animation:fall 3s ease-out forwards}
+    @keyframes fall{to{transform:translateY(420px);opacity:0}}
+
+    /* ===== DEMO 3 – share link ===== */
+    .link-box{width:100%;border:2px dashed #aaa;border-radius:10px;padding:1rem;font-size:.9rem;word-break:break-all;position:relative}
+    .spark{position:absolute;width:6px;height:6px;background:#ffcc00;border-radius:50%;opacity:0;animation:spark 1s forwards}
+    @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.4);opacity:1}100%{transform:scale(0);opacity:0}}
+
   </style>
 </head>
 <body>
 
-  <!-- ===== site header ===== -->
+  <!-- ================= HEADER ================= -->
   <header>
     <h1>Seafoam E‑Card</h1>
-    <a href="builder.html" class="pill">Create E‑Card</a>
+    <a class="pill" href="builder.html">Create E‑Card</a>
   </header>
 
-  <!-- ===== main content ===== -->
+  <!-- ================= DEMOS ================= -->
   <main>
-    <section class="intro">
-      <h2 style="font-weight:700;margin-bottom:.5rem">See it in action</h2>
-      <p>Watch quick clips that showcase how to build a personalised envelope, preview
-         the animation, and share your card with a single link.</p>
-    </section>
-
     <section class="demos">
-      <!-- === demo #1 === -->
-      <div class="demo">
-        <video src="demo‑builder.mp4" autoplay muted loop playsinline></video>
-        <canvas></canvas>
+
+      <!-- DEMO 1 : builder typing -->
+      <div class="demo" id="demoBuilder">
+        <h3>1 · Build</h3>
+        <div class="builder-screen" id="builderScreen">
+          <!-- typed lines injected by JS -->
+          <div class="color-pick" id="colorPick"></div>
+          <div class="sticker-thumb" id="stickerThumb"></div>
+        </div>
       </div>
 
-      <!-- === demo #2 === -->
-      <div class="demo">
-        <video src="demo‑preview.mp4" autoplay muted loop playsinline></video>
-        <canvas></canvas>
+      <!-- DEMO 2 : preview envelope -->
+      <div class="demo" id="demoPreview">
+        <h3>2 · Preview</h3>
+        <div class="preview-wrap">
+          <div class="envelope" id="env">
+            <div class="body"></div>
+            <div class="flap"></div>
+            <div class="mask"></div>
+            <div class="paper" id="paper">
+              <div class="line">Your first message</div>
+              <div class="line">A cheerful note</div>
+              <div class="line">Dream big</div>
+              <div class="line">Shine on</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- === demo #3 === -->
-      <div class="demo">
-        <video src="demo‑share.mp4" autoplay muted loop playsinline></video>
-        <canvas></canvas>
+      <!-- DEMO 3 : share link -->
+      <div class="demo" id="demoShare">
+        <h3>3 · Share</h3>
+        <div class="link-box" id="linkBox">
+          https://seafoam‑ecard.app/ecard.html?d=AbCdEfGhIjKlMnOpQrStUvWxYz
+        </div>
       </div>
+
     </section>
   </main>
 
+  <!-- ================= SCRIPTS ================= -->
   <script>
-    /* copy each video frame to its companion canvas */
-    document.querySelectorAll('.demo').forEach(wrapper=>{
-      const vid   = wrapper.querySelector('video');
-      const can   = wrapper.querySelector('canvas');
-      const ctx   = can.getContext('2d');
-      function draw(){
-        if(vid.readyState>=2){                 // HAVE_CURRENT_DATA
-          can.width  = vid.videoWidth;
-          can.height = vid.videoHeight;
-          ctx.drawImage(vid,0,0,can.width,can.height);
-        }
-        requestAnimationFrame(draw);
+  /* ---------- DEMO 1 : builder typing ---------- */
+  (function(){
+    const lines   = ['Your first message','A cheerful note','Stay curious','Dream big'];
+    const screen  = document.getElementById('builderScreen');
+    const picker  = document.getElementById('colorPick');
+    const thumb   = document.getElementById('stickerThumb');
+
+    function typeLine(i){
+      if(i>=lines.length) return showExtras();
+      const div=document.createElement('div');
+      div.className='builder-line';
+      screen.insertBefore(div, picker);      /* keep colour/sticker at bottom */
+      div.style.animation='typeLine 1s steps(20) forwards';
+      setTimeout(()=>typeLine(i+1),1100);
+    }
+    function showExtras(){
+      picker.style.background='#76C69C';
+      picker.style.animation='fadeIn .6s forwards';
+      thumb.style.animation='fadeIn .6s .4s forwards';
+      /* loop the demo */
+      setTimeout(reset,3000);
+    }
+    function reset(){
+      [...screen.querySelectorAll('.builder-line')].forEach(l=>l.remove());
+      picker.style.opacity=0; thumb.style.opacity=0;
+      setTimeout(()=>typeLine(0),400);
+    }
+    typeLine(0);
+  })();
+
+  /* ---------- DEMO 2 : envelope preview ---------- */
+  (function(){
+    const env   = document.getElementById('env');
+    const flap  = env.querySelector('.flap');
+    const paper = document.getElementById('paper');
+    const totalH = 260;               /* unrolled paper height in px */
+    let confettiTimer;
+
+    function startCycle(){
+      /* open flap */
+      env.classList.add('env-open');
+      /* extend paper */
+      paper.style.height = totalH + 'px';
+
+      setTimeout(()=>{                 /* pause */
+        /* retract paper */
+        paper.style.height = '0px';
+      },2000);
+
+      setTimeout(()=>{                 /* flip & confetti */
+        env.classList.add('env-flip');
+        burstConfetti();
+      },3400);
+
+      setTimeout(()=>resetCycle(),6500);
+    }
+
+    function burstConfetti(){
+      const box = env.getBoundingClientRect();
+      for(let i=0;i<45;i++){
+        const d = document.createElement('div');
+        d.className='confetti';
+        d.style.left = (box.left + 20 + Math.random()*420) + 'px';
+        d.style.top  = (box.top + 20) + 'px';
+        d.style.background = 'hsl('+Math.random()*360+',100%,60%)';
+        d.style.animationDelay = Math.random()*0.8 + 's';
+        document.body.appendChild(d);
+        setTimeout(()=>d.remove(),3000);
       }
-      draw();
-    });
+    }
+
+    function resetCycle(){
+      env.classList.remove('env-open','env-flip');
+      paper.style.height = '0px';
+      setTimeout(startCycle,800);
+    }
+
+    startCycle();
+  })();
+
+  /* ---------- DEMO 3 : share / copy ---------- */
+  (function(){
+    const box = document.getElementById('linkBox');
+    let lastSpark = null;
+
+    function copyAnim(){
+      /* highlight */
+      box.style.background='#eaffea';
+      box.style.transition='background .4s';
+      setTimeout(()=>box.style.background='#fff',400);
+
+      /* little spark */
+      if(lastSpark) lastSpark.remove();
+      const s=document.createElement('div');
+      s.className='spark';
+      s.style.left=Math.random()*90+'%';
+      s.style.top =Math.random()*90+'%';
+      box.appendChild(s);
+      lastSpark=s;
+      setTimeout(()=>s.remove(),1000);
+    }
+
+    function cycle(){
+      navigator.clipboard.writeText(box.textContent).catch(()=>{});
+      copyAnim();
+      setTimeout(cycle,4000);
+    }
+    cycle();
+  })();
   </script>
 
 </body>
