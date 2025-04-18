@@ -42,11 +42,11 @@
   </label>
 
   <label>To
-    <input type="text" id="toField" placeholder="Recipient Name" value="">
+    <input type="text" id="toField" placeholder="Recipient Name">
   </label>
 
   <label>From
-    <input type="text" id="fromField" placeholder="Your Name" value="">
+    <input type="text" id="fromField" placeholder="Your Name">
   </label>
 
   <label>Envelope body colour <input type="color" id="bodyCol" value="#A8E6CF"></label>
@@ -58,82 +58,86 @@
 </form>
 
 <div id="previewWrap">
-  <!-- live preview iframe -->
   <iframe id="preview" title="Preview" style="width:100%;aspect-ratio:4/3;border:none"></iframe>
 </div>
 
 <div id="shareLink" hidden></div>
 
 <script>
+/* ---------- helpers ---------- */
 const addLineBtn = document.getElementById('addLine');
 const linesUl   = document.getElementById('lines');
 const generateBtn = document.getElementById('generate');
 const shareBox  = document.getElementById('shareLink');
 const previewIF = document.getElementById('preview');
 
-// initial two lines
+/* seed with two starter lines */
 ['Your first message','A cheerful note'].forEach(txt=>addLine(txt));
 
 addLineBtn.onclick = ()=>addLine('');
 
-function addLine(val){
+function addLine(val=''){
   const li=document.createElement('li');
   li.innerHTML=`<input type="text" value="${val}"><button type="button" class="addLineBtn">✕</button>`;
   li.querySelector('button').onclick=()=>li.remove();
   linesUl.appendChild(li);
 }
 
-// read sticker
 let stickerData='';
 document.getElementById('stickerInput').addEventListener('change',e=>{
   const f=e.target.files[0];
   if(!f) return;
   const reader=new FileReader();
-  reader.onload=ev=>{stickerData=ev.target.result;refreshPreview()};
+  reader.onload=ev=>{stickerData=ev.target.result;refreshPreview();};
   reader.readAsDataURL(f);
 });
 
-// whenever a colour or text field changes → refresh preview
-['bodyCol','flapCol','paperCol','bgCol','toField','fromField'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',refreshPreview);
-});
+/* live‑update preview on any change */
+['bodyCol','flapCol','paperCol','bgCol','toField','fromField']
+  .forEach(id=>document.getElementById(id).addEventListener('input',refreshPreview));
 linesUl.addEventListener('input',refreshPreview);
 addLineBtn.addEventListener('click',refreshPreview);
 
-// build card data object
+/* gather current form state */
 function collectData(){
-  return{
+  return {
     to:document.getElementById('toField').value.trim(),
     from:document.getElementById('fromField').value.trim(),
-    lines:[...linesUl.querySelectorAll('input')].map(i=>i.value).filter(Boolean),
+    lines:[...linesUl.querySelectorAll('input')]
+            .map(i=>i.value.trim())
+            .filter(Boolean),
     colors:{
       body:document.getElementById('bodyCol').value,
       flap:document.getElementById('flapCol').value,
       paper:document.getElementById('paperCol').value,
       bg:document.getElementById('bgCol').value
     },
-    sticker:stickerData||''
+    sticker:stickerData || ''
   };
 }
 
-// live preview by injecting data into viewer inside the iframe
+/* -------- preview generator -------- */
 function refreshPreview(){
-  const data=collectData();
-  const html=makeViewerHTML(data,true);
+  const html=makeViewerHTML(collectData(),true);
   previewIF.srcdoc=html;
 }
 refreshPreview();
 
-// create viewer HTML for preview (isPreview flag disables animation delay)
+/* build a complete ecard viewer document */
 function makeViewerHTML(d,isPreview){
   const encodedLines=d.lines.map(l=>`<div class="line">${l.replace(/</g,'&lt;')}</div>`).join('');
   return `
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--body:${d.colors.body};--body-border:${shade(d.colors.body,-20)};
---flap:${d.colors.flap};--flap-border:${shade(d.colors.flap,-20)};
---paper:${d.colors.paper};--bg:${d.colors.bg}}
+:root{
+  --body:${d.colors.body};
+  --body-border:${shade(d.colors.body,-20)};
+  --flap:${d.colors.flap};
+  --flap-border:${shade(d.colors.flap,-20)};
+  --paper:${d.colors.paper};
+  --bg:${d.colors.bg};
+}
 ${viewerCSS()}
 </style></head><body>
   <div class="envelope">
@@ -147,7 +151,20 @@ ${viewerJS(isPreview)}
 </body></html>`;
 }
 
-// CSS string shared
+/* tiny colour‑shading helper */
+function shade(hex,percent){
+  const num=parseInt(hex.slice(1),16);
+  const amt=Math.round(2.55*percent);
+  const R=(num>>16)+amt, G=(num>>8&255)+amt, B=(num&255)+amt;
+  return "#"+(
+    0x1000000+
+    (R<255?Math.max(R,0):255)*0x10000+
+    (G<255?Math.max(G,0):255)*0x100+
+    (B<255?Math.max(B,0):255)
+  ).toString(16).slice(1);
+}
+
+/*   static CSS shared with viewer   */
 function viewerCSS(){return`
 *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
 body{background:var(--bg);min-height:1800vh}
@@ -167,57 +184,59 @@ body{background:var(--bg);min-height:1800vh}
 .confetti{position:absolute;top:0;width:8px;height:8px;border-radius:50%;animation:fall 3s ease-out forwards;z-index:7}
 @keyframes fall{to{transform:translateY(100vh);opacity:0}}`;}
 
+/*   JS injected into the preview iframe   */
 function viewerJS(preview){return`
 <script>
 window.addEventListener('DOMContentLoaded',()=>{
-const env=document.querySelector('.envelope');
-const paper=env.querySelector('.paper');
-let flipped=false;
-const vh=window.innerHeight,maskH=env.clientHeight*0.6,fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
-paper.style.height='0px';
-window.addEventListener('scroll',()=>{
- const y=window.scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
- if(y>10)env.classList.add('open');
- if(y<=unroll){paper.style.height=\`\${totalH*(y/unroll)}px\`;}
- else if(y<=unroll+pause){paper.style.height=\`\${totalH}px\`;}
- else if(y<=unroll+pause+retract){
-   const r=(y-unroll-pause)/retract;paper.style.height=\`\${totalH*(1-r)}px\`;
- }else if(!flipped){
-   flipped=true;env.classList.remove('open');
-   setTimeout(()=>{env.classList.add('flip');
-     setInterval(()=>{for(let i=0;i<8;i++){
-       const c=document.createElement('div');c.className='confetti';
-       c.style.left=Math.random()*100+'vw';
-       c.style.backgroundColor=\`hsl(\${Math.random()*360},100%,60%)\`;
-       c.style.animationDelay=Math.random()*0.8+'s';document.body.appendChild(c);
-     }},800);
-   },600);
- }
-});
-${preview?'window.scrollTo(0,1);':''}
+  const env=document.querySelector('.envelope');
+  const paper=env.querySelector('.paper');
+  let flipped=false;
+  const vh=window.innerHeight,maskH=env.clientHeight*0.6,
+        fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
+  paper.style.height='0px';
+
+  window.addEventListener('scroll',()=>{
+    const y=window.scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
+    if(y>10)env.classList.add('open');
+    if(y<=unroll){
+      paper.style.height=\`\${totalH*(y/unroll)}px\`;
+    }else if(y<=unroll+pause){
+      paper.style.height=\`\${totalH}px\`;
+    }else if(y<=unroll+pause+retract){
+      const r=(y-unroll-pause)/retract;
+      paper.style.height=\`\${totalH*(1-r)}px\`;
+    }else if(!flipped){
+      flipped=true;env.classList.remove('open');
+      setTimeout(()=>{
+        env.classList.add('flip');
+        setInterval(()=>{
+          for(let i=0;i<8;i++){
+            const c=document.createElement('div');
+            c.className='confetti';
+            c.style.left=Math.random()*100+'vw';
+            c.style.backgroundColor=\`hsl(\${Math.random()*360},100%,60%)\`;
+            c.style.animationDelay=Math.random()*0.8+'s';
+            document.body.appendChild(c);
+          }
+        },800);
+      },600);
+    }
+  });
+  ${preview?'window.scrollTo(0,1);':''}
 });
 <\/script>`;}
 
-function shade(hex,percent){ // simple shade util
-  const num=parseInt(hex.slice(1),16),
-  amt=Math.round(2.55*percent),
-  R=(num>>16)+amt,G=(num>>8&0x00FF)+amt,B=(num&0x0000FF)+amt;
-  return "#"+(
-    0x1000000+
-    (R<255?R<1?0:R:255)*0x10000+
-    (G<255?G<1?0:G:255)*0x100+
-    (B<255?B<1?0:B:255)
-  ).toString(16).slice(1);
-}
-
-// ——— share link ———
+/* ---------- share link ---------- */
 generateBtn.onclick=()=>{
   const data=collectData();
-  if(!data.lines.length){alert('Please add at least one message line');return;}
+  if(!data.lines.length){
+    alert('Please add at least one message line');
+    return;
+  }
   const json=encodeURIComponent(JSON.stringify(data));
   const base64=btoa(json);
-  const viewer='ecard.html'; // change if you rename the viewer file
-  const url=\`\${location.origin+\`/\${viewer}?d=\${base64}\`}\`;
+  const viewer='ecard.html';           // rename here if you renamed the viewer
+  const url=\`\${location.origin}/\${viewer}?d=\${base64}\`;
   shareBox.textContent=url;
   shareBox.hidden=false;
 };
