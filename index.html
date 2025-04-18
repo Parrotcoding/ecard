@@ -1,2 +1,100 @@
-<h>Continue Here:</h>
-<a href=builder.html>Click</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seafoam E‑Card — Overview</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== base ===== */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif}
+    body{background:#f0f4f4;color:#333;line-height:1.5;display:flex;flex-direction:column;min-height:100vh}
+
+    /* ===== header ===== */
+    header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:1rem 2rem;background:#A8E6CF;border-bottom:2px solid #82C9A1
+    }
+    header h1{font-size:1.5rem;font-weight:700;color:#155f46}
+    .pill{
+      background:#60A085;color:#fff;padding:.6rem 1.6rem;border:none;
+      border-radius:9999px;font-weight:600;cursor:pointer;font-size:1rem;
+      text-decoration:none;transition:.2s
+    }
+    .pill:hover{filter:brightness(1.1)}
+
+    /* ===== main content ===== */
+    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:2rem}
+    .intro{max-width:760px;text-align:center;margin-bottom:2.5rem}
+    .demos{
+      width:100%;max-width:1100px;
+      display:grid;gap:2rem;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr))
+    }
+
+    /* demo canvas wrapper */
+    .demo{
+      position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,.1);background:#000
+    }
+    canvas, video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+    video{pointer-events:none}
+  </style>
+</head>
+<body>
+
+  <!-- ===== site header ===== -->
+  <header>
+    <h1>Seafoam E‑Card</h1>
+    <a href="builder.html" class="pill">Create E‑Card</a>
+  </header>
+
+  <!-- ===== main content ===== -->
+  <main>
+    <section class="intro">
+      <h2 style="font-weight:700;margin-bottom:.5rem">See it in action</h2>
+      <p>Watch quick clips that showcase how to build a personalised envelope, preview
+         the animation, and share your card with a single link.</p>
+    </section>
+
+    <section class="demos">
+      <!-- === demo #1 === -->
+      <div class="demo">
+        <video src="demo‑builder.mp4" autoplay muted loop playsinline></video>
+        <canvas></canvas>
+      </div>
+
+      <!-- === demo #2 === -->
+      <div class="demo">
+        <video src="demo‑preview.mp4" autoplay muted loop playsinline></video>
+        <canvas></canvas>
+      </div>
+
+      <!-- === demo #3 === -->
+      <div class="demo">
+        <video src="demo‑share.mp4" autoplay muted loop playsinline></video>
+        <canvas></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* copy each video frame to its companion canvas */
+    document.querySelectorAll('.demo').forEach(wrapper=>{
+      const vid   = wrapper.querySelector('video');
+      const can   = wrapper.querySelector('canvas');
+      const ctx   = can.getContext('2d');
+      function draw(){
+        if(vid.readyState>=2){                 // HAVE_CURRENT_DATA
+          can.width  = vid.videoWidth;
+          can.height = vid.videoHeight;
+          ctx.drawImage(vid,0,0,can.width,can.height);
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    });
+  </script>
+
+</body>
+</html>
