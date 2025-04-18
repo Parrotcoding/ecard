@@ -6,48 +6,71 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* static CSS */
+    /* base viewer CSS (same as preview) */
     *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
     body{background:var(--bg,#f0f0f0);min-height:1800vh}
-    .envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px}
-    .body{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--body,#A8E6CF);border:2px solid var(--body-border,#82C9A1)}
-    .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap,#76C69C);border:2px solid var(--flap-border,#60A085);clip-path:polygon(0 0,100% 0,50% 100%)}
-    .mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:var(--body,#A8E6CF)}
-    .paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:var(--paper,#fff8e7);padding:2rem 1rem 2rem;transition:height .1s linear;z-index:2;text-align:center}
-    .line{margin:1rem 0;font-size:1.25rem;}  /* vertically stacked lines */
+    .envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px;transition:top .6s,transform .8s}
+    .envelope.open{top:50%}
+    .envelope.flip{transform:translate(-50%,-50%) rotateY(180deg)}
+    .paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:var(--paper);padding:2rem 1rem 2rem;text-align:center;transition:height .1s;z-index:2}
+    .line{margin:1rem 0;font-size:1.25rem;}
+    .body{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--body);border:2px solid var(--body-border);z-index:1}
+    .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap);border:2px solid var(--flap-border);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s;z-index:4}
+    .envelope.open .flap{transform:rotateX(180deg);z-index:1}
+    .mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:var(--body);z-index:3}
+    .sticker{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:200px;width:auto;transition:opacity .6s;z-index:5}
+    .envelope.flip .sticker{opacity:0}
+    .confetti{position:absolute;top:0;width:8px;height:8px;border-radius:50%;animation:fall 3s ease-out forwards;z-index:7}
+    @keyframes fall{to{transform:translateY(100vh);opacity:0}}
   </style>
 </head>
 <body>
 
   <div class="envelope" id="env">
     <div class="body"></div>
-    <img class="sticker" id="st" alt="Sticker">
+    <img class="sticker" id="st">
     <div class="mask"></div>
     <div class="flap"></div>
     <div class="paper" id="paper"></div>
   </div>
 
 <script>
-(function(){
-  /* decode ?d= */
-  const dataStr=new URLSearchParams(location.search).get('d');
-  if(!dataStr){document.body.innerHTML='<p style="padding:2rem">Missing card data.</p>';return;}
-  let d;try{d=JSON.parse(decodeURIComponent(atob(dataStr)));}catch(e){document.body.innerHTML='<p style="padding:2rem">Invalid link.</p>';return;}
+/* ---- decode data ---- */
+const q=new URLSearchParams(location.search).get('d');
+if(!q){document.body.innerHTML='<p style="padding:2rem">Missing data.</p>';throw'';}
+let data;try{data=JSON.parse(decodeURIComponent(atob(q)));}catch{document.body.innerHTML='<p style="padding:2rem">Bad link.</p>';throw'';}
 
-  /* apply colours */
-  const shade=h=>{const n=parseInt(h.slice(1),16),a=-0.2*255;const r=Math.max(0,Math.min(255,(n>>16)+a)),g=Math.max(0,Math.min(255,((n>>8)&255)+a)),b=Math.max(0,Math.min(255,(n&255)+a));return"#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
-  document.documentElement.style.setProperty('--body',d.colors.body);
-  document.documentElement.style.setProperty('--flap',d.colors.flap);
-  document.documentElement.style.setProperty('--paper',d.colors.paper);
-  document.documentElement.style.setProperty('--bg',d.colors.bg);
-  document.documentElement.style.setProperty('--body-border',shade(d.colors.body));
-  document.documentElement.style.setProperty('--flap-border',shade(d.colors.flap));
+const shade=c=>{const n=parseInt(c.slice(1),16),d=-0.2*255;const r=Math.max(0,Math.min(255,(n>>16)+d)),g=Math.max(0,Math.min(255,((n>>8)&255)+d)),b=Math.max(0,Math.min(255,(n&255)+d));return"#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+document.documentElement.style.setProperty('--body',data.colors.body);
+document.documentElement.style.setProperty('--flap',data.colors.flap);
+document.documentElement.style.setProperty('--paper',data.colors.paper);
+document.documentElement.style.setProperty('--bg',data.colors.bg);
+document.documentElement.style.setProperty('--body-border',shade(data.colors.body));
+document.documentElement.style.setProperty('--flap-border',shade(data.colors.flap));
 
-  /* fill lines + sticker */
-  const paper=document.getElementById('paper');
-  d.lines.forEach(t=>{const div=document.createElement('div');div.className='line';div.textContent=t;paper.appendChild(div);});
-  if(d.sticker)document.getElementById('st').src=d.sticker;else document.getElementById('st').remove();
-})();
+/* lines & sticker */
+const paper=document.getElementById('paper');
+data.lines.forEach(t=>{const div=document.createElement('div');div.className='line';div.textContent=t;paper.appendChild(div);});
+if(data.sticker)document.getElementById('st').src=data.sticker;else document.getElementById('st').remove();
+
+/* animation */
+const env=document.getElementById('env');
+let flipped=false;const vh=innerHeight,maskH=env.clientHeight*0.6,fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
+addEventListener('scroll',()=>{
+  const y=scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
+  if(y>10)env.classList.add('open');
+  if(y<=unroll)paper.style.height=totalH*(y/unroll)+'px';
+  else if(y<=unroll+pause)paper.style.height=totalH+'px';
+  else if(y<=unroll+pause+retract){const r=(y-unroll-pause)/retract;paper.style.height=totalH*(1-r)+'px';}
+  else if(!flipped){flipped=true;env.classList.remove('open');
+    setTimeout(()=>{env.classList.add('flip');
+      setInterval(()=>{for(let i=0;i<8;i++){const c=document.createElement('div');
+        c.className='confetti';c.style.left=Math.random()*100+'vw';
+        c.style.background='hsl('+(Math.random()*360)+',100%,60%)';
+        c.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(c);}},800);
+    },600);
+  }
+});
 </script>
 </body>
 </html>
