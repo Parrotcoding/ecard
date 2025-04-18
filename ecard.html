@@ -7,18 +7,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style id="dynamicVars"></style>
   <style>
-    /* static CSS – unchanged */
+    /* static CSS – includes 200 px‑tall sticker */
     *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
     body{background:var(--bg,#f0f0f0);min-height:1800vh}
     .envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px;transform-style:preserve-3d;transition:top .6s ease,transform .8s ease;z-index:10}
-    .envelope.open{top:50%}
-    .envelope.flip{transform:translate(-50%,-50%) rotateY(180deg)}
+    .envelope.open{top:50%}.envelope.flip{transform:translate(-50%,-50%) rotateY(180deg)}
     .paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:var(--paper,#fff8e7);overflow:hidden;padding:2rem 1rem 2rem;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:height .1s linear;z-index:2;text-align:center}
     .body{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--body,#A8E6CF);border:2px solid var(--body-border,#82C9A1);border-radius:4px;z-index:1}
-    .sticker{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;z-index:5;pointer-events:none;transition:opacity .6s ease}
+    .sticker{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:200px;width:auto;z-index:5;pointer-events:none;transition:opacity .6s ease}
     .envelope.flip .sticker{opacity:0}
     .mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:var(--body,#A8E6CF);z-index:3}
-    .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap,#76C69C);border:2px solid var(--flap-border,#60A085);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transform:rotateX(0deg);transition:transform .6s ease;z-index:4;backface-visibility:visible}
+    .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap,#76C69C);border:2px solid var(--flap-border,#60A085);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transform:rotateX(0deg);transition:transform .6s ease;z-index:4}
     .envelope.open .flap{transform:rotateX(180deg);z-index:1}
     .line{margin:1rem 0;font-size:1.25rem;white-space:nowrap;display:inline-block}
     .address{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity .6s ease,transform .6s ease;z-index:20}
@@ -40,107 +39,40 @@
 
 <script>
 (function(){
-  /* -------- decode data from ?d= -------- */
-  const params  = new URLSearchParams(location.search);
-  const dStr    = params.get('d');
-  if(!dStr){
-    document.body.innerHTML =
-      '<h2 style="padding:2rem;text-align:center">No card data provided.</h2>';
-    return;
-  }
-  let data;
-  try{
-    data = JSON.parse(decodeURIComponent(atob(dStr)));
-  }catch(e){
-    document.body.innerHTML =
-      '<h2 style="padding:2rem;text-align:center">Invalid card link.</h2>';
-    return;
-  }
+  /* --- decode data --- */
+  const q   = new URLSearchParams(location.search).get('d');
+  if(!q){document.body.innerHTML='<h3 style="padding:2rem;text-align:center">Missing card data.</h3>';return;}
+  let d; try{d=JSON.parse(decodeURIComponent(atob(q)));}catch{document.body.innerHTML='<h3 style="padding:2rem;text-align:center">Invalid link.</h3>';return;}
 
-  /* -------- inject dynamic CSS vars -------- */
-  const styleEl = document.getElementById('dynamicVars');
-  const shade = hex => {
-    const num = parseInt(hex.slice(1),16),
-          amt = Math.round(-0.2*255);
-    const r  = Math.max(0,Math.min(255,(num>>16)+amt)),
-          g  = Math.max(0,Math.min(255,((num>>8)&255)+amt)),
-          b  = Math.max(0,Math.min(255,(num&255)+amt));
-    return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
-  };
-  const css =
-    ':root{' +
-      '--body:'        + data.colors.body  + ';' +
-      '--flap:'        + data.colors.flap  + ';' +
-      '--paper:'       + data.colors.paper + ';' +
-      '--bg:'          + data.colors.bg    + ';' +
-      '--body-border:' + shade(data.colors.body) + ';' +
-      '--flap-border:' + shade(data.colors.flap) + ';' +
-    '}';
-  styleEl.textContent = css;
+  /* --- dynamic CSS vars --- */
+  const shade=h=>{const n=parseInt(h.slice(1),16),a=Math.round(-0.2*255);const r=Math.max(0,Math.min(255,(n>>16)+a)),g=Math.max(0,Math.min(255,((n>>8)&255)+a)),b=Math.max(0,Math.min(255,(n&255)+a));return"#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);};
+  document.getElementById('dynamicVars').textContent=
+    ':root{--body:'+d.colors.body+';--flap:'+d.colors.flap+';--paper:'+d.colors.paper+';--bg:'+d.colors.bg+';--body-border:'+shade(d.colors.body)+';--flap-border:'+shade(d.colors.flap)+';}';
 
-  /* -------- populate sticker, lines, address -------- */
-  const stickerImg = document.getElementById('st');
-  if(data.sticker) stickerImg.src = data.sticker;
-  else stickerImg.remove();
+  /* --- build content --- */
+  const st=document.getElementById('st');
+  if(d.sticker)st.src=d.sticker;else st.remove();
+  const paper=document.getElementById('paper');
+  d.lines.forEach(t=>{const div=document.createElement('div');div.className='line';div.textContent=t;paper.appendChild(div);});
+  document.getElementById('addr').innerHTML='<p>To: '+(d.to||'Someone')+'</p><p>From: '+(d.from||'Me')+'</p>';
 
-  const paperEl = document.getElementById('paper');
-  data.lines.forEach(txt=>{
-    const div = document.createElement('div');
-    div.className = 'line';
-    div.textContent = txt;
-    paperEl.appendChild(div);
-  });
-  document.getElementById('addr').innerHTML =
-    '<p>To: '   + (data.to   || 'Someone') + '</p>' +
-    '<p>From: ' + (data.from || 'Me')      + '</p>';
-
-  /* -------- envelope animation -------- */
-  const env      = document.getElementById('env');
-  let   flipped  = false;
-  const vh       = window.innerHeight;
-  const maskH    = env.clientHeight * 0.6;
-  const fullH    = paperEl.scrollHeight;
-  const extra    = 50;
-  const totalH   = maskH + fullH + extra;
-  paperEl.style.height = '0px';
-
-  window.addEventListener('scroll',()=>{
-    const y       = window.scrollY;
-    const unroll  = 7.5 * vh;
-    const pause   = 0.5 * vh;
-    const retract = 7.5 * vh;
-
-    if(y > 10) env.classList.add('open');
-
-    if(y <= unroll){
-      paperEl.style.height = (totalH * (y / unroll)) + 'px';
-    }else if(y <= unroll + pause){
-      paperEl.style.height = totalH + 'px';
-    }else if(y <= unroll + pause + retract){
-      const r = (y - unroll - pause) / retract;
-      paperEl.style.height = (totalH * (1 - r)) + 'px';
+  /* --- animation --- */
+  const env=document.getElementById('env');let flipped=false;
+  const vh=innerHeight,maskH=env.clientHeight*0.6,fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
+  paper.style.height='0px';
+  addEventListener('scroll',()=>{
+    const y=scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
+    if(y>10)env.classList.add('open');
+    if(y<=unroll)paper.style.height=totalH*(y/unroll)+'px';
+    else if(y<=unroll+pause)paper.style.height=totalH+'px';
+    else if(y<=unroll+pause+retract){
+      const r=(y-unroll-pause)/retract;paper.style.height=totalH*(1-r)+'px';
     }else if(!flipped){
-      flipped = true;
-      env.classList.remove('open');
-      setTimeout(()=>{
-        env.classList.add('flip');
-        setInterval(()=>{
-          for(let i=0;i<8;i++){
-            const c = document.createElement('div');
-            c.className = 'confetti';
-            c.style.left = (Math.random()*100) + 'vw';
-            c.style.backgroundColor =
-              'hsl(' + (Math.random()*360) + ',100%,60%)';
-            c.style.animationDelay = (Math.random()*0.8) + 's';
-            document.body.appendChild(c);
-          }
-        },800);
-      },600);
+      flipped=true;env.classList.remove('open');
+      setTimeout(()=>{env.classList.add('flip');setInterval(()=>{for(let i=0;i<8;i++){const c=document.createElement('div');c.className='confetti';c.style.left=Math.random()*100+'vw';c.style.backgroundColor='hsl('+(Math.random()*360)+',100%,60%)';c.style.animationDelay=Math.random()*0.8+'s';document.body.appendChild(c);}},800);},600);
     }
   });
-
-  /* ensure a tiny scroll to kick things off on mobile */
-  setTimeout(()=>window.scrollTo(0,1),50);
+  setTimeout(()=>scrollTo(0,1),50);
 })();
 </script>
 </body>
