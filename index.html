@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Seafoam E‑Card — Interactive Demos</title>
+  <title>Seafoam E‑Card — Guided Demos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* ===== base ===== */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif}
-    body{background:#f0f4f4;min-height:100vh;display:flex;flex-direction:column;color:#333}
+    body{background:#f0f4f4;color:#333;display:flex;flex-direction:column;min-height:100vh}
 
     /* ===== header ===== */
     header{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;background:#A8E6CF;border-bottom:2px solid #82C9A1}
@@ -16,161 +16,182 @@
     .pill{background:#60A085;color:#fff;padding:.6rem 1.6rem;border:none;border-radius:9999px;font-weight:600;cursor:pointer;text-decoration:none;transition:.2s}
     .pill:hover{filter:brightness(1.1)}
 
-    /* ===== main layout ===== */
-    main{flex:1;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:2.5rem}
-    .demos{display:grid;gap:2rem;width:100%;max-width:1100px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-    .demo{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center}
-    .demo h3{margin-bottom:.75rem;font-size:1.1rem;font-weight:600;color:#155f46}
-    .demo iframe{width:100%;aspect-ratio:16/10;border:2px solid #ccc;border-radius:12px;overflow:hidden}
+    /* ===== demos layout ===== */
+    main{flex:1;display:flex;flex-direction:column;gap:3rem;padding:2rem 0}
+    .demo{width:100%;max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+    .demo h3{margin-bottom:1rem;font-size:1.1rem;font-weight:600;color:#155f46}
+    .demo iframe{width:100%;aspect-ratio:16/9;border:2px solid #ccc;border-radius:12px}
 
-    /* visual spark for copy */
-    .spark{position:absolute;width:8px;height:8px;background:#ffcc00;border-radius:50%;pointer-events:none;animation:spark 1s forwards}
-    @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.6);opacity:1}100%{transform:scale(0);opacity:0}}
+    /* pointer */
+    #pointer{
+      position:fixed;left:0;top:0;width:26px;height:26px;border-radius:50%;
+      background:#2a8c60;box-shadow:0 0 0 2px #fff,0 0 6px rgba(0,0,0,.25);
+      transform:translate(-50%,-50%);transition:left .7s ease,top .7s ease,transform .15s ease;
+      z-index:10000;pointer-events:none
+    }
+    .clickAnim{transform:translate(-50%,-50%) scale(.5)}
   </style>
 </head>
 <body>
 
-  <!-- ==================== HEADER ==================== -->
+  <!-- ===== header ===== -->
   <header>
     <h1>Seafoam E‑Card</h1>
-    <a href="builder.html" class="pill">Create E‑Card</a>
+    <a class="pill" href="builder.html">Create E‑Card</a>
   </header>
 
-  <!-- ==================== DEMOS ==================== -->
+  <!-- ===== demos ===== -->
   <main>
-    <section class="demos">
+    <section class="demo" id="demoBuild">
+      <h3>1 · Build</h3>
+      <iframe id="frameBuild" src="builder.html"></iframe>
+    </section>
 
-      <!-- BUILD -->
-      <div class="demo">
-        <h3>1 · Build</h3>
-        <iframe id="frameBuild" src="builder.html"></iframe>
-      </div>
+    <section class="demo" id="demoPreview">
+      <h3>2 · Preview</h3>
+      <iframe id="framePreview"></iframe>
+    </section>
 
-      <!-- PREVIEW -->
-      <div class="demo">
-        <h3>2 · Preview</h3>
-        <iframe id="framePreview" title="Preview demo"></iframe>
-      </div>
-
-      <!-- SHARE -->
-      <div class="demo" style="position:relative">
-        <h3>3 · Share</h3>
-        <iframe id="frameShare" src="builder.html"></iframe>
-      </div>
-
+    <section class="demo" id="demoShare" style="position:relative">
+      <h3>3 · Share</h3>
+      <iframe id="frameShare" src="builder.html"></iframe>
     </section>
   </main>
 
-  <!-- ==================== SCRIPT ==================== -->
+  <!-- floating pointer -->
+  <div id="pointer"></div>
+
+  <!-- ===== script ===== -->
   <script>
-  /* helpers */
+  /* ---------- helpers ---------- */
   const delay = ms => new Promise(r=>setTimeout(r,ms));
+  const pointer = document.getElementById('pointer');
 
-  /* -------------------------------------------------- */
-  /*  DEMO 1  :  run the Builder and capture its link   */
-  /* -------------------------------------------------- */
-  const cardData = {
-    to   : 'Sam',
-    from : 'Kim',
-    lines: ['You rock!', 'Enjoy your day', 'Dream big', '— The Team —'],
-    colors:{body:'#A8E6CF',flap:'#76C69C',paper:'#fff8e7',bg:'#f0f0f0'},
-    sticker:'https://picsum.photos/120'       // small hosted image
-  };
-
-  const buildLoop = async (frame, withCopy)=>{            /* withCopy = false for demo1, true for demo3 */
-    const win  = frame.contentWindow;
-    const doc  = win.document;
-
-    /* wait until inner page finished loading */
-    if(!doc.getElementById('toField')){ await delay(200); return buildLoop(frame,withCopy); }
-
-    /* 1. clear & type lines */
-    const linesUl = doc.getElementById('lines');
-    [...linesUl.querySelectorAll('li')].forEach(li=>li.remove());  // start fresh
-    const addLineBtn = doc.getElementById('addLine');
-    for(const text of cardData.lines){
-      addLineBtn.click();                     // adds LI with input
-      const inp = linesUl.lastElementChild.querySelector('input');
-      inp.value = text;
-      inp.dispatchEvent(new Event('input',{bubbles:true}));
-      await delay(250);
+  /* move pointer to center of element (even inside nested iframes) */
+  function getGlobalRect(el){
+    let r = el.getBoundingClientRect();
+    let win = el.ownerDocument.defaultView;
+    while (win && win !== window){
+      const iframe = win.frameElement;
+      if(!iframe) break;
+      const ir = iframe.getBoundingClientRect();
+      r = {left:r.left+ir.left, top:r.top+ir.top, width:r.width, height:r.height};
+      win = iframe.ownerDocument.defaultView;
     }
-
-    /* 2. fill TO / FROM */
-    const toF   = doc.getElementById('toField');
-    const fromF = doc.getElementById('fromField');
-    toF.value   = cardData.to;   toF.dispatchEvent(new Event('input',{bubbles:true}));
-    fromF.value = cardData.from; fromF.dispatchEvent(new Event('input',{bubbles:true}));
-
-    /* 3. paste sticker URL */
-    const urlF  = doc.getElementById('stickerUrl');
-    urlF.value  = cardData.sticker;
-    urlF.dispatchEvent(new Event('input',{bubbles:true}));
-    await delay(300);
-
-    /* 4. press Generate */
-    doc.getElementById('generate').click();
-    await delay(500);
-
-    /* 5. retrieve link */
-    const link = doc.getElementById('shareLink').textContent.trim();
-
-    /* optional copy highlight */
-    if(withCopy){
-      const copyBtn = doc.getElementById('copyBtn');
-      copyBtn.click();
-      copyHighlight(frame);                 // spark + flash in host page
-    }
-
-    return link;
-  };
-
-  function copyHighlight(containerFrame){
-    /* Spark effect inside main page (not inside iframe) */
-    const rect = containerFrame.getBoundingClientRect();
-    const spark = document.createElement('div');
-    spark.className='spark';
-    spark.style.left = rect.left + rect.width*0.8 + 'px';
-    spark.style.top  = rect.top  + rect.height*0.15 + 'px';
-    document.body.appendChild(spark);
-    setTimeout(()=>spark.remove(),1000);
+    return r;
+  }
+  async function movePointerTo(el, extraDelay = 0){
+    const r = getGlobalRect(el);
+    pointer.style.left = (r.left + r.width/2) + 'px';
+    pointer.style.top  = (r.top  + r.height/2) + 'px';
+    await delay(700 + extraDelay);
+  }
+  async function clickPointer(el, skipSynth=false){
+    pointer.classList.add('clickAnim');
+    if(!skipSynth) el.click();
+    await delay(150);
+    pointer.classList.remove('clickAnim');
   }
 
-  /* run the first builder demo once the iframe is ready */
-  (async ()=>{
-    const link = await buildLoop(document.getElementById('frameBuild'),false);
+  /* ---------- demo content -------- */
+  const sample = {
+    to:'Sam', from:'Kim',
+    lines:['You rock!','Enjoy your day','Dream big','— The Team —'],
+    sticker:'https://picsum.photos/120'
+  };
 
-    /* -------------------------------------------------- */
-    /*  DEMO 2 : show the card & auto‑scroll continuously */
-    /* -------------------------------------------------- */
-    const prevFrame = document.getElementById('framePreview');
-    prevFrame.src = link;
+  /* ===== DEMO 1 : build ===== */
+  async function runBuildDemo(frame){
+    const w = frame.contentWindow, d = w.document;
+    if(!d.getElementById('toField')) { await delay(200); return runBuildDemo(frame);} // wait load
 
-    prevFrame.onload = async ()=>{
-      const pWin = prevFrame.contentWindow;
-      for(;;){
-        pWin.scrollTo({top:0,behavior:'instant'});
-        await delay(100);
-        /* smooth scroll down to trigger open/unroll */
-        pWin.scrollTo({top:pWin.document.body.scrollHeight,behavior:'smooth'});
-        await delay(6500);                  // wait for envelope cycle
-      }
-    };
+    /* helper: add line & type */
+    const addBtn = d.getElementById('addLine');
+    const ul     = d.getElementById('lines');
 
-    /* -------------------------------------------------- */
-    /*  DEMO 3 : rebuild & click Copy every 6 s           */
-    /* -------------------------------------------------- */
-    const shareFrame = document.getElementById('frameShare');
-    shareFrame.onload = async()=>{
-      for(;;){
-        await buildLoop(shareFrame,true);
-        await delay(6000);
-        shareFrame.contentWindow.location.reload();
-        await delay(500);
-      }
-    };
+    // clear default lines
+    [...ul.children].forEach(li=>li.remove());
+
+    for(const text of sample.lines){
+      await movePointerTo(addBtn);
+      await clickPointer(addBtn);
+      const inp = ul.lastElementChild.querySelector('input');
+      await movePointerTo(inp);
+      inp.value = text;
+      inp.dispatchEvent(new Event('input',{bubbles:true}));
+      await clickPointer(inp,true);
+    }
+
+    /* To / From */
+    const toF=d.getElementById('toField'),fromF=d.getElementById('fromField');
+    await movePointerTo(toF); toF.value=sample.to; toF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(toF,true);
+    await movePointerTo(fromF); fromF.value=sample.from; fromF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(fromF,true);
+
+    /* Sticker URL */
+    const urlF=d.getElementById('stickerUrl');
+    await movePointerTo(urlF); urlF.value=sample.sticker; urlF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(urlF,true);
+
+    /* Generate */
+    const gen=d.getElementById('generate');
+    await movePointerTo(gen,200);
+    await clickPointer(gen);
+
+    await delay(400);
+    return d.getElementById('shareLink').textContent.trim();
+  }
+
+  /* ===== DEMO 2 : preview scroll loop ===== */
+  async function runPreviewLoop(frame){
+    const w = frame.contentWindow, body = w.document.body;
+    for(;;){
+      w.scrollTo({top:0,behavior:'instant'});
+      await delay(300);
+      await movePointerTo(frame,0); // pointer to iframe
+      w.scrollTo({top:body.scrollHeight,behavior:'smooth'});
+      await delay(7500);
+    }
+  }
+
+  /* ===== DEMO 3 : build + copy ===== */
+  async function runShareDemo(frame){
+    const link = await runBuildDemo(frame);      // reuse builder steps
+    const d = frame.contentWindow.document;
+    const copyBtn = d.getElementById('copyBtn');
+    await movePointerTo(copyBtn,150);
+    await clickPointer(copyBtn);
+
+    // flash & spark in outer page
+    const outerRect = getGlobalRect(frame);
+    const spark = document.createElement('div');
+    spark.className='spark';
+    spark.style.left = (outerRect.left + outerRect.width*0.8) + 'px';
+    spark.style.top  = (outerRect.top  + outerRect.height*0.2) + 'px';
+    document.body.appendChild(spark);
+    setTimeout(()=>spark.remove(),1000);
+
+    return link;
+  }
+
+  (async()=>{
+    const frameBuild   = document.getElementById('frameBuild');
+    const framePreview = document.getElementById('framePreview');
+    const frameShare   = document.getElementById('frameShare');
+
+    /* BUILD once, then loop */
+    let link = await runBuildDemo(frameBuild);
+
+    /* PREVIEW */
+    framePreview.src = link;
+    framePreview.onload = ()=>runPreviewLoop(framePreview);
+
+    /* SHARE loop (rebuild every 9 s) */
+    while(true){
+      link = await runShareDemo(frameShare);
+      await delay(9000);
+      frameShare.contentWindow.location.reload();
+      await delay(800);
+    }
   })();
   </script>
-
 </body>
 </html>
