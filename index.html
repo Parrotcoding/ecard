@@ -14,7 +14,6 @@
     header h1{font-size:1.5rem;font-weight:700;color:#155f46}
     .pill{background:#60A085;color:#fff;padding:.6rem 1.6rem;border:none;border-radius:9999px;font-weight:600;text-decoration:none}
 
-    /* demos */
     main{flex:1;display:flex;flex-direction:column;gap:4rem;padding:2.5rem 0}
     .demo{width:100%;max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center}
     .demo h3{margin-bottom:1rem;font-size:1.1rem;font-weight:600;color:#155f46}
@@ -22,17 +21,22 @@
 
     /* fake browser */
     .browser{width:100%;aspect-ratio:16/9;border:2px solid #ccc;border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
-    .bar{position:relative;height:38px;background:#eaeaea;display:flex;align-items:center;padding:0 .8rem;border-bottom:2px solid #ccc}
+    .bar{position:relative;height:38px;background:#eaeaea;display:flex;align-items:center;padding:0 .8rem;font-size:.85rem;border-bottom:2px solid #ccc}
     .bar::before{content:'';width:10px;height:10px;border-radius:50%;background:#ff5f56;margin-right:.5rem}
-    #urlFill{position:absolute;left:0;top:0;height:100%;width:0;background:#cfcfcf}
+    #urlFill{position:absolute;left:0;top:0;height:100%;width:0;background:#d7d7d7;pointer-events:none}
+    #urlTxt{position:relative;white-space:nowrap;overflow:hidden}
 
     /* pointer */
     #cur{position:fixed;left:0;top:0;width:26px;height:26px;border-radius:50%;background:#2a8c60;box-shadow:0 0 0 2px #fff,0 0 6px rgba(0,0,0,.25);transform:translate(-50%,-50%);transition:left .7s ease,top .7s ease,transform .13s ease;z-index:10000;pointer-events:none}
     .click{transform:translate(-50%,-50%) scale(.5)}
 
-    /* spark */
     .spark{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffcc00;animation:spark 1s forwards}
     @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.6);opacity:1}100%{transform:scale(0);opacity:0}}
+
+    /* replay overlay */
+    #replayCover{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;justify-content:center;align-items:center;color:#fff;font-size:1.4rem;font-weight:600;gap:.6rem;opacity:0;pointer-events:none;transition:opacity .5s}
+    #replayCover.show{opacity:1;pointer-events:auto;cursor:pointer}
+    #replayIcon{width:22px;height:22px;border:3px solid #fff;border-radius:50%;border-left-color:transparent;transform:rotate(45deg)}
   </style>
 </head>
 <body>
@@ -43,90 +47,107 @@
 </header>
 
 <main>
-  <!-- STEP 1 – BUILD -->
   <section class="demo" id="demoBuild">
     <h3>1 · Build</h3>
     <iframe id="frameBuild" src="builder.html"></iframe>
   </section>
 
-  <!-- STEP 2 – SHARE / VIEW -->
   <section class="demo" id="demoShare">
     <h3>2 · Share & View</h3>
     <div class="browser">
-      <div class="bar"><div id="urlFill"></div></div>
+      <div class="bar">
+        <div id="urlFill"></div>
+        <span id="urlTxt"></span>
+      </div>
       <iframe class="pageFrame" id="frameView"></iframe>
     </div>
   </section>
 </main>
 
 <div id="cur"></div>
+<div id="replayCover"><div id="replayIcon"></div>Replay</div>
 
 <script>
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const cur=document.getElementById('cur');
 
-/* utilities */
-function rectGlobal(el){
-  let r=el.getBoundingClientRect(),win=el.ownerDocument.defaultView;
-  while(win&&win!==window){const f=win.frameElement;if(!f)break;const fr=f.getBoundingClientRect();r={left:r.left+fr.left,top:r.top+fr.top,width:r.width,height:r.height};win=f.ownerDocument.defaultView;}
+/* helpers */
+function gRect(el){
+  let r=el.getBoundingClientRect(),w=el.ownerDocument.defaultView;
+  while(w&&w!==window){const f=w.frameElement;if(!f)break;const fr=f.getBoundingClientRect();r={left:r.left+fr.left,top:r.top+fr.top,width:r.width,height:r.height};w=f.ownerDocument.defaultView;}
   return r;
 }
-async function moveCur(el,extra=0){
-  el.scrollIntoView({block:'center',behavior:'smooth'});
-  await delay(800);
-  const r=rectGlobal(el);cur.style.left=r.left+r.width/2+'px';cur.style.top=r.top+r.height/2+'px';
+async function move(el,extra=0){
+  el.scrollIntoView({block:'center',behavior:'smooth'});await delay(800);
+  const r=gRect(el);cur.style.left=r.left+r.width/2+'px';cur.style.top=r.top+r.height/2+'px';
   await delay(700+extra);
 }
-async function click(el){cur.classList.add('click');if(el)el.click();await delay(130);cur.classList.remove('click');}
+async function click(el){cur.classList.add('click');el&&el.click();await delay(130);cur.classList.remove('click');}
 
+/* build sample card */
 const sample={to:'Sam',from:'Kim',lines:['You rock!','Enjoy your day','Dream big','— The Team —'],sticker:'https://picsum.photos/120'};
 
-/* STEP 1 */
-async function build(frame){
+async function buildCard(frame){
   const d=frame.contentWindow.document;
-  if(!d.getElementById('toField')){await delay(200);return build(frame);}
+  if(!d.getElementById('toField')){await delay(200);return buildCard(frame);}
   const add=d.getElementById('addLine'),ul=d.getElementById('lines');
-  [...ul.children].forEach(li=>li.remove());
+  ul.innerHTML='';
   for(const t of sample.lines){
-    await moveCur(add);await click(add);
+    await move(add);await click(add);
     const inp=ul.lastElementChild.querySelector('input');
-    await moveCur(inp);inp.value=t;inp.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
+    await move(inp);inp.value=t;inp.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
   }
   const toF=d.getElementById('toField'),fromF=d.getElementById('fromField');
-  await moveCur(toF);toF.value=sample.to;toF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
-  await moveCur(fromF);fromF.value=sample.from;fromF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
+  await move(toF);toF.value=sample.to;toF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
+  await move(fromF);fromF.value=sample.from;fromF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
   const urlF=d.getElementById('stickerUrl');
-  await moveCur(urlF);urlF.value=sample.sticker;urlF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
+  await move(urlF);urlF.value=sample.sticker;urlF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
   const gen=d.getElementById('generate');
-  await moveCur(gen,200);await click(gen);await delay(400);
-  /* copy spark */
-  const spark=document.createElement('div');spark.className='spark';
-  const fr=rectGlobal(frame);spark.style.left=fr.left+fr.width*0.8+'px';spark.style.top=fr.top+fr.height*0.2+'px';
-  document.body.appendChild(spark);setTimeout(()=>spark.remove(),1000);
+  await move(gen,200);await click(gen);await delay(450);
+  /* spark */
+  const sp=document.createElement('div');sp.className='spark';
+  const fr=gRect(frame);sp.style.left=fr.left+fr.width*0.8+'px';sp.style.top=fr.top+fr.height*0.2+'px';document.body.appendChild(sp);setTimeout(()=>sp.remove(),1000);
   return d.getElementById('shareLink').textContent.trim();
 }
 
-/* STEP 2 */
-async function show(link){
-  const urlFill=document.getElementById('urlFill');
-  urlFill.style.width='0%';
-  await moveCur(document.querySelector('.bar'));await click(null);
-  for(let i=1;i<=100;i+=2){urlFill.style.width=i+'%';await delay(25);}
+/* share & view */
+async function shareCard(link){
+  const fill=document.getElementById('urlFill'),txt=document.getElementById('urlTxt');
+  fill.style.width='0%';txt.textContent='';
+  const bar=fill.parentElement;
+  await move(bar);await click(null);
+  for(let i=1;i<=link.length;i++){
+    txt.textContent=link.slice(0,i);
+    fill.style.width=(i/link.length*100)+'%';
+    await delay(35);
+  }
   await click(null);
   const view=document.getElementById('frameView');
-  view.src=link;await delay(700);
+  view.src=link;await delay(800);
   const w=view.contentWindow,body=w.document.body;
-  for(;;){
-    await moveCur(view);
-    w.scrollTo({top:0,behavior:'instant'});await delay(300);
-    w.scrollTo({top:body.scrollHeight,behavior:'smooth'});await delay(7400);
-  }
+  await move(view);                    // cursor to frame
+  w.scrollTo({top:0,behavior:'instant'});
+  await delay(400);
+  w.scrollTo({top:body.scrollHeight,behavior:'smooth'});
+  await delay(7600);                   // allow envelope cycle
+
+  /* end – show replay */
+  cur.style.opacity=0;
+  window.scrollTo({top:0,behavior:'smooth'});
+  await delay(800);
+  document.getElementById('replayCover').classList.add('show');
 }
 
-(async()=>{
-  const link=await build(document.getElementById('frameBuild'));
-  await show(link);
+/* run once then overlay */
+(async function run(){
+  const link=await buildCard(document.getElementById('frameBuild'));
+  await shareCard(link);
 })();
+
+/* replay handler */
+document.getElementById('replayCover').onclick=()=>{
+  location.reload();
+};
 </script>
 </body>
 </html>
