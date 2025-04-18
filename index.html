@@ -8,6 +8,7 @@
   <style>
     /* ===== base ===== */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif}
+    html{scroll-behavior:smooth}
     body{background:#f0f4f4;color:#333;display:flex;flex-direction:column;min-height:100vh}
 
     /* ===== header ===== */
@@ -17,7 +18,7 @@
     .pill:hover{filter:brightness(1.1)}
 
     /* ===== demos layout ===== */
-    main{flex:1;display:flex;flex-direction:column;gap:3rem;padding:2rem 0}
+    main{flex:1;display:flex;flex-direction:column;gap:4rem;padding:2rem 0}
     .demo{width:100%;max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
     .demo h3{margin-bottom:1rem;font-size:1.1rem;font-weight:600;color:#155f46}
     .demo iframe{width:100%;aspect-ratio:16/9;border:2px solid #ccc;border-radius:12px}
@@ -30,6 +31,10 @@
       z-index:10000;pointer-events:none
     }
     .clickAnim{transform:translate(-50%,-50%) scale(.5)}
+
+    /* spark for copy */
+    .spark{position:absolute;width:8px;height:8px;background:#ffcc00;border-radius:50%;pointer-events:none;animation:spark 1s forwards}
+    @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.6);opacity:1}100%{transform:scale(0);opacity:0}}
   </style>
 </head>
 <body>
@@ -49,10 +54,10 @@
 
     <section class="demo" id="demoPreview">
       <h3>2 · Preview</h3>
-      <iframe id="framePreview"></iframe>
+      <iframe id="framePreview" title="Preview demo"></iframe>
     </section>
 
-    <section class="demo" id="demoShare" style="position:relative">
+    <section class="demo" id="demoShare">
       <h3>3 · Share</h3>
       <iframe id="frameShare" src="builder.html"></iframe>
     </section>
@@ -63,132 +68,132 @@
 
   <!-- ===== script ===== -->
   <script>
-  /* ---------- helpers ---------- */
   const delay = ms => new Promise(r=>setTimeout(r,ms));
   const pointer = document.getElementById('pointer');
 
-  /* move pointer to center of element (even inside nested iframes) */
-  function getGlobalRect(el){
-    let r = el.getBoundingClientRect();
-    let win = el.ownerDocument.defaultView;
+  /* centre‑of‑element coords converted to page space */
+  function globalRect(el){
+    let r = el.getBoundingClientRect(), win = el.ownerDocument.defaultView;
     while (win && win !== window){
-      const iframe = win.frameElement;
-      if(!iframe) break;
-      const ir = iframe.getBoundingClientRect();
+      const ifr = win.frameElement; if(!ifr) break;
+      const ir = ifr.getBoundingClientRect();
       r = {left:r.left+ir.left, top:r.top+ir.top, width:r.width, height:r.height};
-      win = iframe.ownerDocument.defaultView;
+      win = ifr.ownerDocument.defaultView;
     }
     return r;
   }
-  async function movePointerTo(el, extraDelay = 0){
-    const r = getGlobalRect(el);
+
+  async function scrollPageTo(el){
+    el.scrollIntoView({block:'center',behavior:'smooth'});
+    await delay(800);
+  }
+
+  async function movePointer(el, extra = 0){
+    const r = globalRect(el);
     pointer.style.left = (r.left + r.width/2) + 'px';
     pointer.style.top  = (r.top  + r.height/2) + 'px';
-    await delay(700 + extraDelay);
+    await delay(700 + extra);
   }
-  async function clickPointer(el, skipSynth=false){
+
+  async function clickPointer(el, synth = true){
     pointer.classList.add('clickAnim');
-    if(!skipSynth) el.click();
+    if(synth) el.click();
     await delay(150);
     pointer.classList.remove('clickAnim');
   }
 
-  /* ---------- demo content -------- */
+  /* sample card content */
   const sample = {
     to:'Sam', from:'Kim',
-    lines:['You rock!','Enjoy your day','Dream big','— The Team —'],
+    lines:['You rock!','Enjoy your day','Dream big','— The Team —'],
     sticker:'https://picsum.photos/120'
   };
 
-  /* ===== DEMO 1 : build ===== */
-  async function runBuildDemo(frame){
-    const w = frame.contentWindow, d = w.document;
-    if(!d.getElementById('toField')) { await delay(200); return runBuildDemo(frame);} // wait load
+  /* ---------- build demo ---------- */
+  async function runBuilder(frame){
+    await scrollPageTo(document.getElementById('demoBuild'));
 
-    /* helper: add line & type */
+    const w = frame.contentWindow, d = w.document;
+    if(!d.getElementById('toField')){await delay(200);return runBuilder(frame);}
+
     const addBtn = d.getElementById('addLine');
     const ul     = d.getElementById('lines');
-
-    // clear default lines
     [...ul.children].forEach(li=>li.remove());
 
-    for(const text of sample.lines){
-      await movePointerTo(addBtn);
+    for(const txt of sample.lines){
+      await movePointer(addBtn);
       await clickPointer(addBtn);
       const inp = ul.lastElementChild.querySelector('input');
-      await movePointerTo(inp);
-      inp.value = text;
-      inp.dispatchEvent(new Event('input',{bubbles:true}));
-      await clickPointer(inp,true);
+      await movePointer(inp);
+      inp.value = txt; inp.dispatchEvent(new Event('input',{bubbles:true}));
+      await clickPointer(inp,false);
     }
 
-    /* To / From */
     const toF=d.getElementById('toField'),fromF=d.getElementById('fromField');
-    await movePointerTo(toF); toF.value=sample.to; toF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(toF,true);
-    await movePointerTo(fromF); fromF.value=sample.from; fromF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(fromF,true);
+    await movePointer(toF); toF.value=sample.to; toF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(toF,false);
+    await movePointer(fromF); fromF.value=sample.from; fromF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(fromF,false);
 
-    /* Sticker URL */
     const urlF=d.getElementById('stickerUrl');
-    await movePointerTo(urlF); urlF.value=sample.sticker; urlF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(urlF,true);
+    await movePointer(urlF); urlF.value=sample.sticker; urlF.dispatchEvent(new Event('input',{bubbles:true})); await clickPointer(urlF,false);
 
-    /* Generate */
     const gen=d.getElementById('generate');
-    await movePointerTo(gen,200);
+    await movePointer(gen,200);
     await clickPointer(gen);
-
     await delay(400);
+
     return d.getElementById('shareLink').textContent.trim();
   }
 
-  /* ===== DEMO 2 : preview scroll loop ===== */
-  async function runPreviewLoop(frame){
-    const w = frame.contentWindow, body = w.document.body;
+  /* ---------- preview demo ---------- */
+  async function runPreview(frame){
+    await scrollPageTo(document.getElementById('demoPreview'));
+    const win = frame.contentWindow, body = win.document.body;
     for(;;){
-      w.scrollTo({top:0,behavior:'instant'});
-      await delay(300);
-      await movePointerTo(frame,0); // pointer to iframe
-      w.scrollTo({top:body.scrollHeight,behavior:'smooth'});
+      win.scrollTo({top:0,behavior:'instant'});
+      await delay(200);
+      await movePointer(frame);
+      win.scrollTo({top:body.scrollHeight,behavior:'smooth'});
       await delay(7500);
     }
   }
 
-  /* ===== DEMO 3 : build + copy ===== */
-  async function runShareDemo(frame){
-    const link = await runBuildDemo(frame);      // reuse builder steps
+  /* ---------- share demo ---------- */
+  async function runShare(frame){
+    await scrollPageTo(document.getElementById('demoShare'));
+    const link = await runBuilder(frame);        // reuse builder steps
     const d = frame.contentWindow.document;
     const copyBtn = d.getElementById('copyBtn');
-    await movePointerTo(copyBtn,150);
+    await movePointer(copyBtn,150);
     await clickPointer(copyBtn);
 
-    // flash & spark in outer page
-    const outerRect = getGlobalRect(frame);
-    const spark = document.createElement('div');
-    spark.className='spark';
-    spark.style.left = (outerRect.left + outerRect.width*0.8) + 'px';
-    spark.style.top  = (outerRect.top  + outerRect.height*0.2) + 'px';
-    document.body.appendChild(spark);
-    setTimeout(()=>spark.remove(),1000);
+    // spark effect (in main page)
+    const rect = globalRect(frame);
+    const s=document.createElement('div');s.className='spark';
+    s.style.left=(rect.left+rect.width*0.8)+'px';
+    s.style.top =(rect.top +rect.height*0.2)+'px';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),1000);
 
     return link;
   }
 
   (async()=>{
-    const frameBuild   = document.getElementById('frameBuild');
-    const framePreview = document.getElementById('framePreview');
-    const frameShare   = document.getElementById('frameShare');
+    const fBuild   = document.getElementById('frameBuild');
+    const fPreview = document.getElementById('framePreview');
+    const fShare   = document.getElementById('frameShare');
 
-    /* BUILD once, then loop */
-    let link = await runBuildDemo(frameBuild);
+    /* build once, then preview loops */
+    const link = await runBuilder(fBuild);
 
-    /* PREVIEW */
-    framePreview.src = link;
-    framePreview.onload = ()=>runPreviewLoop(framePreview);
+    /* preview loop */
+    fPreview.src = link;
+    fPreview.onload = ()=>runPreview(fPreview);
 
-    /* SHARE loop (rebuild every 9 s) */
-    while(true){
-      link = await runShareDemo(frameShare);
+    /* share demo loops every 9 s */
+    for(;;){
+      await runShare(fShare);
       await delay(9000);
-      frameShare.contentWindow.location.reload();
+      fShare.contentWindow.location.reload();
       await delay(800);
     }
   })();
