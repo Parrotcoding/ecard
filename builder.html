@@ -26,8 +26,8 @@
     textarea{resize:vertical;height:90px;border-radius:1rem}
 
     input[type="color"]{
-      border:none;width:2.75rem;height:2.75rem;
-      border-radius:50%;cursor:pointer;padding:0;appearance:none
+      border:none;width:2.75rem;height:2.75rem;border-radius:50%;
+      cursor:pointer;padding:0;appearance:none
     }
 
     #lines li{display:flex;gap:.5rem;margin:.35rem 0}
@@ -40,22 +40,18 @@
     }
     button:hover{filter:brightness(1.1)}
 
-    .addLineBtn{
-      background:#76C69C;font-size:.85rem;padding:.35rem 1rem
-    }
+    .addLineBtn{background:#76C69C;font-size:.85rem;padding:.35rem 1rem}
 
-    #previewWrap{
-      border:1px dashed #bbb;border-radius:8px;padding:1rem
-    }
+    #previewWrap{border:1px dashed #bbb;border-radius:8px;padding:1rem}
 
     #linkWrap{display:none;flex-direction:column;gap:.25rem;margin-top:.5rem}
-    #copyBtn{
-      align-self:flex-start;background:#82C9A1;font-size:.85rem;padding:.4rem 1rem
-    }
+    #copyBtn{align-self:flex-start;background:#82C9A1;font-size:.85rem;padding:.4rem 1rem}
     #shareLink{
       word-break:break-all;padding:.7rem 1rem;
       background:#fff;border:1px solid #ccc;border-radius:1rem;font-size:.9rem
     }
+
+    .note{font-size:.75rem;color:#666;margin-top:.25rem}
   </style>
 </head>
 <body>
@@ -63,8 +59,12 @@
 <h1>Create Your Seafoam Envelope E‑Card</h1>
 
 <form id="cardForm">
-  <label>Square sticker (PNG/JPG/GIF)
+  <label>Square sticker (PNG/JPG/GIF, ≤ 100 kB)
     <input type="file" id="stickerInput" accept="image/*">
+  </label>
+  <span class="note">— or —</span>
+  <label>Image URL (https://…)
+    <input type="text" id="stickerUrl" placeholder="https://example.com/sticker.png">
   </label>
 
   <label>Message lines
@@ -87,7 +87,6 @@
 
   <button type="button" id="generate">Generate Link</button>
 
-  <!-- link & copy appear here -->
   <div id="linkWrap">
     <button type="button" id="copyBtn">Copy</button>
     <div id="shareLink"></div>
@@ -99,78 +98,94 @@
 </div>
 
 <script>
-/* ---------- DOM refs ---------- */
+/* ===== constants ===== */
+const MAX_INLINE = 100 * 1024;          // 100 kB
+
+/* ===== dom refs ===== */
 const addLineBtn  = document.getElementById('addLine');
 const linesUl     = document.getElementById('lines');
+const stickerFile = document.getElementById('stickerInput');
+const stickerURL  = document.getElementById('stickerUrl');
 const generateBtn = document.getElementById('generate');
 const linkWrap    = document.getElementById('linkWrap');
 const shareBox    = document.getElementById('shareLink');
 const copyBtn     = document.getElementById('copyBtn');
 const previewIF   = document.getElementById('preview');
 
-/* ---------- seed two lines ---------- */
+/* ===== starter lines ===== */
 ['Your first message','A cheerful note'].forEach(addLine);
-
 function addLine(val=''){
-  const li = document.createElement('li');
-  li.innerHTML =
-    '<input type="text" value="'+val+'">'+
-    '<button type="button" class="addLineBtn">✕</button>';
-  li.querySelector('button').onclick = ()=>li.remove();
+  const li=document.createElement('li');
+  li.innerHTML='<input type="text" value="'+val+'"><button type="button" class="addLineBtn">✕</button>';
+  li.querySelector('button').onclick=()=>li.remove();
   linesUl.appendChild(li);
 }
-addLineBtn.onclick = ()=>{ addLine(); refreshPreview(); };
+addLineBtn.onclick=()=>{addLine();refreshPreview();};
 
-/* ---------- sticker upload ---------- */
-let stickerData = '';
-document.getElementById('stickerInput').addEventListener('change',e=>{
+/* ===== sticker handling ===== */
+let inlineStickerData = '';   // base‑64 string (only if ≤ MAX_INLINE)
+
+stickerFile.addEventListener('change',e=>{
+  inlineStickerData='';
   const f=e.target.files[0];
   if(!f) return;
-  const reader=new FileReader();
-  reader.onload = ev => { stickerData = ev.target.result; refreshPreview(); };
-  reader.readAsDataURL(f);
+
+  if(f.size>MAX_INLINE){
+    alert('That file is '+Math.round(f.size/1024)+' kB — please host it online and paste its URL instead.');
+    stickerFile.value='';
+    refreshPreview();
+    return;
+  }
+  const r=new FileReader();
+  r.onload=ev=>{inlineStickerData=ev.target.result;stickerURL.value='';refreshPreview();};
+  r.readAsDataURL(f);
 });
 
-/* ---------- live preview triggers ---------- */
+/* typing a URL clears any uploaded file */
+stickerURL.addEventListener('input',()=>{
+  if(stickerURL.value.trim()) { inlineStickerData=''; stickerFile.value=''; }
+  refreshPreview();
+});
+
+/* ===== live preview triggers ===== */
 ['bodyCol','flapCol','paperCol','bgCol','toField','fromField']
   .forEach(id=>document.getElementById(id).addEventListener('input',refreshPreview));
 linesUl.addEventListener('input',refreshPreview);
 
-/* ---------- collect current data ---------- */
+/* ===== collect current data ===== */
 function collectData(){
+  const remote = stickerURL.value.trim();
   return {
     to:   document.getElementById('toField').value.trim(),
     from: document.getElementById('fromField').value.trim(),
-    lines:[...linesUl.querySelectorAll('input')]
-            .map(i=>i.value.trim()).filter(Boolean),
+    lines:[...linesUl.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean),
     colors:{
       body: document.getElementById('bodyCol').value,
       flap: document.getElementById('flapCol').value,
       paper:document.getElementById('paperCol').value,
       bg:   document.getElementById('bgCol').value
     },
-    sticker: stickerData || ''
+    sticker: remote || inlineStickerData || ''   // remote URL wins, else inline
   };
 }
 
-/* ---------- preview iframe ---------- */
+/* ===== preview iframe ===== */
 function refreshPreview(){
   previewIF.srcdoc = makeViewerHTML(collectData(),true);
 }
 refreshPreview();
 
-/* ---------- shade util ---------- */
+/* ===== shade util ===== */
 function shade(hex,percent){
-  const num=parseInt(hex.slice(1),16),
-        amt=Math.round(2.55*percent),
-        r=(num>>16)+amt,g=(num>>8&255)+amt,b=(num&255)+amt;
+  const n=parseInt(hex.slice(1),16),a=Math.round(2.55*percent),
+        r=(n>>16)+a,g=(n>>8&255)+a,b=(n&255)+a;
   return "#"+(0x1000000+
     (r<255?Math.max(r,0):255)*0x10000+
     (g<255?Math.max(g,0):255)*0x100+
     (b<255?Math.max(b,0):255)).toString(16).slice(1);
 }
 
-/* ---------- viewer CSS shared ---------- */
+/* ===== viewer CSS ===== */
 function viewerCSS(){return`
 *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
 body{background:var(--bg);min-height:1800vh}
@@ -189,86 +204,66 @@ body{background:var(--bg);min-height:1800vh}
 .confetti{position:absolute;top:0;width:8px;height:8px;border-radius:50%;animation:fall 3s ease-out forwards;z-index:7}
 @keyframes fall{to{transform:translateY(100vh);opacity:0}}`;}
 
-/* ---------- viewer JS injected ---------- */
+/* ===== viewer JS injected ===== */
 function viewerJS(preview){return`
 <script>
 window.addEventListener('DOMContentLoaded',()=>{
   const env=document.querySelector('.envelope');
   const paper=env.querySelector('.paper');
   let flipped=false;
-  const vh=window.innerHeight,
-        maskH=env.clientHeight*0.6,
-        fullH=paper.scrollHeight,
-        extra=50,
-        totalH=maskH+fullH+extra;
+  const vh=innerHeight,maskH=env.clientHeight*0.6,fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
   paper.style.height='0px';
-  window.addEventListener('scroll',()=>{
-    const y=window.scrollY,
-          unroll=7.5*vh,
-          pause=0.5*vh,
-          retract=7.5*vh;
+  addEventListener('scroll',()=>{
+    const y=scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
     if(y>10)env.classList.add('open');
-    if(y<=unroll){
-      paper.style.height=(totalH*(y/unroll))+'px';
-    }else if(y<=unroll+pause){
-      paper.style.height=totalH+'px';
-    }else if(y<=unroll+pause+retract){
-      const r=(y-unroll-pause)/retract;
-      paper.style.height=(totalH*(1-r))+'px';
+    if(y<=unroll)paper.style.height=totalH*(y/unroll)+'px';
+    else if(y<=unroll+pause)paper.style.height=totalH+'px';
+    else if(y<=unroll+pause+retract){
+      const r=(y-unroll-pause)/retract;paper.style.height=totalH*(1-r)+'px';
     }else if(!flipped){
       flipped=true;env.classList.remove('open');
-      setTimeout(()=>{
-        env.classList.add('flip');
-        setInterval(()=>{
-          for(let i=0;i<8;i++){
-            const c=document.createElement('div');
-            c.className='confetti';
-            c.style.left=(Math.random()*100)+'vw';
-            c.style.backgroundColor='hsl('+(Math.random()*360)+',100%,60%)';
-            c.style.animationDelay=(Math.random()*0.8)+'s';
-            document.body.appendChild(c);
-          }
-        },800);
-      },600);
+      setTimeout(()=>{env.classList.add('flip');setInterval(()=>{
+        for(let i=0;i<8;i++){const c=document.createElement('div');c.className='confetti';
+          c.style.left=Math.random()*100+'vw';
+          c.style.backgroundColor='hsl('+(Math.random()*360)+',100%,60%)';
+          c.style.animationDelay=Math.random()*0.8+'s';
+          document.body.appendChild(c);}
+      },800);},600);
     }
   });
-  ${preview?'window.scrollTo(0,1);':''}
+  ${preview?'scrollTo(0,1);':''}
 });
 <\/script>`;}
 
-/* ---------- build full viewer doc ---------- */
+/* ===== build viewer doc ===== */
 function makeViewerHTML(d,isPreview){
-  const linesHTML = d.lines.map(l=>'<div class="line">'+l.replace(/</g,'&lt;')+'</div>').join('');
-  return (
-'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'+
-'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">'+
-'<style>:root{--body:'+d.colors.body+';--body-border:'+shade(d.colors.body,-20)+';--flap:'+d.colors.flap+';--flap-border:'+shade(d.colors.flap,-20)+';--paper:'+d.colors.paper+';--bg:'+d.colors.bg+';}'+
-viewerCSS()+'</style></head><body>'+
-'<div class="envelope"><div class="body"></div>'+
-( d.sticker ? '<img class="sticker" src="'+d.sticker+'" alt="Sticker">' : '' )+
-'<div class="mask"></div><div class="flap"></div>'+
-'<div class="paper">'+linesHTML+'</div>'+
-'<div class="address"><p>To: '+(d.to||'Someone')+'</p><p>From: '+(d.from||'Me')+'</p></div>'+
-'</div>'+ viewerJS(isPreview) +'</body></html>'
-  );
+  const lines=d.lines.map(l=>'<div class="line">'+l.replace(/</g,'&lt;')+'</div>').join('');
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'+
+    '<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">'+
+    '<style>:root{--body:'+d.colors.body+';--body-border:'+shade(d.colors.body,-20)+';--flap:'+d.colors.flap+';--flap-border:'+shade(d.colors.flap,-20)+';--paper:'+d.colors.paper+';--bg:'+d.colors.bg+';}'+
+    viewerCSS()+'</style></head><body>'+
+    '<div class="envelope"><div class="body"></div>'+
+    (d.sticker?'<img class="sticker" src="'+d.sticker+'" alt="Sticker">':'')+
+    '<div class="mask"></div><div class="flap"></div>'+
+    '<div class="paper">'+lines+'</div>'+
+    '<div class="address"><p>To: '+(d.to||'Someone')+'</p><p>From: '+(d.from||'Me')+'</p></div>'+
+    '</div>'+viewerJS(isPreview)+'</body></html>';
 }
 
-/* ---------- link generation ---------- */
-generateBtn.onclick = ()=>{
-  const data = collectData();
-  if(!data.lines.length){
-    alert('Please add at least one message line'); return;
-  }
-  const url = location.origin + '/ecard.html?d=' + btoa(encodeURIComponent(JSON.stringify(data)));
-  shareBox.textContent = url;
-  linkWrap.style.display = 'flex';
+/* ===== generate link ===== */
+generateBtn.onclick=()=>{
+  const data=collectData();
+  if(!data.lines.length){alert('Please add at least one message line');return;}
+  const url=location.origin+'/ecard.html?d='+btoa(encodeURIComponent(JSON.stringify(data)));
+  shareBox.textContent=url;
+  linkWrap.style.display='flex';
 };
 
-/* ---------- copy button ---------- */
-copyBtn.onclick = ()=>{
+/* ===== copy to clipboard ===== */
+copyBtn.onclick=()=>{
   navigator.clipboard.writeText(shareBox.textContent)
     .then(()=>copyBtn.textContent='Copied!')
-    .catch(()=>alert('Copy failed – please copy manually.'));
+    .catch(()=>alert('Copy failed — please copy manually.'));
 };
 </script>
 </body>
