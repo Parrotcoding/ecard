@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Seafoam E‑Card — Live Demos</title>
+  <title>Seafoam E‑Card — Interactive Demos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* ===== base ===== */
     *{box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif}
-    body{background:#f0f4f4;min-height:100vh;color:#333;display:flex;flex-direction:column}
+    body{background:#f0f4f4;min-height:100vh;display:flex;flex-direction:column;color:#333}
 
     /* ===== header ===== */
     header{display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;background:#A8E6CF;border-bottom:2px solid #82C9A1}
@@ -19,203 +19,156 @@
     /* ===== main layout ===== */
     main{flex:1;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:2.5rem}
     .demos{display:grid;gap:2rem;width:100%;max-width:1100px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-
-    .demo{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+    .demo{background:#fff;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center}
     .demo h3{margin-bottom:.75rem;font-size:1.1rem;font-weight:600;color:#155f46}
+    .demo iframe{width:100%;aspect-ratio:16/10;border:2px solid #ccc;border-radius:12px;overflow:hidden}
 
-    /* ===== DEMO 1 – builder typing ===== */
-    .builder-screen{width:100%;height:240px;border:2px solid #ccc;border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:.4rem;position:relative;overflow:hidden}
-    .builder-line{height:18px;width:0;background:#e0e0e0;border-radius:4px}
-    .color-pick{width:22px;height:22px;border-radius:50%;position:absolute;bottom:1rem;left:1rem;opacity:0}
-    .sticker-thumb{position:absolute;bottom:1rem;right:1rem;width:38px;height:38px;border-radius:6px;background:url('https://picsum.photos/80') center/cover;opacity:0}
-    @keyframes typeLine{to{width:100%}}
-    @keyframes fadeIn{to{opacity:1}}
-    /* will be triggered via JS */
-
-    /* ===== DEMO 2 – envelope preview (scaled) ===== */
-    .preview-wrap{transform:scale(.55);transform-origin:top left}
-    /* envelope CSS (shrunk copy of real component) */
-    .envelope{position:relative;width:480px;height:360px;perspective:800px;transform-style:preserve-3d}
-    .body{position:absolute;top:0;left:0;width:100%;height:100%;background:#A8E6CF;border:2px solid #82C9A1;border-radius:4px;z-index:1}
-    .flap{position:absolute;top:0;left:0;width:100%;height:50%;background:#76C69C;border:2px solid #60A085;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s ease;z-index:4}
-    .paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:#fff8e7;text-align:center;overflow:hidden;padding:2rem 1rem 2rem;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:height .1s linear;z-index:2}
-    .line{margin:.8rem 0;font-size:20px}
-    .mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:#A8E6CF;z-index:3}
-    .env-open .flap{transform:rotateX(180deg)}
-    .env-flip{transform:rotateY(180deg);transition:transform .8s ease}
-
-    /* confetti dots */
-    .confetti{position:absolute;width:10px;height:10px;border-radius:50%;animation:fall 3s ease-out forwards}
-    @keyframes fall{to{transform:translateY(420px);opacity:0}}
-
-    /* ===== DEMO 3 – share link ===== */
-    .link-box{width:100%;border:2px dashed #aaa;border-radius:10px;padding:1rem;font-size:.9rem;word-break:break-all;position:relative}
-    .spark{position:absolute;width:6px;height:6px;background:#ffcc00;border-radius:50%;opacity:0;animation:spark 1s forwards}
-    @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.4);opacity:1}100%{transform:scale(0);opacity:0}}
-
+    /* visual spark for copy */
+    .spark{position:absolute;width:8px;height:8px;background:#ffcc00;border-radius:50%;pointer-events:none;animation:spark 1s forwards}
+    @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.6);opacity:1}100%{transform:scale(0);opacity:0}}
   </style>
 </head>
 <body>
 
-  <!-- ================= HEADER ================= -->
+  <!-- ==================== HEADER ==================== -->
   <header>
     <h1>Seafoam E‑Card</h1>
-    <a class="pill" href="builder.html">Create E‑Card</a>
+    <a href="builder.html" class="pill">Create E‑Card</a>
   </header>
 
-  <!-- ================= DEMOS ================= -->
+  <!-- ==================== DEMOS ==================== -->
   <main>
     <section class="demos">
 
-      <!-- DEMO 1 : builder typing -->
-      <div class="demo" id="demoBuilder">
+      <!-- BUILD -->
+      <div class="demo">
         <h3>1 · Build</h3>
-        <div class="builder-screen" id="builderScreen">
-          <!-- typed lines injected by JS -->
-          <div class="color-pick" id="colorPick"></div>
-          <div class="sticker-thumb" id="stickerThumb"></div>
-        </div>
+        <iframe id="frameBuild" src="builder.html"></iframe>
       </div>
 
-      <!-- DEMO 2 : preview envelope -->
-      <div class="demo" id="demoPreview">
+      <!-- PREVIEW -->
+      <div class="demo">
         <h3>2 · Preview</h3>
-        <div class="preview-wrap">
-          <div class="envelope" id="env">
-            <div class="body"></div>
-            <div class="flap"></div>
-            <div class="mask"></div>
-            <div class="paper" id="paper">
-              <div class="line">Your first message</div>
-              <div class="line">A cheerful note</div>
-              <div class="line">Dream big</div>
-              <div class="line">Shine on</div>
-            </div>
-          </div>
-        </div>
+        <iframe id="framePreview" title="Preview demo"></iframe>
       </div>
 
-      <!-- DEMO 3 : share link -->
-      <div class="demo" id="demoShare">
+      <!-- SHARE -->
+      <div class="demo" style="position:relative">
         <h3>3 · Share</h3>
-        <div class="link-box" id="linkBox">
-          https://seafoam‑ecard.app/ecard.html?d=AbCdEfGhIjKlMnOpQrStUvWxYz
-        </div>
+        <iframe id="frameShare" src="builder.html"></iframe>
       </div>
 
     </section>
   </main>
 
-  <!-- ================= SCRIPTS ================= -->
+  <!-- ==================== SCRIPT ==================== -->
   <script>
-  /* ---------- DEMO 1 : builder typing ---------- */
-  (function(){
-    const lines   = ['Your first message','A cheerful note','Stay curious','Dream big'];
-    const screen  = document.getElementById('builderScreen');
-    const picker  = document.getElementById('colorPick');
-    const thumb   = document.getElementById('stickerThumb');
+  /* helpers */
+  const delay = ms => new Promise(r=>setTimeout(r,ms));
 
-    function typeLine(i){
-      if(i>=lines.length) return showExtras();
-      const div=document.createElement('div');
-      div.className='builder-line';
-      screen.insertBefore(div, picker);      /* keep colour/sticker at bottom */
-      div.style.animation='typeLine 1s steps(20) forwards';
-      setTimeout(()=>typeLine(i+1),1100);
-    }
-    function showExtras(){
-      picker.style.background='#76C69C';
-      picker.style.animation='fadeIn .6s forwards';
-      thumb.style.animation='fadeIn .6s .4s forwards';
-      /* loop the demo */
-      setTimeout(reset,3000);
-    }
-    function reset(){
-      [...screen.querySelectorAll('.builder-line')].forEach(l=>l.remove());
-      picker.style.opacity=0; thumb.style.opacity=0;
-      setTimeout(()=>typeLine(0),400);
-    }
-    typeLine(0);
-  })();
+  /* -------------------------------------------------- */
+  /*  DEMO 1  :  run the Builder and capture its link   */
+  /* -------------------------------------------------- */
+  const cardData = {
+    to   : 'Sam',
+    from : 'Kim',
+    lines: ['You rock!', 'Enjoy your day', 'Dream big', '— The Team —'],
+    colors:{body:'#A8E6CF',flap:'#76C69C',paper:'#fff8e7',bg:'#f0f0f0'},
+    sticker:'https://picsum.photos/120'       // small hosted image
+  };
 
-  /* ---------- DEMO 2 : envelope preview ---------- */
-  (function(){
-    const env   = document.getElementById('env');
-    const flap  = env.querySelector('.flap');
-    const paper = document.getElementById('paper');
-    const totalH = 260;               /* unrolled paper height in px */
-    let confettiTimer;
+  const buildLoop = async (frame, withCopy)=>{            /* withCopy = false for demo1, true for demo3 */
+    const win  = frame.contentWindow;
+    const doc  = win.document;
 
-    function startCycle(){
-      /* open flap */
-      env.classList.add('env-open');
-      /* extend paper */
-      paper.style.height = totalH + 'px';
+    /* wait until inner page finished loading */
+    if(!doc.getElementById('toField')){ await delay(200); return buildLoop(frame,withCopy); }
 
-      setTimeout(()=>{                 /* pause */
-        /* retract paper */
-        paper.style.height = '0px';
-      },2000);
-
-      setTimeout(()=>{                 /* flip & confetti */
-        env.classList.add('env-flip');
-        burstConfetti();
-      },3400);
-
-      setTimeout(()=>resetCycle(),6500);
+    /* 1. clear & type lines */
+    const linesUl = doc.getElementById('lines');
+    [...linesUl.querySelectorAll('li')].forEach(li=>li.remove());  // start fresh
+    const addLineBtn = doc.getElementById('addLine');
+    for(const text of cardData.lines){
+      addLineBtn.click();                     // adds LI with input
+      const inp = linesUl.lastElementChild.querySelector('input');
+      inp.value = text;
+      inp.dispatchEvent(new Event('input',{bubbles:true}));
+      await delay(250);
     }
 
-    function burstConfetti(){
-      const box = env.getBoundingClientRect();
-      for(let i=0;i<45;i++){
-        const d = document.createElement('div');
-        d.className='confetti';
-        d.style.left = (box.left + 20 + Math.random()*420) + 'px';
-        d.style.top  = (box.top + 20) + 'px';
-        d.style.background = 'hsl('+Math.random()*360+',100%,60%)';
-        d.style.animationDelay = Math.random()*0.8 + 's';
-        document.body.appendChild(d);
-        setTimeout(()=>d.remove(),3000);
+    /* 2. fill TO / FROM */
+    const toF   = doc.getElementById('toField');
+    const fromF = doc.getElementById('fromField');
+    toF.value   = cardData.to;   toF.dispatchEvent(new Event('input',{bubbles:true}));
+    fromF.value = cardData.from; fromF.dispatchEvent(new Event('input',{bubbles:true}));
+
+    /* 3. paste sticker URL */
+    const urlF  = doc.getElementById('stickerUrl');
+    urlF.value  = cardData.sticker;
+    urlF.dispatchEvent(new Event('input',{bubbles:true}));
+    await delay(300);
+
+    /* 4. press Generate */
+    doc.getElementById('generate').click();
+    await delay(500);
+
+    /* 5. retrieve link */
+    const link = doc.getElementById('shareLink').textContent.trim();
+
+    /* optional copy highlight */
+    if(withCopy){
+      const copyBtn = doc.getElementById('copyBtn');
+      copyBtn.click();
+      copyHighlight(frame);                 // spark + flash in host page
+    }
+
+    return link;
+  };
+
+  function copyHighlight(containerFrame){
+    /* Spark effect inside main page (not inside iframe) */
+    const rect = containerFrame.getBoundingClientRect();
+    const spark = document.createElement('div');
+    spark.className='spark';
+    spark.style.left = rect.left + rect.width*0.8 + 'px';
+    spark.style.top  = rect.top  + rect.height*0.15 + 'px';
+    document.body.appendChild(spark);
+    setTimeout(()=>spark.remove(),1000);
+  }
+
+  /* run the first builder demo once the iframe is ready */
+  (async ()=>{
+    const link = await buildLoop(document.getElementById('frameBuild'),false);
+
+    /* -------------------------------------------------- */
+    /*  DEMO 2 : show the card & auto‑scroll continuously */
+    /* -------------------------------------------------- */
+    const prevFrame = document.getElementById('framePreview');
+    prevFrame.src = link;
+
+    prevFrame.onload = async ()=>{
+      const pWin = prevFrame.contentWindow;
+      for(;;){
+        pWin.scrollTo({top:0,behavior:'instant'});
+        await delay(100);
+        /* smooth scroll down to trigger open/unroll */
+        pWin.scrollTo({top:pWin.document.body.scrollHeight,behavior:'smooth'});
+        await delay(6500);                  // wait for envelope cycle
       }
-    }
+    };
 
-    function resetCycle(){
-      env.classList.remove('env-open','env-flip');
-      paper.style.height = '0px';
-      setTimeout(startCycle,800);
-    }
-
-    startCycle();
-  })();
-
-  /* ---------- DEMO 3 : share / copy ---------- */
-  (function(){
-    const box = document.getElementById('linkBox');
-    let lastSpark = null;
-
-    function copyAnim(){
-      /* highlight */
-      box.style.background='#eaffea';
-      box.style.transition='background .4s';
-      setTimeout(()=>box.style.background='#fff',400);
-
-      /* little spark */
-      if(lastSpark) lastSpark.remove();
-      const s=document.createElement('div');
-      s.className='spark';
-      s.style.left=Math.random()*90+'%';
-      s.style.top =Math.random()*90+'%';
-      box.appendChild(s);
-      lastSpark=s;
-      setTimeout(()=>s.remove(),1000);
-    }
-
-    function cycle(){
-      navigator.clipboard.writeText(box.textContent).catch(()=>{});
-      copyAnim();
-      setTimeout(cycle,4000);
-    }
-    cycle();
+    /* -------------------------------------------------- */
+    /*  DEMO 3 : rebuild & click Copy every 6 s           */
+    /* -------------------------------------------------- */
+    const shareFrame = document.getElementById('frameShare');
+    shareFrame.onload = async()=>{
+      for(;;){
+        await buildLoop(shareFrame,true);
+        await delay(6000);
+        shareFrame.contentWindow.location.reload();
+        await delay(500);
+      }
+    };
   })();
   </script>
 
