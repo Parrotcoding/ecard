@@ -62,18 +62,65 @@
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
 
-  /* --- refs --- */
-  const addLineBtn=addLine; const linesUl=lines;
-  const preview=previewWrap.querySelector('iframe');
+  /* refs */
+  const addLineBtn=addLine,linesUl=lines;
   const fields=[stickerUrl,toField,fromField,bodyCol,flapCol,paperCol,bgCol];
+  const preview  =document.getElementById('preview');
+  const linkWrap =document.getElementById('linkWrap');
+  const linkField=document.getElementById('linkField');
+  const copyBtn  =document.getElementById('copyBtn');
 
-  addLineBtn.onclick=()=>{const li=document.createElement('li');
-    li.innerHTML='<input type=text><button class="addLineBtn">✕</button>';
-    li.lastChild.onclick=()=>li.remove();linesUl.appendChild(li);refresh();
-  };
+  /* ------- helper functions first (so they can be called) ------- */
+  function viewerCSS(){return`
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+body{background:var(--bg);min-height:1800vh}
+.envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px;transition:top .6s,transform .8s}
+.envelope.open{top:50%}.envelope.flip{transform:translate(-50%,-50%) rotateY(180deg)}
+.paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:var(--paper);padding:2rem 1rem;text-align:center;transition:height .1s;z-index:2}
+.line{margin:1rem 0;font-size:1.25rem;}
+.body{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--body);border:2px solid var(--body-border);z-index:1}
+.flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap);border:2px solid var(--flap-border);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s;z-index:4}
+.envelope.open .flap{transform:rotateX(180deg);z-index:1}
+.mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:var(--body);z-index:3}
+.sticker{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:200px;width:auto;z-index:5}
+.envelope.flip .sticker{opacity:0;transition:opacity .6s}
+.confetti{position:absolute;top:0;width:8px;height:8px;border-radius:50%;animation:fall 3s ease-out forwards;z-index:7}
+@keyframes fall{to{transform:translateY(100vh);opacity:0}}
+`;}
 
-  linesUl.addEventListener('input',refresh);
-  fields.forEach(el=>el.addEventListener('input',refresh));
+  function viewerJS(){return`
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+  const env=document.querySelector('.envelope'),paper=env.querySelector('.paper');
+  const vh=innerHeight,totalH=env.clientHeight*0.6+paper.scrollHeight+50;
+  let flipped=false;
+  addEventListener('scroll',()=>{
+    const y=scrollY,un=7.5*vh,pause=.5*vh,ret=7.5*vh;
+    if(y>10)env.classList.add('open');
+    if(y<=un)paper.style.height=totalH*(y/un)+'px';
+    else if(y<=un+pause)paper.style.height=totalH+'px';
+    else if(y<=un+pause+ret){const r=(y-un-pause)/ret;paper.style.height=totalH*(1-r)+'px';}
+    else if(!flipped){
+      flipped=true;env.classList.remove('open');
+      setTimeout(()=>{env.classList.add('flip');
+        setInterval(()=>{for(let i=0;i<8;i++){const c=document.createElement('div');
+          c.className='confetti';c.style.left=Math.random()*100+'vw';
+          c.style.background='hsl('+(Math.random()*360)+',100%,60%)';
+          c.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(c);}},800);
+      },600);
+    }
+  });
+});
+<\/script>`;}
+
+  function makeViewerHTML(d){
+    const lines=d.lines.map(t=>`<div class=line>${t.replace(/</g,'&lt;')}</div>`).join('');
+    return`<!DOCTYPE html><html><head><meta charset=utf-8>
+    <style>:root{--body:${d.colors.body};--flap:${d.colors.flap};--paper:${d.colors.paper};--bg:${d.colors.bg};--body-border:#0003;--flap-border:#0003}${viewerCSS()}</style></head><body>
+    <div class=envelope><div class=body></div>${d.sticker?`<img class=sticker src="${d.sticker}">`:''}
+    <div class=mask></div><div class=flap></div><div class=paper>${lines}</div></div>${viewerJS()}</body></html>`;
+  }
+  function refreshPreview(){preview.srcdoc=makeViewerHTML(collect());}
 
   function collect(){
     return{
@@ -85,75 +132,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     };
   }
 
-  /* --- CSS & JS for animated viewer --- */
-  function viewerCSS(){return`
-*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
-body{background:var(--bg);min-height:1800vh}
-.envelope{position:fixed;top:65%;left:50%;width:60vw;height:60vh;transform:translate(-50%,-50%);perspective:800px;transition:top .6s,transform .8s}
-.envelope.open{top:50%}
-.envelope.flip{transform:translate(-50%,-50%) rotateY(180deg)}
-.paper{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:0;background:var(--paper);padding:2rem 1rem 2rem;transition:height .1s;text-align:center;z-index:2}
-.line{margin:1rem 0;font-size:1.25rem;}
-.body{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--body);border:2px solid var(--body-border);z-index:1}
-.flap{position:absolute;top:0;left:0;width:100%;height:50%;background:var(--flap);border:2px solid var(--flap-border);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .6s;z-index:4}
-.envelope.open .flap{transform:rotateX(180deg);z-index:1}
-.mask{position:absolute;bottom:2px;left:2px;width:calc(100% - 4px);height:60%;background:var(--body);z-index:3}
-.sticker{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:200px;width:auto;transition:opacity .6s;z-index:5}
-.envelope.flip .sticker{opacity:0}
-.confetti{position:absolute;top:0;width:8px;height:8px;border-radius:50%;animation:fall 3s ease-out forwards;z-index:7}
-@keyframes fall{to{transform:translateY(100vh);opacity:0}}
-`;}
-  function viewerJS(){return`
-<script>
-window.addEventListener('DOMContentLoaded',()=>{
-  const env=document.querySelector('.envelope'),paper=env.querySelector('.paper');
-  let flipped=false;const vh=innerHeight,maskH=env.clientHeight*0.6,fullH=paper.scrollHeight,extra=50,totalH=maskH+fullH+extra;
-  paper.style.height='0';
-  addEventListener('scroll',()=>{
-    const y=scrollY,unroll=7.5*vh,pause=0.5*vh,retract=7.5*vh;
-    if(y>10)env.classList.add('open');
-    if(y<=unroll)paper.style.height=totalH*(y/unroll)+'px';
-    else if(y<=unroll+pause)paper.style.height=totalH+'px';
-    else if(y<=unroll+pause+retract){
-      const r=(y-unroll-pause)/retract;paper.style.height=totalH*(1-r)+'px';
-    }else if(!flipped){
-      flipped=true;env.classList.remove('open');
-      setTimeout(()=>{env.classList.add('flip');
-        setInterval(()=>{for(let i=0;i<8;i++){const c=document.createElement('div');
-          c.className='confetti';c.style.left=Math.random()*100+'vw';
-          c.style.background='hsl('+Math.random()*360+',100%,60%)';
-          c.style.animationDelay=Math.random()*.8+'s';document.body.appendChild(c);}},800);
-      },600);
-    }
-  });
-});
-<\/script>`;}
+  /* initial preview */
+  refreshPreview();
 
-  function makeViewer(d){
-    const lines=d.lines.map(t=>`<div class=line>${t.replace(/</g,'&lt;')}</div>`).join('');
-    return`<!DOCTYPE html><html><head><meta charset=utf-8>
-    <style>:root{--body:${d.colors.body};--flap:${d.colors.flap};--paper:${d.colors.paper};--bg:${d.colors.bg};
-      --body-border:#0003;--flap-border:#0003}${viewerCSS()}</style></head><body>
-    <div class=envelope>
-      <div class=body></div>${d.sticker?`<img class=sticker src="${d.sticker}">`:''}
-      <div class=mask></div><div class=flap></div>
-      <div class=paper>${lines}</div>
-    </div>${viewerJS()}</body></html>`;
-  }
-  function refreshPreview(){preview.srcdoc=makeViewer(collect());}
-  const refresh=refreshPreview; refresh();
-
-  /* ------- generate & copy ------- */
-  generate.onclick=()=>{
+  /* ----- events ----- */
+  document.getElementById('generate').onclick=()=>{
     const data=collect();
-    if(!data.lines.length){alert('Add at least one message line');return;}
+    if(!data.lines.length){alert('Add at least one message line.');return;}
     const url=`${location.origin}/ecard.html?d=${btoa(encodeURIComponent(JSON.stringify(data)))}`;
     linkField.value=url;linkWrap.style.display='flex';
   };
   copyBtn.onclick=()=>{
-    navigator.clipboard.writeText(linkField.value).then(()=>{
-      copyBtn.textContent='Copied!';setTimeout(()=>copyBtn.textContent='Copy',1200);
-    });
+    navigator.clipboard.writeText(linkField.value)
+      .then(()=>{copyBtn.textContent='Copied!';setTimeout(()=>copyBtn.textContent='Copy',1200);});
   };
 
 });
