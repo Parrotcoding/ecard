@@ -6,13 +6,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* reset & scrollable page */
+    /* Reset & scrollable page */
     * { margin:0; padding:0; box-sizing:border-box; font-family:Poppins,sans-serif }
-    html, body { width:100%; overflow-x:hidden; background:var(--bg,#f0f0f0) }
-    /* plenty of vertical space for scroll */
-    body { min-height:2200vh }
+    html,body { width:100%; overflow-x:hidden; background:var(--bg,#f0f0f0) }
+    body { min-height:2200vh } /* enough scroll room */
 
-    /* envelope container */
+    /* Envelope container */
     .envelope {
       position:fixed; top:65%; left:50%;
       width:60vw; height:60vh;
@@ -25,7 +24,7 @@
     .envelope.open { top:50%; }
     .envelope.flip { transform:translate(-50%,-50%) rotateY(180deg); }
 
-    /* front‑face elements */
+    /* Front‑face elements (body, mask, flap, paper, sticker) */
     .body, .mask, .flap, .paper, .sticker {
       position:absolute;
       transform:rotateY(0deg);
@@ -52,11 +51,9 @@
       transition:transform .6s ease, opacity .4s ease;
       z-index:5; opacity:1;
     }
-    /* open flap on small scroll */
     .envelope.open .flap {
       transform:rotateX(180deg);
     }
-    /* hide flap on full flip */
     .envelope.flip .flap {
       opacity:0;
     }
@@ -69,9 +66,7 @@
       text-align:center; transition:height .1s linear;
       z-index:2;
     }
-    .line {
-      margin:1rem 0; font-size:1.25rem;
-    }
+    .line { margin:1rem 0; font-size:1.25rem; }
 
     .sticker {
       top:50%; left:50%;
@@ -81,24 +76,29 @@
     }
     .envelope.flip .sticker { opacity:0; }
 
-    /* back‑face address */
+    /* Back‑face address */
     .address {
       position:absolute;
       top:50%; left:50%;
-      transform:translate(-50%,-50%) rotateY(180deg);
-      text-align:center; color:#155f46;
-      opacity:0; transition:opacity .6s ease;
+      /* start hidden facing away */
+      transform:translate(-50%,-50%) rotateY(-180deg);
+      text-align:center;
+      color:#155f46;
+      opacity:0;
+      transition:transform .6s ease, opacity .6s ease;
       z-index:6;
-      backface-visibility:hidden;
+      /* no backface‑visibility so it always shows when rotated into view */
     }
     .envelope.flip .address {
+      /* counter‑rotate so it ends up at 0° */
+      transform:translate(-50%,-50%) rotateY(0deg);
       opacity:1;
-      /* no extra transform so parent flip + this 180 = net 360° */
     }
 
-    /* confetti */
+    /* Confetti */
     .confetti {
-      position:absolute; top:0; width:8px; height:8px; border-radius:50%;
+      position:absolute; top:0;
+      width:8px; height:8px; border-radius:50%;
       animation:fall 3s ease-out forwards; z-index:7;
     }
     @keyframes fall { to { transform:translateY(100vh); opacity:0 } }
@@ -119,22 +119,28 @@
   window.addEventListener('DOMContentLoaded', () => {
     // 1. Decode data
     const raw = new URLSearchParams(location.search).get('d');
-    if (!raw) return document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
+    if (!raw) {
+      document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
+      return;
+    }
     let data;
     try { data = JSON.parse(decodeURIComponent(atob(raw))); }
-    catch  { return document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>'; }
+    catch {
+      document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>';
+      return;
+    }
 
     // 2. Shade helper
     function shade(hex) {
-      const n = parseInt(hex.slice(1),16), a = -0.2*255;
-      let r=(n>>16)+a, g=((n>>8)&255)+a, b=(n&255)+a;
-      r=Math.max(0,Math.min(255,r));
-      g=Math.max(0,Math.min(255,g));
-      b=Math.max(0,Math.min(255,b));
-      return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+      const n = parseInt(hex.slice(1), 16), a = -0.2 * 255;
+      let r = (n >> 16) + a, g = ((n >> 8) & 255) + a, b = (n & 255) + a;
+      r = Math.max(0, Math.min(255, r));
+      g = Math.max(0, Math.min(255, g));
+      b = Math.max(0, Math.min(255, b));
+      return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
     }
 
-    // 3. Apply CSS vars
+    // 3. Apply CSS variables
     const root = document.documentElement.style;
     root.setProperty('--body', data.colors.body);
     root.setProperty('--body-border', shade(data.colors.body));
@@ -145,29 +151,31 @@
 
     // 4. Render sticker
     const st = document.getElementById('sticker');
-    data.sticker ? st.src = data.sticker : st.remove();
+    if (data.sticker) st.src = data.sticker;
+    else st.remove();
 
-    // 5. Render lines
+    // 5. Render message lines
     const paperEl = document.getElementById('paper');
     data.lines.forEach(txt => {
       const d = document.createElement('div');
-      d.className = 'line'; d.textContent = txt;
+      d.className = 'line';
+      d.textContent = txt;
       paperEl.appendChild(d);
     });
 
-    // 6. Render address
+    // 6. Render back‑side address
     document.getElementById('address').innerHTML =
-      `<p>To: ${data.to||''}</p><p>From: ${data.from||''}</p>`;
+      `<p>To: ${data.to || ''}</p><p>From: ${data.from || ''}</p>`;
 
-    // 7. Set page height
+    // 7. Set page height for scrolling
     const vh = window.innerHeight;
-    const un    = 7.5*vh;
-    const pause = 0.5*vh;
-    const ret   = 7.5*vh;
-    const extra = vh;
-    document.body.style.height = (10 + un + pause + ret + extra) + 'px';
+    const un    = 7.5 * vh,
+          pause = 0.5 * vh,
+          ret   = 7.5 * vh,
+          extra = vh;
+    document.body.style.height = `${10 + un + pause + ret + extra}px`;
 
-    // 8. Scroll animation
+    // 8. Scroll‑driven animation
     const env = document.getElementById('env');
     let flipped = false;
     const maskH  = env.clientHeight * 0.6;
@@ -180,33 +188,32 @@
       if (y > 10) env.classList.add('open');
 
       if (y <= un) {
-        paperEl.style.height = `${totalH * (y/un)}px`;
+        paperEl.style.height = `${totalH * (y / un)}px`;
       } else if (y <= un + pause) {
         paperEl.style.height = `${totalH}px`;
       } else if (y <= un + pause + ret) {
-        const r = (y - un - pause)/ret;
-        paperEl.style.height = `${totalH * (1-r)}px`;
+        const r = (y - un - pause) / ret;
+        paperEl.style.height = `${totalH * (1 - r)}px`;
       } else if (!flipped) {
         flipped = true;
         env.classList.remove('open');
-        // wait flap to close (0.6s) + tiny buffer
         setTimeout(() => {
           env.classList.add('flip');
           setInterval(() => {
             for (let i = 0; i < 8; i++) {
               const c = document.createElement('div');
               c.className = 'confetti';
-              c.style.left = `${Math.random()*100}vw`;
-              c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-              c.style.animationDelay = `${Math.random()*0.8}s`;
+              c.style.left = `${Math.random() * 100}vw`;
+              c.style.backgroundColor = `hsl(${Math.random() * 360},100%,60%)`;
+              c.style.animationDelay = `${Math.random() * 0.8}s`;
               document.body.appendChild(c);
             }
           }, 800);
-        }, 650);
+        }, 650); // after flap closes (600ms) + 50ms buffer
       }
     });
 
-    // kickstart mobile
+    // Kickstart mobile scroll
     setTimeout(() => window.scrollTo(0,1), 50);
   });
   </script>
