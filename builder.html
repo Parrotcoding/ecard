@@ -13,64 +13,140 @@
       --input-border: #ccc;
       --focus-ring: rgba(96,160,133,0.6);
     }
-    /* hide all native cursors */
-    * { cursor: none !important; box-sizing: border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
-    body { background:var(--bg); padding:2rem; }
-    h1 { text-align:center; margin-bottom:1rem; font-weight:700 }
+    /* Hide native cursor everywhere */
+    * {
+      cursor: none !important;
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: Poppins, sans-serif;
+    }
+    body {
+      background: var(--bg);
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
 
-    form { max-width:600px; margin:auto; display:grid; gap:1.5rem }
+    form {
+      max-width: 600px;
+      margin: auto;
+      display: grid;
+      gap: 1.5rem;
+    }
 
-    fieldset { border:1px solid var(--input-border); border-radius:9999px; padding:1rem }
-    legend { padding:0 .5rem; font-weight:600 }
+    /* Group borders: gentle rounding, NOT pill */
+    fieldset {
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    legend {
+      padding: 0 .5rem;
+      font-weight: 600;
+    }
 
-    /* Sticker */
-    .sticker-group { display:flex; gap:1rem; align-items:flex-end }
-    .sticker-group label { flex:1; display:flex; flex-direction:column; font-size:.9rem }
-    .sticker-group input[type="file"] { padding:.4rem; border-radius:9999px }
+    /* Sticker inputs */
+    .sticker-group {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+    .sticker-group label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      font-size: .9rem;
+    }
+    .sticker-group input[type="file"] {
+      padding: .4rem;
+      border-radius: 4px;
+    }
     .sticker-group input[type="text"] {
-      padding:.6rem 1rem; border:1px solid var(--input-border); border-radius:9999px;
+      padding: .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
     }
 
-    /* Colors */
-    .color-group { display:grid; grid-template-columns:1fr 1fr; gap:1rem }
-    .color-group label { display:flex; flex-direction:column; font-size:.9rem }
+    /* Color pickers */
+    .color-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .color-group label {
+      display: flex;
+      flex-direction: column;
+      font-size: .9rem;
+    }
     .color-group input[type="color"] {
-      width:2.5rem; height:2.5rem; border:none; border-radius:50%; margin-top:.25rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: none;
+      border-radius: 50%;
+      margin-top: .25rem;
     }
-    .palette-group { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap }
+    .palette-group {
+      display: flex;
+      gap: .5rem;
+      margin-top: .75rem;
+      flex-wrap: wrap;
+    }
     .palette {
-      display:flex; gap:.25rem; align-items:center; background:transparent;
-      border:2px solid transparent; border-radius:9999px; padding:.25rem; position:relative;
+      display: flex;
+      gap: .25rem;
+      align-items: center;
+      background: transparent;
+      border: 2px solid transparent;
+      border-radius: 9999px;  /* pill shape for palettes */
+      padding: .25rem;
+      transition: border-image-source .3s ease;
     }
-    .swatch { width:20px; height:20px; border-radius:50%; border:1px solid #ccc }
+    .swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+    }
 
     /* Message lines */
-    #lines { list-style:none; padding:0; margin:0 }
-    #lines li { position:relative; margin-bottom:.75rem }
+    #lines { list-style: none; padding: 0; margin: 0; }
+    #lines li { position: relative; margin-bottom: .75rem; }
     #lines input {
-      width:80%; padding:.6rem 2.5rem .6rem 1rem;
-      border:1px solid var(--input-border); border-radius:9999px;
-      outline:none; transition:all .2s;
+      width: 80%;
+      padding: .6rem 2.5rem .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
+      outline: none;
+      transition: all .2s;
     }
     #lines input:focus {
-      outline:3px solid var(--focus-ring); outline-offset:2px;
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
     }
     .delete-btn {
-      position:absolute; top:50%; right:.5rem; transform:translateY(-50%);
-      background:transparent; border:none; font-size:1.2rem; color:#999;
+      position: absolute;
+      top: 50%; right: .5rem;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      color: #999;
     }
-    .delete-btn:hover { color:#333 }
+    .delete-btn:hover { color: #333; }
 
-    /* Pill‑shaped gradient border on hover */
+    /* Buttons & palettes get the pill-shaped gradient border */
     .tb-btn,
     #addLine,
     #generate,
     #copyBtn,
     .palette {
-      border:2px solid transparent;
-      border-radius:9999px;
+      border: 2px solid transparent;
+      border-radius: 9999px;
       background-clip: padding-box;
-      transition:border-image-source .3s ease;
+      transition: border-image-source .3s ease;
     }
     .tb-btn:hover,
     #addLine:hover,
@@ -79,84 +155,119 @@
     .palette:hover {
       border-image-source: conic-gradient(
         from 0deg,
-        #60A085, #76C69C, #60A085
+        #60A085,
+        #76C69C,
+        #60A085
       );
-      border-image-slice:1;
+      border-image-slice: 1;
     }
 
-    /* Buttons */
+    /* Specific buttons */
     #addLine {
-      padding:.6rem 1.4rem; background:var(--primary); color:#fff;
-      font-weight:600; transition:filter .2s;
+      padding: .6rem 1.4rem;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      transition: filter .2s;
     }
-    #addLine:hover { filter:brightness(1.1) }
+    #addLine:hover { filter: brightness(1.1); }
 
-    /* Recipient */
-    .address-group { display:grid; gap:.75rem }
+    /* Recipient fields */
+    .address-group {
+      display: grid;
+      gap: .75rem;
+    }
     .address-group input {
-      padding:.6rem 1rem; border:1px solid var(--input-border);
-      border-radius:9999px; outline:none; transition:all .2s;
+      padding: .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
+      outline: none;
+      transition: all .2s;
     }
     .address-group input:focus {
-      outline:3px solid var(--focus-ring); outline-offset:2px;
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
     }
 
     /* Finalize */
     #generate {
-      padding:.6rem 1.4rem; background:var(--primary); color:#fff;
-      font-weight:600; transition:filter .2s;
+      padding: .6rem 1.4rem;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      transition: filter .2s;
     }
-    #generate:hover { filter:brightness(1.1) }
+    #generate:hover { filter: brightness(1.1); }
 
     #linkWrap {
-      display:none; margin-top:1rem; gap:.5rem; align-items:center;
+      display: none;
+      margin-top: 1rem;
+      gap: .5rem;
+      align-items: center;
     }
     #linkField {
-      flex:1; padding:.6rem 1rem; border:1px solid var(--input-border);
-      border-radius:9999px; background:#fafafa; outline:none;
+      flex: 1;
+      padding: .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
+      background: #fafafa;
+      outline: none;
     }
     #copyBtn {
-      padding:.6rem 1.4rem; background:var(--secondary); color:#fff;
-      font-weight:600;
+      padding: .6rem 1.4rem;
+      background: var(--secondary);
+      color: #fff;
+      font-weight: 600;
     }
 
     /* Toolbar */
     #toolbar {
-      position:absolute; display:none; flex-direction:column; gap:.25rem;
-      background:#fff; border:2px solid transparent; border-radius:9999px;
-      padding:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
-      z-index:1000;
+      position: absolute;
+      display: none;
+      flex-direction: column;
+      gap: .25rem;
+      background: #fff;
+      border: 2px solid transparent;
+      border-radius: 9999px; /* pill */
+      padding: .5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      z-index: 1000;
+      transition: border-image-source .3s ease;
     }
-    .tb-btn {
-      width:2.4rem; height:2.4rem; background:transparent;
-      display:flex; align-items:center; justify-content:center; outline:none;
-      position:relative;
-    }
-    .tb-btn:hover { background:#eee }
-    .tb-btn.active { background:var(--secondary); color:#fff }
-    .tb-icon { width:1.2rem; height:1.2rem }
 
-    /* custom cursor */
+    /* Cursor */
     #cur {
-      position:fixed; pointer-events:none; z-index:2000;
-      transition:transform .1s, width .1s, height .1s,
-                  background .1s, border-radius .1s, opacity .1s;
+      position: fixed;
+      pointer-events: none;
+      z-index: 2000;
+      transition: transform .1s,
+                  width .1s, height .1s,
+                  background .1s, border-radius .1s,
+                  opacity .1s;
     }
     #cur.default {
-      width:12px; height:12px; background:var(--primary); border-radius:50%;
-      box-shadow:0 0 2px rgba(0,0,0,.4); opacity:1;
+      width: 12px; height: 12px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 2px rgba(0,0,0,.4);
+      opacity: 1;
     }
     #cur.pointer {
-      width:16px; height:16px; background:var(--secondary); border-radius:4px;
-      opacity:0;
+      width: 16px; height: 16px;
+      background: var(--secondary);
+      border-radius: 4px;
+      opacity: 0;
     }
     #cur.text {
-      width:2px; height:24px; background:#333; border-radius:0; opacity:1;
+      width: 2px; height: 24px;
+      background: #333;
+      border-radius: 0;
+      opacity: 1;
     }
     #cur.grab {
-      width:20px; height:20px;
-      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M2,2 L18,18 M18,2 L2,18" stroke="%235F9E44" stroke-width="2"/></svg>') center/contain no-repeat;
-      opacity:1;
+      width: 20px; height: 20px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M2,2 L18,18 M18,2 L2,18" stroke="%235F9E44" stroke-width="2"/></svg>') center/contain no-repeat;
+      opacity: 1;
     }
   </style>
 </head>
@@ -165,16 +276,15 @@
   <div id="cur" class="default"></div>
 
   <div id="toolbar">
-    <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left"><img src="align-left.svg" class="tb-icon"></button>
-    <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center"><img src="align-center.svg" class="tb-icon"></button>
-    <button type="button" class="tb-btn" id="alignRightBtn" title="Align right"><img src="align-right.svg" class="tb-icon"></button>
-    <button type="button" class="tb-btn" id="boldBtn" title="Bold"><b>B</b></button>
-    <button type="button" class="tb-btn" id="italicBtn" title="Italic"><i>I</i></button>
-    <button type="button" class="tb-btn" id="underlineBtn" title="Underline"><u>U</u></button>
+    <button type="button" class="tb-btn" id="alignLeftBtn"><img src="align-left.svg" class="tb-icon"></button>
+    <button type="button" class="tb-btn" id="alignCenterBtn"><img src="align-center.svg" class="tb-icon"></button>
+    <button type="button" class="tb-btn" id="alignRightBtn"><img src="align-right.svg" class="tb-icon"></button>
+    <button type="button" class="tb-btn" id="boldBtn"><b>B</b></button>
+    <button type="button" class="tb-btn" id="italicBtn"><i>I</i></button>
+    <button type="button" class="tb-btn" id="underlineBtn"><u>U</u></button>
   </div>
 
   <form id="cardForm">
-    <!-- Sticker -->
     <fieldset>
       <legend>Sticker</legend>
       <div class="sticker-group">
@@ -182,7 +292,7 @@
         <label>or URL<input type="text" id="stickerUrl" placeholder="https://…"></label>
       </div>
     </fieldset>
-    <!-- Colors -->
+
     <fieldset>
       <legend>Colors</legend>
       <div class="color-group">
@@ -204,19 +314,19 @@
         </button>
       </div>
     </fieldset>
-    <!-- Message Lines -->
+
     <fieldset>
       <legend>Message Lines</legend>
       <ul id="lines"></ul>
       <button type="button" id="addLine">+ Add line</button>
     </fieldset>
-    <!-- Recipient -->
+
     <fieldset class="address-group">
       <legend>Recipient</legend>
       <label>To<input type="text" id="toField"></label>
       <label>From<input type="text" id="fromField"></label>
     </fieldset>
-    <!-- Finalize -->
+
     <fieldset>
       <legend>Finalize</legend>
       <button type="button" id="generate">Generate Link</button>
@@ -231,32 +341,29 @@
   (function(){
     // custom cursor
     const cur = document.getElementById('cur');
-    document.addEventListener('mousemove', e => {
-      const t = e.target;
-      let type = 'default', x = e.clientX, y = e.clientY;
-      if (t.closest('button, .tb-btn, .delete-btn, .palette')) {
-        type = 'pointer';
-        const r = t.getBoundingClientRect();
-        x = r.left + r.width/2;
-        y = r.top  + r.height/2;
-        cur.style.opacity = 0; // hide when snapped
+    document.addEventListener('mousemove', e=>{
+      const t=e.target;
+      let type='default',x=e.clientX,y=e.clientY;
+      if(t.closest('button, .tb-btn, .delete-btn, .palette')){
+        type='pointer';
+        const r=t.getBoundingClientRect();
+        x=r.left+r.width/2; y=r.top+r.height/2;
+        cur.style.opacity=0;
       } else {
-        cur.style.opacity = 1;
-        if (t.matches('input[type="text"], input[type="color"]')) type = 'text';
-        else if (t.matches('input[type="file"]')) type = 'grab';
+        cur.style.opacity=1;
+        if(t.matches('input[type="text"], input[type="color"]')) type='text';
+        else if(t.matches('input[type="file"]')) type='grab';
       }
-      cur.className = type;
-      cur.style.left = x + 'px';
-      cur.style.top  = y + 'px';
+      cur.className=type;
+      cur.style.left=x+'px'; cur.style.top=y+'px';
     });
     document.addEventListener('mousedown', ()=>cur.classList.add('click'));
     document.addEventListener('mouseup',   ()=>cur.classList.remove('click'));
-    // hide cursor when leaving page
-    document.addEventListener('mouseleave', ()=>cur.style.display='none');
-    document.addEventListener('mouseenter', ()=>cur.style.display='block');
+    document.addEventListener('mouseleave',()=>cur.style.display='none');
+    document.addEventListener('mouseenter',()=>cur.style.display='block');
 
-    // builder logic (addLine, toolbar, palettes, generate, copy)…
-    // (same as previous full code)
+    // builder logic...
+    // (palette clicks, file upload, addLine, toolbar placement, generate, copy)
   })();
   </script>
 </body>
