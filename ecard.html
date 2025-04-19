@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Your E‑Card</title>
+  <title>Seafoam Envelope E‑Card</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* reset & scroll area */
+    /* Reset & base */
     * { margin:0; padding:0; box-sizing:border-box }
-    html, body { height:100%; overflow-x:hidden; }
+    html, body { height:100%; }
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh; /* plenty of room */
+      min-height:1800vh;
     }
 
-    /* envelope container */
+    /* Envelope container */
     .envelope {
       position:fixed; top:65%; left:50%;
       width:60vw; height:60vh;
@@ -24,87 +23,87 @@
       transform-style:preserve-3d;
       transition:top .6s ease, transform .8s ease;
       z-index:10;
-      overflow:hidden;
     }
     .envelope.open { top:50%; }
     .envelope.flip {
       transform:translate(-50%,-50%) rotateY(180deg);
     }
 
-    /* cream paper */
-    .paper {
-      position:absolute; bottom:2px; left:2px;
-      width:calc(100% - 4px); height:0;
-      background:#fff8e7;
-      overflow:hidden;
-      padding:2rem 1rem 2rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
-      transition:height .1s linear;
-      z-index:2;
-      text-align:center;
-    }
-
-    /* seafoam green body */
+    /* Body & colors */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
-      background:#A8E6CF;
-      border:2px solid #82C9A1; border-radius:4px;
+      background: var(--bodyColor,#A8E6CF);
+      border:2px solid var(--flapColor,#76C69C);
+      border-radius:4px;
       z-index:1;
     }
 
-    /* sticker */
+    /* Sticker */
     .sticker {
-      position:absolute; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      width:auto; height:200px;
+      position:absolute; top:10%; left:50%;
+      transform:translateX(-50%);
+      height:200px; width:auto;
       z-index:5; pointer-events:none;
       transition:opacity .6s ease;
     }
     .envelope.flip .sticker { opacity:0 }
 
-    /* pocket mask */
+    /* Pocket & paper */
     .mask {
       position:absolute; bottom:2px; left:2px;
       width:calc(100% - 4px); height:60%;
-      background:#A8E6CF; z-index:3;
+      background: var(--bodyColor,#A8E6CF);
+      z-index:3;
+    }
+    .paper {
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:0;
+      background: var(--paperColor,#fff8e7);
+      overflow:hidden; padding:2rem 1rem 2rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      transition:height .1s linear;
+      z-index:2; text-align:center;
     }
 
-    /* flap */
+    /* Flap */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
-      background:#76C69C; border:2px solid #60A085;
+      background: var(--flapColor,#76C69C);
+      border:2px solid var(--flapColor,#60A085);
       clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top; transform:rotateX(0deg);
-      transition:transform .6s ease, opacity .4s ease;
+      transition:transform .6s ease;
       z-index:4; backface-visibility:visible;
     }
     .envelope.open .flap {
       transform:rotateX(180deg);
-      z-index:1; /* behind paper */
+      z-index:1;
     }
 
-    /* styled message lines */
+    /* Message lines */
     .line {
-      margin:1rem 0;
-      font-size:1.25rem;
+      margin: .75rem 0;
+      font-size: 1.25rem;
+      white-space: pre-wrap;
     }
 
-    /* back‑side address */
+    /* Back‑side address */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
       text-align:center; opacity:0;
       transition:opacity .6s ease, transform .6s ease;
-      z-index:20; backface-visibility:visible;
+      z-index:20;
+      font-size:1rem;
     }
     .envelope.flip .address {
       opacity:1;
       transform:translate(-50%,-50%) rotateY(180deg);
     }
 
-    /* confetti */
+    /* Confetti */
     .confetti {
       position:absolute; top:0;
       width:8px; height:8px; border-radius:50%;
@@ -117,69 +116,67 @@
   </style>
 </head>
 <body>
-
-  <div class="envelope" id="env">
+  <div class="envelope">
     <div class="body"></div>
-    <img class="sticker" id="sticker" alt="Sticker">
+    <img class="sticker" src="" alt="Sticker">
     <div class="mask"></div>
     <div class="flap"></div>
-    <div class="paper" id="paper"></div>
-    <div class="address" id="address"></div>
+    <div class="paper"></div>
+    <div class="address">
+      <p id="toText"></p>
+      <p id="fromText"></p>
+    </div>
   </div>
 
   <script>
-  window.addEventListener('DOMContentLoaded', () => {
-    // 1. Decode the builder payload
-    const raw = new URLSearchParams(location.search).get('d');
-    if (!raw) {
-      document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
-      return;
-    }
-    let data;
-    try { data = JSON.parse(decodeURIComponent(atob(raw))); }
-    catch {
-      document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>';
-      return;
-    }
+  (function(){
+    // parse data param
+    const params = new URLSearchParams(location.search);
+    let data = {};
+    try {
+      data = JSON.parse(decodeURIComponent(atob(params.get('d')||'')));
+    } catch(e){ console.error('Invalid data'); return; }
 
-    // 2. Render sticker
-    const stickerEl = document.getElementById('sticker');
-    if (data.sticker) stickerEl.src = data.sticker;
-    else stickerEl.remove();
+    // set CSS vars
+    document.documentElement.style.setProperty('--bodyColor', data.colors.body);
+    document.documentElement.style.setProperty('--flapColor', data.colors.flap);
+    document.documentElement.style.setProperty('--paperColor', data.colors.paper);
 
-    // 3. Render styled lines
-    const paperEl = document.getElementById('paper');
-    function esc(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-    data.lines.forEach(line => {
+    // sticker
+    const stickerEl = document.querySelector('.sticker');
+    stickerEl.src = data.sticker;
+
+    // lines
+    const paper = document.querySelector('.paper');
+    paper.innerHTML = ''; 
+    data.lines.forEach(l => {
       const div = document.createElement('div');
       div.className = 'line';
-      div.style.textAlign = line.align;
-      let txt = esc(line.text);
-      if (line.bold)      txt = `<strong>${txt}</strong>`;
-      if (line.italic)    txt = `<em>${txt}</em>`;
-      if (line.underline) txt = `<u>${txt}</u>`;
-      div.innerHTML = txt;
-      paperEl.appendChild(div);
+      div.textContent = l.text;
+      div.style.textAlign    = l.align;
+      div.style.fontWeight   = l.bold ? '700' : '400';
+      div.style.fontStyle    = l.italic ? 'italic' : 'normal';
+      div.style.textDecoration = l.underline ? 'underline' : 'none';
+      div.style.fontFamily   = l.font || 'Poppins, sans-serif';
+      paper.append(div);
     });
 
-    // 4. Render To/From
-    const addrEl = document.getElementById('address');
-    addrEl.innerHTML = `<p>To: ${esc(data.to||'')}</p><p>From: ${esc(data.from||'')}</p>`;
+    // address
+    document.getElementById('toText').textContent   = 'To: '   + (data.to||'');
+    document.getElementById('fromText').textContent = 'From: ' + (data.from||'');
 
-    // 5. Original scroll→open→unroll→retract→flip→confetti logic
-    const env = document.getElementById('env');
-    const vh  = window.innerHeight;
-    const maskH = env.clientHeight * 0.6;
-    const fullH = paperEl.scrollHeight;
-    const extra = 50;
+    // scroll animation
+    const env    = document.querySelector('.envelope');
+    const vh     = window.innerHeight;
+    const maskH  = env.clientHeight * 0.6;
+    const fullH  = paper.scrollHeight;
+    const extra  = 50;
     const totalH = maskH + fullH + extra;
-    let flipped = false;
-    paperEl.style.height = '0px';
+    paper.style.height = '0px';
 
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
+    let flipped = false;
+    window.addEventListener('scroll', ()=>{
+      const y       = window.scrollY;
       const unroll  = 7.5 * vh;
       const pause   = 0.5 * vh;
       const retract = 7.5 * vh;
@@ -187,31 +184,31 @@
       if (y > 10) env.classList.add('open');
 
       if (y <= unroll) {
-        paperEl.style.height = `${totalH * (y / unroll)}px`;
+        paper.style.height = `${totalH * (y / unroll)}px`;
       } else if (y <= unroll + pause) {
-        paperEl.style.height = `${totalH}px`;
+        paper.style.height = `${totalH}px`;
       } else if (y <= unroll + pause + retract) {
         const r = (y - unroll - pause) / retract;
-        paperEl.style.height = `${totalH * (1 - r)}px`;
+        paper.style.height = `${totalH * (1 - r)}px`;
       } else if (!flipped) {
         flipped = true;
         env.classList.remove('open');
-        setTimeout(() => {
+        setTimeout(()=>{
           env.classList.add('flip');
-          setInterval(() => {
-            for (let i = 0; i < 8; i++) {
+          setInterval(()=>{
+            for(let i=0;i<8;i++){
               const c = document.createElement('div');
               c.className = 'confetti';
-              c.style.left = `${Math.random()*100}vw`;
-              c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-              c.style.animationDelay = `${Math.random()*0.8}s`;
-              document.body.appendChild(c);
+              c.style.left             = Math.random()*100+'vw';
+              c.style.backgroundColor  = `hsl(${Math.random()*360},100%,60%)`;
+              c.style.animationDelay   = Math.random()*0.8+'s';
+              document.body.append(c);
             }
-          }, 800);
-        }, 600);
+          },800);
+        },600);
       }
     });
-  });
+  })();
   </script>
 </body>
 </html>
