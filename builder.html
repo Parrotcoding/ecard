@@ -12,90 +12,74 @@
       --bg: #f0f0f0;
       --input-bg: #fff;
       --input-border: #ccc;
+      --toolbar-bg: #fff;
+      --toolbar-border: #ddd;
     }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:var(--bg); padding:2rem; }
     h1 { margin-bottom:1rem; font-weight:700; }
-    form { max-width:600px; margin-bottom:2rem; display:grid; gap:1rem; }
+    form { max-width:600px; display:grid; gap:1rem; margin-bottom:2rem; }
 
     /* Floating toolbar */
     #toolbar {
       position:absolute;
       display:none;
       flex-direction:column;
-      align-items:center;
-      gap:.5rem;
-      background:var(--input-bg);
-      border:1px solid var(--input-border);
+      gap:.25rem;
+      background:var(--toolbar-bg);
+      border:1px solid var(--toolbar-border);
       border-radius:9999px;
       padding:.5rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:100;
     }
-    #toolbar select, #toolbar button {
-      appearance:none;
-      border:1px solid var(--input-border);
-      background:var(--input-bg);
-      cursor:pointer;
-      border-radius:9999px;
-      padding:.3rem .6rem;
-      font-size:1rem;
+    .tb-btn {
+      width:2.2rem; height:2.2rem;
+      border:none; background:transparent;
+      cursor:pointer; display:flex;
+      align-items:center; justify-content:center;
+      color:#666; font-size:1.1rem;
+      border-radius:50%;
+      transition:background .2s,color .2s;
     }
-    #toolbar .style-btn {
-      width:2rem; height:2rem;
-      display:flex; align-items:center; justify-content:center;
-    }
-    #toolbar .style-btn.active {
-      background:var(--secondary);
-      color:#fff;
-    }
+    .tb-btn:hover { background:#eee; }
+    .tb-btn.active { background:var(--secondary); color:#fff; }
+
+    /* svg icons scale */
+    .tb-btn svg { width:1.2rem; height:1.2rem; }
 
     /* Lines */
     #lines { list-style:none; padding:0; margin:0; }
     #lines li { position:relative; margin-bottom:.75rem; }
     #lines input {
-      width:100%;
-      padding:.6rem 2.5rem .6rem 1rem;
+      width:100%; padding:.6rem 2.5rem .6rem 1rem;
       border:1px solid var(--input-border);
-      border-radius:9999px;
-      background:var(--input-bg);
+      border-radius:9999px; background:var(--input-bg);
       transition:all .2s;
     }
-    #lines .delete-btn {
-      position:absolute;
-      right:.5rem; top:50%;
+    .delete-btn {
+      position:absolute; top:50%; right:.5rem;
       transform:translateY(-50%);
-      border:none;
-      background:transparent;
-      font-size:1.1rem;
-      cursor:pointer;
-      color:#999;
+      border:none; background:transparent;
+      font-size:1.2rem; color:#999; cursor:pointer;
     }
-    #lines .delete-btn:hover { color:#333; }
+    .delete-btn:hover { color:#333; }
 
     /* Controls */
     input[type="text"], select {
       width:100%; padding:.6rem 1rem;
       border:1px solid var(--input-border);
-      border-radius:9999px;
-      background:var(--input-bg);
+      border-radius:9999px; background:var(--input-bg);
     }
     button, #addLine {
-      background:var(--primary);
-      color:#fff; border:none;
-      padding:.6rem 1.4rem;
-      border-radius:9999px;
-      cursor:pointer; font-weight:600;
-      transition:filter .2s;
+      background:var(--primary); color:#fff; border:none;
+      padding:.6rem 1.4rem; border-radius:9999px;
+      cursor:pointer; font-weight:600; transition:filter .2s;
     }
     button:hover, #addLine:hover { filter:brightness(1.1); }
 
-    /* Link display */
-    #linkWrap {
-      display:none; gap:.5rem;
-      max-width:600px; margin-top:1rem;
-      align-items:center; display:flex;
-    }
+    /* Link */
+    #linkWrap { display:none; gap:.5rem; max-width:600px; align-items:center; }
     #linkField {
       flex:1; padding:.6rem 1rem;
       border:1px solid var(--input-border);
@@ -111,14 +95,18 @@
 
   <!-- Floating toolbar -->
   <div id="toolbar">
-    <select id="alignSel">
-      <option value="left">Left</option>
-      <option value="center">Center</option>
-      <option value="right">Right</option>
-    </select>
-    <button type="button" class="style-btn" id="boldBtn"><strong>B</strong></button>
-    <button type="button" class="style-btn" id="italicBtn"><em>I</em></button>
-    <button type="button" class="style-btn" id="underlineBtn"><u>U</u></button>
+    <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="2" width="16" height="2"/><rect x="0" y="6" width="10" height="2"/><rect x="0" y="10" width="16" height="2"/><rect x="0" y="14" width="10" height="2"/></svg>
+    </button>
+    <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="2" width="16" height="2"/><rect x="3" y="6" width="10" height="2"/><rect x="0" y="10" width="16" height="2"/><rect x="3" y="14" width="10" height="2"/></svg>
+    </button>
+    <button type="button" class="tb-btn" id="alignRightBtn" title="Align right">
+      <svg viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="2" width="16" height="2"/><rect x="6" y="6" width="10" height="2"/><rect x="0" y="10" width="16" height="2"/><rect x="6" y="14" width="10" height="2"/></svg>
+    </button>
+    <button type="button" class="tb-btn" id="boldBtn" title="Bold"><b>B</b></button>
+    <button type="button" class="tb-btn" id="italicBtn" title="Italic"><i>I</i></button>
+    <button type="button" class="tb-btn" id="underlineBtn" title="Underline"><u>U</u></button>
   </div>
 
   <form id="cardForm">
@@ -144,20 +132,22 @@
   <script>
   const CardBuilder = (() => {
     // refs
-    const linesUl    = document.getElementById('lines');
-    const toolbar    = document.getElementById('toolbar');
-    const alignSel   = document.getElementById('alignSel');
-    const boldBtn    = document.getElementById('boldBtn');
-    const italicBtn  = document.getElementById('italicBtn');
-    const underlineBtn = document.getElementById('underlineBtn');
-    const addLineBtn = document.getElementById('addLine');
-    const stickerEl  = document.getElementById('stickerUrl');
-    const toEl       = document.getElementById('toField');
-    const fromEl     = document.getElementById('fromField');
-    const generate   = document.getElementById('generate');
-    const linkWrap   = document.getElementById('linkWrap');
-    const linkField  = document.getElementById('linkField');
-    const copyBtn    = document.getElementById('copyBtn');
+    const linesUl       = document.getElementById('lines');
+    const toolbar       = document.getElementById('toolbar');
+    const alignLeftBtn  = document.getElementById('alignLeftBtn');
+    const alignCenterBtn= document.getElementById('alignCenterBtn');
+    const alignRightBtn = document.getElementById('alignRightBtn');
+    const boldBtn       = document.getElementById('boldBtn');
+    const italicBtn     = document.getElementById('italicBtn');
+    const underlineBtn  = document.getElementById('underlineBtn');
+    const addLineBtn    = document.getElementById('addLine');
+    const stickerEl     = document.getElementById('stickerUrl');
+    const toEl          = document.getElementById('toField');
+    const fromEl        = document.getElementById('fromField');
+    const generate      = document.getElementById('generate');
+    const linkWrap      = document.getElementById('linkWrap');
+    const linkField     = document.getElementById('linkField');
+    const copyBtn       = document.getElementById('copyBtn');
 
     let focusedInput = null;
 
@@ -184,16 +174,21 @@
 
     function showToolbar(e) {
       focusedInput = e.target;
-      // sync toolbar state
-      alignSel.value = focusedInput.style.textAlign || 'left';
-      boldBtn.classList.toggle('active', focusedInput.style.fontWeight === '700');
-      italicBtn.classList.toggle('active', focusedInput.style.fontStyle === 'italic');
-      underlineBtn.classList.toggle('active', focusedInput.style.textDecoration.includes('underline'));
+      const styles = window.getComputedStyle(focusedInput);
+      // set active states
+      [alignLeftBtn,alignCenterBtn,alignRightBtn].forEach(btn=>btn.classList.remove('active'));
+      if (styles.textAlign === 'center')       alignCenterBtn.classList.add('active');
+      else if (styles.textAlign === 'right')   alignRightBtn.classList.add('active');
+      else                                      alignLeftBtn.classList.add('active');
+      [boldBtn,italicBtn,underlineBtn].forEach(btn=>btn.classList.remove('active'));
+      if (styles.fontWeight === '700')          boldBtn.classList.add('active');
+      if (styles.fontStyle  === 'italic')       italicBtn.classList.add('active');
+      if (styles.textDecoration.includes('underline')) underlineBtn.classList.add('active');
 
-      // position toolbar next to input
-      const rect = focusedInput.getBoundingClientRect();
-      toolbar.style.top  = `${window.scrollY + rect.top + (rect.height - toolbar.offsetHeight)/2}px`;
-      toolbar.style.left = `${window.scrollX + rect.right + 8}px`;
+      // position next to input
+      const r = focusedInput.getBoundingClientRect();
+      toolbar.style.top  = `${window.scrollY + r.top + (r.height - toolbar.offsetHeight)/2}px`;
+      toolbar.style.left = `${window.scrollX + r.right + 8}px`;
       toolbar.style.display = 'flex';
     }
 
@@ -202,12 +197,22 @@
       focusedInput = null;
     }
 
-    function applyStyle() {
+    function applyAlign(align) {
       if (!focusedInput) return;
-      focusedInput.style.textAlign      = alignSel.value;
-      focusedInput.style.fontWeight     = boldBtn.classList.contains('active') ? '700' : '400';
-      focusedInput.style.fontStyle      = italicBtn.classList.contains('active') ? 'italic' : 'normal';
-      focusedInput.style.textDecoration = underlineBtn.classList.contains('active') ? 'underline' : 'none';
+      focusedInput.style.textAlign = align;
+      showToolbar({target: focusedInput});
+    }
+
+    function toggleStyle(btn, prop, value) {
+      if (!focusedInput) return;
+      const active = btn.classList.toggle('active');
+      if (prop === 'fontWeight') {
+        focusedInput.style.fontWeight = active ? value : '400';
+      } else if (prop === 'fontStyle') {
+        focusedInput.style.fontStyle = active ? value : 'normal';
+      } else if (prop === 'textDecoration') {
+        focusedInput.style.textDecoration = active ? value : 'none';
+      }
     }
 
     function collect() {
@@ -220,7 +225,7 @@
           align:     i.style.textAlign || 'left',
           bold:      i.style.fontWeight === '700',
           italic:    i.style.fontStyle === 'italic',
-          underline: i.style.textDecoration === 'underline'
+          underline: i.style.textDecoration.includes('underline')
         })).filter(l=>l.text)
       };
     }
@@ -234,21 +239,24 @@
     }
 
     function init() {
-      // seed
       addLine('Your first message');
       addLine('A cheerful note');
-
-      // events
       addLineBtn.addEventListener('click', ()=> addLine());
-      [alignSel, boldBtn, italicBtn, underlineBtn].forEach(el=>{
-        el.addEventListener('click', applyStyle);
-        el.addEventListener('change', applyStyle);
-      });
+
+      alignLeftBtn.addEventListener('click', ()=> applyAlign('left'));
+      alignCenterBtn.addEventListener('click', ()=> applyAlign('center'));
+      alignRightBtn.addEventListener('click', ()=> applyAlign('right'));
+
+      boldBtn.addEventListener('click', ()=> toggleStyle(boldBtn,'fontWeight','700'));
+      italicBtn.addEventListener('click', ()=> toggleStyle(italicBtn,'fontStyle','italic'));
+      underlineBtn.addEventListener('click', ()=> toggleStyle(underlineBtn,'textDecoration','underline'));
+
       document.addEventListener('click', e=>{
         if (!toolbar.contains(e.target) && !linesUl.contains(e.target)) {
           hideToolbar();
         }
       });
+
       generate.addEventListener('click', onGenerate);
       copyBtn.addEventListener('click', ()=>{
         navigator.clipboard.writeText(linkField.value)
