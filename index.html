@@ -24,25 +24,64 @@
     }
     .demo {
       position:relative;
-      width:100%; height:80vh;
+      width:100%; height:60vh;
       background:#fff; overflow:hidden;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
     }
-    .demo iframe {
-      width:100%; height:100%; border:none;
+    .frame {
+      position:absolute; top:0; left:0; right:0;
+      height:200%; /* plenty of scroll room */
+      overflow-y:scroll;
+      padding:2rem;
     }
-    .demo::after {
-      content:''; position:absolute;
-      top:0; left:0; right:0; bottom:0;
-      /* transparent overlay prevents manual interaction */
+
+    /* builder form styles (disabled) */
+    .frame form {
+      display:grid; gap:1rem; max-width:600px; margin:auto;
     }
+    .frame input[type="text"], .frame select {
+      padding:.6rem 1rem; border:1px solid #ccc; border-radius:9999px;
+      background:#fafafa; width:100%;
+    }
+    .frame input[type="color"] {
+      width:2.5rem; height:2.5rem; border:none; border-radius:50%;
+    }
+    .frame button {
+      padding:.6rem 1.4rem; border:none; border-radius:9999px;
+      background:#60A085; color:#fff; cursor:pointer;
+    }
+    .frame button:disabled { opacity:.5; cursor:default; }
+    .frame ul { list-style:none; padding:0; margin:0; }
+    .frame ul li {
+      display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem;
+    }
+    .frame ul li input {
+      flex:1; padding:.6rem 1rem; border:1px solid #ccc; border-radius:9999px;
+    }
+    .frame ul li button {
+      width:2rem; height:2rem; border:none; border-radius:50%;
+      background:#e74c3c; color:#fff; cursor:pointer;
+    }
+    .frame ul li button:disabled { opacity:.5; }
+
+    .share-controls {
+      display:flex; gap:.5rem; max-width:600px; margin:auto; align-items:center;
+    }
+    .share-controls input {
+      flex:1; padding:.6rem 1rem; border:1px solid #ccc; border-radius:9999px;
+      background:#fafafa;
+    }
+    .share-controls button {
+      padding:.6rem 1.2rem; border:none; border-radius:9999px;
+      background:#76C69C; color:#fff; cursor:pointer;
+    }
+    .share-controls button:disabled { opacity:.5; }
+
+    /* pointer */
     #pointer {
-      position:fixed;
-      width:24px; height:24px;
-      background:rgba(0,0,0,0.7);
-      border-radius:50%;
-      pointer-events:none;
-      transform:translate(-50%,-50%);
+      position:fixed; width:24px; height:24px;
+      background:rgba(0,0,0,0.7); border-radius:50%;
+      pointer-events:none; transform:translate(-50%,-50%);
       transition:width .1s ease, height .1s ease;
       z-index:1000;
     }
@@ -55,11 +94,47 @@
   </header>
 
   <main>
+    <!-- Demo 1: Builder -->
     <section class="demo" id="demo-builder">
-      <iframe id="iframe-builder" src="builder.html?demo=true"></iframe>
+      <div class="frame" id="frame-builder">
+        <form>
+          <label>Sticker URL
+            <input type="text" placeholder="https://…/sticker.png" disabled>
+          </label>
+          <div style="display:flex; gap:1rem;">
+            <label>Body<input type="color" disabled></label>
+            <label>Flap<input type="color" disabled></label>
+            <label>Paper<input type="color" disabled></label>
+            <label>Bg<input type="color" disabled></label>
+          </div>
+          <label>Message Lines</label>
+          <ul>
+            <li><input type="text" value="Your first message" disabled><button disabled>✕</button></li>
+            <li><input type="text" value="A cheerful note" disabled><button disabled>✕</button></li>
+          </ul>
+          <button type="button" disabled>+ Add line</button>
+          <div style="display:flex; gap:1rem;">
+            <label><input type="checkbox" disabled> Bold</label>
+            <label><input type="checkbox" disabled> Italic</label>
+            <label><input type="checkbox" disabled> Underline</label>
+          </div>
+          <label>To<input type="text" placeholder="Recipient" disabled></label>
+          <label>From<input type="text" placeholder="Your Name" disabled></label>
+          <button type="button" disabled>Generate Link</button>
+        </form>
+      </div>
     </section>
+
+    <!-- Demo 2: Share -->
     <section class="demo" id="demo-share">
-      <iframe id="iframe-share" src="share.html?demo=true"></iframe>
+      <div class="frame" id="frame-share">
+        <div style="margin-top:80vh;">
+          <div class="share-controls">
+            <input type="text" value="https://…/ecard.html?d=XYZ" disabled>
+            <button disabled>Copy</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -68,75 +143,41 @@
   <script>
   (function(){
     const pointer = document.getElementById('pointer');
-    const frames = {
-      builder: document.getElementById('iframe-builder'),
-      share:   document.getElementById('iframe-share')
-    };
-
-    // Demo sequence: scroll position + selector to click
     const steps = [
-      // Builder: add a line
-      { frame: 'builder', scroll: 0,   selector: '#addLine'        },
-      // Builder: click Generate
-      { frame: 'builder', scroll: 400, selector: '#generate'       },
-      // Share: scroll to copy
-      { frame: 'share',   scroll: 0,   selector: '#copyBtn'        },
+      // builder steps
+      { frame: 'frame-builder', scroll:   0, x: 200, y: 100, click: true },
+      { frame: 'frame-builder', scroll: 200, x: 300, y: 200, click: true },
+      { frame: 'frame-builder', scroll: 400, x: 150, y: 400, click: true },
+      // share steps
+      { frame: 'frame-share',   scroll:   0, x: 200, y: 100, click: false },
+      { frame: 'frame-share',   scroll: 300, x: 300, y: 200, click: true },
     ];
 
     let idx = 0;
-    function runStep() {
-      const step = steps[idx];
-      const iframe = frames[step.frame];
-      const doc    = iframe.contentDocument || iframe.contentWindow.document;
-
-      // 1) scroll iframe
-      iframe.contentWindow.scrollTo({ top: step.scroll, behavior: 'smooth' });
-
-      // 2) after small delay for scroll, find target element
-      setTimeout(() => {
-        const el = doc.querySelector(step.selector);
-        if (!el) {
-          console.warn('Selector not found in demo:', step.selector);
-          advance();
-          return;
-        }
-        // 3) compute pointer pos
-        const iframeRect = iframe.getBoundingClientRect();
-        const elRect     = el.getBoundingClientRect();
-        // Note: elRect is in viewport coordinates of the iframe window, so relative to parent
-        const px = iframeRect.left + elRect.left;
-        const py = iframeRect.top  + elRect.top;
-
-        pointer.style.left = px + elRect.width/2 + 'px';
-        pointer.style.top  = py + elRect.height/2 + 'px';
-
-        // 4) simulate click animation & dispatch
+    function runStep(){
+      const s = steps[idx];
+      const frame = document.getElementById(s.frame);
+      // scroll
+      frame.scrollTo({ top: s.scroll, behavior: 'smooth' });
+      // pointer position
+      const r = frame.getBoundingClientRect();
+      pointer.style.left = r.left + s.x + 'px';
+      pointer.style.top  = r.top  + s.y + 'px';
+      // click animation
+      if (s.click) {
         pointer.style.width  = '16px';
         pointer.style.height = '16px';
-        setTimeout(() => {
+        setTimeout(()=>{
           pointer.style.width  = '24px';
           pointer.style.height = '24px';
-          // dispatch click inside iframe
-          el.dispatchEvent(new MouseEvent('click', {
-            view: iframe.contentWindow,
-            bubbles: true,
-            cancelable: true
-          }));
         }, 150);
-
-        // advance after a moment
-        setTimeout(advance, 1000);
-      }, 500);
-    }
-
-    function advance() {
+      }
       idx = (idx + 1) % steps.length;
-      runStep();
+      setTimeout(runStep, 1000);
     }
 
-    window.addEventListener('load', () => {
-      // give iframes time to load fully
-      setTimeout(runStep, 1000);
+    window.addEventListener('load', ()=>{
+      setTimeout(runStep, 500);
     });
   })();
   </script>
