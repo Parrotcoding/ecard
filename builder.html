@@ -133,6 +133,7 @@
       border-radius:9999px; background:#fafafa;
       font-size:.85rem; outline:none;
     }
+    /* Copy button now explicit type="button" so it won’t reset */
     #copyBtn {
       background:var(--secondary); color:#fff;
       border:none; padding:.6rem 1.4rem;
@@ -192,7 +193,7 @@
       <button type="button" id="generate">Generate Link</button>
       <div id="linkWrap">
         <input id="linkField" readonly>
-        <button id="copyBtn">Copy</button>
+        <button type="button" id="copyBtn">Copy</button>
       </div>
     </fieldset>
   </form>
@@ -222,14 +223,14 @@
 
     fileInput.addEventListener('change', () => {
       const f = fileInput.files[0];
-      if (!f) return fileDataUrl = '';
+      if (!f) { fileDataUrl = ''; return; }
       if (f.size > 2*1024*1024) {
         alert('Max file size 2 MB');
         fileInput.value = '';
         return;
       }
       const r = new FileReader();
-      r.onload = ()=> fileDataUrl = r.result;
+      r.onload = () => fileDataUrl = r.result;
       r.readAsDataURL(f);
     });
 
@@ -300,7 +301,7 @@
       const p = btoa(encodeURIComponent(JSON.stringify(d)));
       linkField.value = `${location.origin}/ecard.html?d=${p}`;
       linkWrap.style.display = 'flex';
-      // **No clearing of inputs—everything stays in place**
+      // all inputs remain intact
     }
 
     function init() {
