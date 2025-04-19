@@ -43,18 +43,15 @@
       align-items:center;
       justify-content:center;
       color:#666;
-      font-size:1.1rem;
       border-radius:50%;
       transition:background .2s,color .2s;
     }
     .tb-btn:hover { background:#eee; }
     .tb-btn.active { background:var(--secondary); color:#fff; }
-    .tb-btn svg {
+    .tb-icon {
       width:1.2rem;
       height:1.2rem;
-      fill:none;
-      stroke:currentColor;
-      display:block;
+      object-fit:contain;
     }
 
     /* Lines list */
@@ -107,13 +104,13 @@
   <!-- Floating toolbar -->
   <div id="toolbar">
     <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6h8m-8 4h12M6 14h8m-8 4h12"/></svg>
+      <img src="align-left.svg" alt="Left" class="tb-icon">
     </button>
     <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h8M6 10h12M8 14h8M6 18h12"/></svg>
+      <img src="align-center.svg" alt="Center" class="tb-icon">
     </button>
     <button type="button" class="tb-btn" id="alignRightBtn" title="Align right">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6h-8m8 4H6m12 4h-8m8 4H6"/></svg>
+      <img src="align-right.svg" alt="Right" class="tb-icon">
     </button>
     <button type="button" class="tb-btn" id="boldBtn" title="Bold"><b>B</b></button>
     <button type="button" class="tb-btn" id="italicBtn" title="Italic"><i>I</i></button>
