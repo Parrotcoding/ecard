@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Seafoam E‑Card — Guided Demo</title>
+  <title>Seafoam E‑Card — Guided Demo with Alignment</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -20,9 +20,7 @@
     .pill{background:#60A085;color:#fff;padding:.6rem 1.6rem;border:none;border-radius:9999px;font-weight:600;text-decoration:none}
 
     /* ===== main demos ===== */
-    main{position:relative;               /* overlay anchor */
-         flex:1;display:flex;flex-direction:column;
-         gap:4rem;padding:calc(64px + 1rem) 0 3rem}  /* 64 px header */
+    main{position:relative;flex:1;display:flex;flex-direction:column;gap:4rem;padding:calc(64px + 1rem) 0 3rem}
 
     .demo{width:100%;max-width:1200px;margin:0 auto;background:#fff;border-radius:16px;
           box-shadow:0 6px 18px rgba(0,0,0,.1);padding:1.5rem;display:flex;flex-direction:column;align-items:center}
@@ -44,36 +42,25 @@
     .spark{position:absolute;width:8px;height:8px;border-radius:50%;background:#ffcc00;animation:spark 1s forwards}
     @keyframes spark{0%{transform:scale(0);opacity:1}80%{transform:scale(1.6);opacity:1}100%{transform:scale(0);opacity:0}}
 
-    /* ===== overlay (only over demos) ===== */
-    #replayCover{
-      position:absolute;inset:0;                /* inside <main> only */
-      background:rgba(0,0,0,.7);
-      display:flex;justify-content:center;align-items:center;
-      color:#fff;font-size:1.4rem;font-weight:600;gap:.6rem;
-      opacity:0;pointer-events:none;transition:opacity .5s;
-      z-index:1500
-    }
+    /* overlay */
+    #replayCover{position:absolute;inset:0;background:rgba(0,0,0,.7);display:flex;justify-content:center;align-items:center;color:#fff;font-size:1.4rem;font-weight:600;gap:.6rem;opacity:0;pointer-events:none;transition:opacity .5s;z-index:1500}
     #replayCover.show{opacity:1;pointer-events:auto;cursor:pointer}
     #replayIcon{width:22px;height:22px;border:3px solid #fff;border-radius:50%;border-left-color:transparent;transform:rotate(45deg)}
   </style>
 </head>
 <body>
 
-<!-- ===== fixed header ===== -->
 <header>
   <h1>Seafoam E‑Card</h1>
   <a class="pill" href="builder.html">Create E‑Card</a>
 </header>
 
-<!-- ===== demos ===== -->
 <main>
-  <!-- STEP 1 – BUILD -->
   <section class="demo" id="demoBuild">
-    <h3>1 · Build</h3>
+    <h3>1 · Build (with Alignment)</h3>
     <iframe id="frameBuild" src="builder.html"></iframe>
   </section>
 
-  <!-- STEP 2 – SHARE / VIEW -->
   <section class="demo" id="demoShare">
     <h3>2 · Share & View</h3>
     <div class="browser">
@@ -82,95 +69,148 @@
     </div>
   </section>
 
-  <!-- overlay just for demos -->
   <div id="replayCover">
     <div id="replayIcon"></div>Replay
   </div>
 </main>
 
-<!-- pointer -->
 <div id="cur"></div>
 
-<!-- ===== script ===== -->
 <script>
-/* utilities */
-const delay=ms=>new Promise(r=>setTimeout(r,ms));
-const cur=document.getElementById('cur');
+const delay = ms => new Promise(r => setTimeout(r, ms));
+const cur = document.getElementById('cur');
 
+// calculate element rect across iframes
 function gRect(el){
-  let r=el.getBoundingClientRect(),w=el.ownerDocument.defaultView;
-  while(w&&w!==window){
-    const f=w.frameElement;if(!f)break;
-    const fr=f.getBoundingClientRect();
-    r={left:r.left+fr.left,top:r.top+fr.top,width:r.width,height:r.height};
-    w=f.ownerDocument.defaultView;
+  let r = el.getBoundingClientRect(), w = el.ownerDocument.defaultView;
+  while(w && w !== window){
+    const f = w.frameElement; if(!f) break;
+    const fr = f.getBoundingClientRect();
+    r = { left: r.left + fr.left, top: r.top + fr.top, width: r.width, height: r.height };
+    w = f.ownerDocument.defaultView;
   }
   return r;
 }
 
-async function move(el,extra=0){
-  el.scrollIntoView({block:'center',behavior:'smooth'});
+async function move(el, extra=0){
+  el.scrollIntoView({ block: 'center', behavior:'smooth' });
   await delay(800);
-  const r=gRect(el);
-  cur.style.left=r.left+r.width/2+'px';
-  cur.style.top =r.top +r.height/2+'px';
-  await delay(700+extra);
+  const r = gRect(el);
+  cur.style.left = r.left + r.width/2 + 'px';
+  cur.style.top  = r.top  + r.height/2 + 'px';
+  await delay(700 + extra);
 }
 
-async function click(el){cur.classList.add('click');el&&el.click();await delay(130);cur.classList.remove('click');}
+async function click(el){
+  cur.classList.add('click');
+  if(el) el.click();
+  await delay(130);
+  cur.classList.remove('click');
+}
 
-/* sample card content */
-const sample={to:'Sam',from:'Kim',
+// sample content
+const sample = {
+  to:'Sam', from:'Kim',
   lines:['You rock!','Enjoy your day','Dream big','— The Team —'],
-  sticker:'https://picsum.photos/120'};
+  sticker:'https://picsum.photos/120'
+};
 
 async function buildCard(frame){
-  const d=frame.contentWindow.document;
-  if(!d.getElementById('toField')){await delay(200);return buildCard(frame);}
-  const add=d.getElementById('addLine'),ul=d.getElementById('lines');
-  ul.innerHTML='';
-  for(const t of sample.lines){
-    await move(add);await click(add);
-    const inp=ul.lastElementChild.querySelector('input');
-    await move(inp);inp.value=t;inp.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
+  const d = frame.contentWindow.document;
+  // wait until builder loaded
+  if(!d.getElementById('toField')){ await delay(200); return buildCard(frame); }
+  const addBtn = d.getElementById('addLine');
+  const ul     = d.getElementById('lines');
+  const alignCenterBtn = d.getElementById('alignCenterBtn');
+
+  ul.innerHTML = '';
+  // for each line: add, type, align center
+  for(const text of sample.lines){
+    // add line
+    await move(addBtn);
+    await click(addBtn);
+    const inp = ul.lastElementChild.querySelector('input');
+
+    // focus & type
+    await move(inp);
+    inp.focus();
+    for(let i=1;i<=text.length;i++){
+      inp.value = text.slice(0,i);
+      inp.dispatchEvent(new Event('input',{bubbles:true}));
+      await delay(30);
+    }
+
+    // align center
+    await move(alignCenterBtn, 200);
+    await click(alignCenterBtn);
   }
-  const toF=d.getElementById('toField'),fromF=d.getElementById('fromField');
-  await move(toF);toF.value=sample.to;toF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
-  await move(fromF);fromF.value=sample.from;fromF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
-  const urlF=d.getElementById('stickerUrl');
-  await move(urlF);urlF.value=sample.sticker;urlF.dispatchEvent(new Event('input',{bubbles:true}));await click(null);
-  const gen=d.getElementById('generate');
-  await move(gen,200);await click(gen);await delay(450);
-  /* spark */
-  const sp=document.createElement('div');sp.className='spark';
-  const fr=gRect(frame);sp.style.left=fr.left+fr.width*0.8+'px';sp.style.top=fr.top+fr.height*0.2+'px';
-  document.body.appendChild(sp);setTimeout(()=>sp.remove(),1000);
+
+  // fill To/From and sticker URL
+  const toF = d.getElementById('toField'),
+        fromF = d.getElementById('fromField'),
+        urlF = d.getElementById('stickerUrl'),
+        gen = d.getElementById('generate');
+
+  await move(toF); toF.value = sample.to; toF.dispatchEvent(new Event('input',{bubbles:true}));
+  await click(null);
+
+  await move(fromF); fromF.value = sample.from; fromF.dispatchEvent(new Event('input',{bubbles:true}));
+  await click(null);
+
+  await move(urlF); urlF.value = sample.sticker; urlF.dispatchEvent(new Event('input',{bubbles:true}));
+  await click(null);
+
+  // generate link
+  await move(gen,200);
+  await click(gen);
+  await delay(450);
+
+  // sparkle on generate button
+  const sp = document.createElement('div'); sp.className='spark';
+  const fr = gRect(frame);
+  sp.style.left = fr.left + fr.width*0.8 + 'px';
+  sp.style.top  = fr.top  + fr.height*0.2 + 'px';
+  document.body.append(sp);
+  setTimeout(()=>sp.remove(),1000);
+
   return d.getElementById('shareLink').textContent.trim();
 }
 
 async function shareCard(link){
-  const txt=document.getElementById('urlTxt');txt.textContent='';
-  const bar=txt.parentElement;
-  await move(bar);await click(null);
-  for(let i=1;i<=link.length;i++){txt.textContent=link.slice(0,i);await delay(40);}
+  const txt = document.getElementById('urlTxt');
+  txt.textContent = '';
+  const bar = txt.parentElement;
+
+  await move(bar);
   await click(null);
-  const view=document.getElementById('frameView');view.src=link;await delay(800);
-  const win=view.contentWindow,body=win.document.body;
+  for(let i=1;i<=link.length;i++){
+    txt.textContent = link.slice(0,i);
+    await delay(40);
+  }
+  await click(null);
+
+  const view = document.getElementById('frameView');
+  view.src = link;
+  await delay(800);
+
+  // scroll inside view
+  const win = view.contentWindow, body = win.document.body;
   await move(view);
-  win.scrollTo({top:0,behavior:'instant'});await delay(400);
-  win.scrollTo({top:body.scrollHeight,behavior:'smooth'});await delay(7600);
-  cur.style.opacity=0;
-  window.scrollTo({top:0,behavior:'smooth'});await delay(800);
+  win.scrollTo({top:0,behavior:'instant'}); await delay(400);
+  win.scrollTo({top:body.scrollHeight,behavior:'smooth'}); await delay(4000);
+
+  cur.style.opacity = 0;
+  window.scrollTo({top:0,behavior:'smooth'}); await delay(800);
   document.getElementById('replayCover').classList.add('show');
 }
 
-(async function run(){
-  const link=await buildCard(document.getElementById('frameBuild'));
+(async function(){
+  const link = await buildCard(document.getElementById('frameBuild'));
   await shareCard(link);
 })();
 
-/* replay */
-document.getElementById('replayCover').onclick=()=>location.reload();
+// replay
+document.getElementById('replayCover').onclick = ()=>location.reload();
 </script>
 </body>
 </html>
