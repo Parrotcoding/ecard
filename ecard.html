@@ -12,7 +12,7 @@
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh; /* plenty of room */
+      min-height:1800vh;
     }
 
     /* envelope container */
@@ -23,48 +23,41 @@
       perspective:800px;
       transform-style:preserve-3d;
       transition:top .6s ease, transform .8s ease;
-      z-index:10;
-      overflow:hidden;
+      z-index:10; overflow:hidden;
     }
     .envelope.open { top:50%; }
-    .envelope.flip {
-      transform:translate(-50%,-50%) rotateY(180deg);
-    }
+    .envelope.flip { transform:translate(-50%,-50%) rotateY(180deg); }
 
-    /* cream paper */
+    /* paper */
     .paper {
       position:absolute; bottom:2px; left:2px;
       width:calc(100% - 4px); height:0;
       background:var(--paper,#fff8e7);
-      overflow:hidden;
-      padding:2rem 1rem 2rem;
+      overflow:hidden; padding:2rem 1rem 2rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
-      transition:height .1s linear;
-      z-index:2;
+      transition:height .1s linear; z-index:2;
       text-align:center;
     }
 
-    /* seafoam green body */
+    /* body */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
       background:var(--body,#A8E6CF);
       border:2px solid var(--body-border,#82C9A1);
-      border-radius:4px;
-      z-index:1;
+      border-radius:4px; z-index:1;
     }
 
     /* sticker */
     .sticker {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      width:auto; height:200px;
-      z-index:5; pointer-events:none;
+      height:200px; width:auto; z-index:5;
       transition:opacity .6s ease;
     }
     .envelope.flip .sticker { opacity:0 }
 
-    /* pocket mask */
+    /* mask */
     .mask {
       position:absolute; bottom:2px; left:2px;
       width:calc(100% - 4px); height:60%;
@@ -79,29 +72,26 @@
       border:2px solid var(--flap-border,#60A085);
       clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top; transform:rotateX(0deg);
-      transition:transform .6s ease;
-      z-index:4;
-      backface-visibility:visible;
+      transition:transform .6s ease, opacity .4s ease;
+      z-index:4; backface-visibility:visible;
     }
     .envelope.open .flap {
-      transform:rotateX(180deg);
-      z-index:1; /* behind paper */
+      transform:rotateX(180deg); z-index:1;
     }
 
-    /* message lines */
+    /* each styled line */
     .line {
       margin:1rem 0;
       font-size:1.25rem;
     }
 
-    /* back‑side address (original flip logic) */
+    /* back‑side address */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
       text-align:center; opacity:0;
       transition:opacity .6s ease, transform .6s ease;
-      z-index:20;
-      backface-visibility:visible;
+      z-index:20; backface-visibility:visible;
     }
     .envelope.flip .address {
       opacity:1;
@@ -112,8 +102,7 @@
     .confetti {
       position:absolute; top:0;
       width:8px; height:8px; border-radius:50%;
-      animation:fall 3s ease-out forwards;
-      z-index:7;
+      animation:fall 3s ease-out forwards; z-index:7;
     }
     @keyframes fall {
       to { transform:translateY(100vh); opacity:0 }
@@ -133,31 +122,24 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
-    // 1. Decode data
+    // decode and parse
     const raw = new URLSearchParams(location.search).get('d');
-    if (!raw) {
-      document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
-      return;
-    }
+    if (!raw) return document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
     let data;
-    try {
-      data = JSON.parse(decodeURIComponent(atob(raw)));
-    } catch {
-      document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>';
-      return;
-    }
+    try { data = JSON.parse(decodeURIComponent(atob(raw))); }
+    catch { return document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>'; }
 
-    // 2. Shade helper
+    // shade helper
     function shade(hex) {
       const n = parseInt(hex.slice(1),16), a = -0.2*255;
       let r=(n>>16)+a, g=((n>>8)&255)+a, b=(n&255)+a;
       r=Math.max(0,Math.min(255,r));
       g=Math.max(0,Math.min(255,g));
       b=Math.max(0,Math.min(255,b));
-      return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+      return "#"+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
     }
 
-    // 3. Apply CSS vars
+    // apply colors
     const root = document.documentElement.style;
     root.setProperty('--body', data.colors.body);
     root.setProperty('--body-border', shade(data.colors.body));
@@ -166,33 +148,40 @@
     root.setProperty('--paper', data.colors.paper);
     root.setProperty('--bg', data.colors.bg);
 
-    // 4. Render sticker
-    const stEl = document.getElementById('sticker');
-    if (data.sticker) stEl.src = data.sticker;
-    else stEl.remove();
+    // sticker
+    const st = document.getElementById('sticker');
+    data.sticker ? st.src = data.sticker : st.remove();
 
-    // 5. Render lines
+    // render lines with styling
     const paperEl = document.getElementById('paper');
-    data.lines.forEach(txt => {
+    function escapeHTML(s){
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    data.lines.forEach(line => {
       const d = document.createElement('div');
-      d.className = 'line'; d.textContent = txt;
+      d.className = 'line';
+      d.style.textAlign = line.align;
+      let html = escapeHTML(line.text);
+      if (line.bold)      html = `<strong>${html}</strong>`;
+      if (line.italic)    html = `<em>${html}</em>`;
+      if (line.underline) html = `<u>${html}</u>`;
+      d.innerHTML = html;
       paperEl.appendChild(d);
     });
 
-    // 6. Render address
+    // render address
     document.getElementById('address').innerHTML =
-      `<p>To: ${data.to||''}</p><p>From: ${data.from||''}</p>`;
+      `<p>To: ${escapeHTML(data.to||'')}</p><p>From: ${escapeHTML(data.from||'')}</p>`;
 
-    // 7. Animation logic (exactly your flip logic)
+    // animation logic (same as before)
     const env   = document.getElementById('env');
-    const paper = paperEl;
-    const vh       = window.innerHeight;
-    const maskH    = env.clientHeight * 0.6;
-    const fullH    = paper.scrollHeight;
-    const extra    = 50;
-    const totalH   = maskH + fullH + extra;
+    const vh    = window.innerHeight;
+    const maskH = env.clientHeight * 0.6;
+    const fullH = paperEl.scrollHeight;
+    const extra = 50;
+    const totalH = maskH + fullH + extra;
     let flipped = false;
-    paper.style.height = '0px';
+    paperEl.style.height = '0px';
 
     window.addEventListener('scroll', () => {
       const y       = window.scrollY;
@@ -203,12 +192,12 @@
       if (y > 10) env.classList.add('open');
 
       if (y <= unroll) {
-        paper.style.height = `${totalH * (y / unroll)}px`;
+        paperEl.style.height = `${totalH * (y / unroll)}px`;
       } else if (y <= unroll + pause) {
-        paper.style.height = `${totalH}px`;
+        paperEl.style.height = `${totalH}px`;
       } else if (y <= unroll + pause + retract) {
         const r = (y - unroll - pause) / retract;
-        paper.style.height = `${totalH * (1 - r)}px`;
+        paperEl.style.height = `${totalH * (1 - r)}px`;
       } else if (!flipped) {
         flipped = true;
         env.classList.remove('open');
@@ -218,9 +207,9 @@
             for (let i = 0; i < 8; i++) {
               const c = document.createElement('div');
               c.className = 'confetti';
-              c.style.left = Math.random() * 100 + 'vw';
+              c.style.left = `${Math.random()*100}vw`;
               c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-              c.style.animationDelay = Math.random() * 0.8 + 's';
+              c.style.animationDelay = `${Math.random()*0.8}s`;
               document.body.appendChild(c);
             }
           }, 800);
