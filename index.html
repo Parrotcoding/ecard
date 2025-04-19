@@ -6,65 +6,58 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
-    body { background: #f0f0f0; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
+    body { background:#f0f0f0; }
     header {
-      position: sticky; top: 0; background: #fff;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,.1); z-index: 10;
+      position:sticky; top:0; background:#fff;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:1rem 2rem; box-shadow:0 2px 4px rgba(0,0,0,.1); z-index:10;
     }
-    header h1 { font-size: 1.25rem; }
+    header h1 { font-size:1.25rem; }
     header button#create {
-      background: #60A085; color: #fff; border: none;
-      padding: .5rem 1rem; border-radius: 9999px; cursor: pointer;
+      background:#60A085; color:#fff; border:none;
+      padding:.5rem 1rem; border-radius:9999px; cursor:pointer;
     }
     main {
-      display: flex; flex-direction: column; gap: 4rem;
-      padding: 2rem;
+      display:flex; flex-direction:column; gap:4rem;
+      padding:2rem;
     }
     .demo {
-      position: relative;
-      width: 100%; height: 80vh;
-      background: #fff; overflow: hidden;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      position:relative;
+      width:100%; height:80vh;
+      background:#fff; overflow:hidden;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
     }
     .demo iframe {
-      width: 100%; height: 100%;
-      border: none;
+      width:100%; height:100%; border:none;
     }
-    /* prevent user interaction in demos */
     .demo::after {
-      content: '';
-      position: absolute; top:0; left:0; right:0; bottom:0;
-      /* transparent overlay */
+      content:''; position:absolute;
+      top:0; left:0; right:0; bottom:0;
+      /* transparent overlay prevents manual interaction */
     }
-    /* Floating pointer */
     #pointer {
-      position: fixed;
-      width: 24px; height: 24px;
-      background: rgba(0,0,0,0.7);
-      border-radius: 50%;
-      pointer-events: none;
-      transform: translate(-50%,-50%);
-      transition: width .1s ease, height .1s ease;
-      z-index: 100;
+      position:fixed;
+      width:24px; height:24px;
+      background:rgba(0,0,0,0.7);
+      border-radius:50%;
+      pointer-events:none;
+      transform:translate(-50%,-50%);
+      transition:width .1s ease, height .1s ease;
+      z-index:1000;
     }
   </style>
 </head>
 <body>
-
   <header>
     <h1>Seafoam E‑Card App</h1>
     <button id="create" onclick="location.href='builder.html'">Create</button>
   </header>
 
   <main>
-    <!-- Demo 1: Builder -->
     <section class="demo" id="demo-builder">
       <iframe id="iframe-builder" src="builder.html?demo=true"></iframe>
     </section>
-
-    <!-- Demo 2: Share -->
     <section class="demo" id="demo-share">
       <iframe id="iframe-share" src="share.html?demo=true"></iframe>
     </section>
@@ -75,45 +68,75 @@
   <script>
   (function(){
     const pointer = document.getElementById('pointer');
-    const builderFrame = document.getElementById('iframe-builder');
-    const shareFrame   = document.getElementById('iframe-share');
+    const frames = {
+      builder: document.getElementById('iframe-builder'),
+      share:   document.getElementById('iframe-share')
+    };
 
+    // Demo sequence: scroll position + selector to click
     const steps = [
-      // builder demo steps
-      {frame: builderFrame, scroll: 0,   x: 200, y: 100, click: true},
-      {frame: builderFrame, scroll: 150, x: 300, y: 200, click: true},
-      {frame: builderFrame, scroll: 300, x: 180, y: 400, click: true},
-      // share demo steps
-      {frame: shareFrame,   scroll: 0,   x: 200, y: 100, click: false},
-      {frame: shareFrame,   scroll: 150, x: 300, y: 200, click: true},
+      // Builder: add a line
+      { frame: 'builder', scroll: 0,   selector: '#addLine'        },
+      // Builder: click Generate
+      { frame: 'builder', scroll: 400, selector: '#generate'       },
+      // Share: scroll to copy
+      { frame: 'share',   scroll: 0,   selector: '#copyBtn'        },
     ];
 
     let idx = 0;
     function runStep() {
       const step = steps[idx];
-      const { frame, scroll, x, y, click } = step;
-      // scroll inside iframe
-      frame.contentWindow.scrollTo({ top: scroll, behavior: 'smooth' });
-      // position pointer relative to frame
-      const rect = frame.getBoundingClientRect();
-      pointer.style.left = rect.left + x + 'px';
-      pointer.style.top  = rect.top  + y + 'px';
-      // simulate click
-      if (click) {
-        pointer.style.width = '16px';
-        pointer.style.height= '16px';
-        setTimeout(()=>{
-          pointer.style.width = '24px';
-          pointer.style.height= '24px';
+      const iframe = frames[step.frame];
+      const doc    = iframe.contentDocument || iframe.contentWindow.document;
+
+      // 1) scroll iframe
+      iframe.contentWindow.scrollTo({ top: step.scroll, behavior: 'smooth' });
+
+      // 2) after small delay for scroll, find target element
+      setTimeout(() => {
+        const el = doc.querySelector(step.selector);
+        if (!el) {
+          console.warn('Selector not found in demo:', step.selector);
+          advance();
+          return;
+        }
+        // 3) compute pointer pos
+        const iframeRect = iframe.getBoundingClientRect();
+        const elRect     = el.getBoundingClientRect();
+        // Note: elRect is in viewport coordinates of the iframe window, so relative to parent
+        const px = iframeRect.left + elRect.left;
+        const py = iframeRect.top  + elRect.top;
+
+        pointer.style.left = px + elRect.width/2 + 'px';
+        pointer.style.top  = py + elRect.height/2 + 'px';
+
+        // 4) simulate click animation & dispatch
+        pointer.style.width  = '16px';
+        pointer.style.height = '16px';
+        setTimeout(() => {
+          pointer.style.width  = '24px';
+          pointer.style.height = '24px';
+          // dispatch click inside iframe
+          el.dispatchEvent(new MouseEvent('click', {
+            view: iframe.contentWindow,
+            bubbles: true,
+            cancelable: true
+          }));
         }, 150);
-      }
-      idx = (idx + 1) % steps.length;
-      setTimeout(runStep, 1000);
+
+        // advance after a moment
+        setTimeout(advance, 1000);
+      }, 500);
     }
 
-    window.addEventListener('load', ()=>{
-      // allow iframes to load their CSS/JS
-      setTimeout(runStep, 800);
+    function advance() {
+      idx = (idx + 1) % steps.length;
+      runStep();
+    }
+
+    window.addEventListener('load', () => {
+      // give iframes time to load fully
+      setTimeout(runStep, 1000);
     });
   })();
   </script>
