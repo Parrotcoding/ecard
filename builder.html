@@ -18,7 +18,7 @@
     }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:var(--bg); padding:2rem; }
-    h1 { margin-bottom:1rem; font-weight:700; }
+    h1 { margin-bottom:1rem; font-weight:700; text-align:center }
 
     form { max-width:600px; margin:auto; display:grid; gap:1.5rem; }
 
@@ -39,14 +39,35 @@
     .sticker-group label {
       flex:1; display:flex; flex-direction:column; font-size:.9rem;
     }
-    .sticker-group input[type="file"] {
-      padding:.4rem;
-    }
+    .sticker-group input[type="file"] { padding:.4rem; }
     .sticker-group input[type="text"] {
-      padding:.6rem 1rem;
-      border:1px solid var(--input-border);
-      border-radius:9999px;
-      background:var(--input-bg);
+      padding:.6rem 1rem; border:1px solid var(--input-border);
+      border-radius:9999px; background:var(--input-bg);
+    }
+
+    /* Colors group */
+    .color-group {
+      display:grid; grid-template-columns:1fr 1fr; gap:1rem;
+      align-items:center;
+    }
+    .color-group label {
+      display:flex; flex-direction:column; font-size:.9rem;
+      align-items:start;
+    }
+    .color-group input[type="color"] {
+      width:2.5rem; height:2.5rem; border:none; padding:0; border-radius:50%;
+      margin-top:.25rem;
+      cursor:pointer;
+    }
+    .palette-group {
+      display:flex; gap:1rem; margin-top:.75rem; flex-wrap:wrap;
+    }
+    .palette {
+      display:flex; gap:.25rem; border:none; background:transparent;
+      cursor:pointer; align-items:center;
+    }
+    .swatch {
+      width:20px; height:20px; border-radius:50%; border:1px solid #ccc;
     }
 
     /* Floating toolbar */
@@ -133,7 +154,6 @@
       border-radius:9999px; background:#fafafa;
       font-size:.85rem; outline:none;
     }
-    /* Copy button now explicit type="button" so it won’t reset */
     #copyBtn {
       background:var(--secondary); color:#fff;
       border:none; padding:.6rem 1.4rem;
@@ -145,7 +165,7 @@
 
   <h1>Create Your Seafoam Envelope E‑Card</h1>
 
-  <!-- toolbar -->
+  <!-- Floating toolbar -->
   <div id="toolbar">
     <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left">
       <img src="align-left.svg" alt="Left" class="tb-icon">
@@ -162,6 +182,7 @@
   </div>
 
   <form id="cardForm">
+    <!-- Sticker -->
     <fieldset>
       <legend>Sticker</legend>
       <div class="sticker-group">
@@ -176,18 +197,55 @@
       </div>
     </fieldset>
 
+    <!-- Colors -->
+    <fieldset>
+      <legend>Colors</legend>
+      <div class="color-group">
+        <label>Body<input type="color" id="bodyColor" value="#A8E6CF"></label>
+        <label>Flap<input type="color" id="flapColor" value="#76C69C"></label>
+        <label>Paper<input type="color" id="paperColor" value="#fff8e7"></label>
+        <label>Background<input type="color" id="bgColor" value="#f0f0f0"></label>
+      </div>
+      <div class="palette-group">
+        <!-- Seafoam -->
+        <button type="button" class="palette" data-colors='{"body":"#A8E6CF","flap":"#76C69C","paper":"#fff8e7","background":"#f0f0f0"}'>
+          <div class="swatch" style="background:#A8E6CF"></div>
+          <div class="swatch" style="background:#76C69C"></div>
+          <div class="swatch" style="background:#fff8e7"></div>
+          <div class="swatch" style="background:#f0f0f0"></div>
+        </button>
+        <!-- Sunset -->
+        <button type="button" class="palette" data-colors='{"body":"#FFD54F","flap":"#FFB300","paper":"#FFF8E1","background":"#FFF3E0"}'>
+          <div class="swatch" style="background:#FFD54F"></div>
+          <div class="swatch" style="background:#FFB300"></div>
+          <div class="swatch" style="background:#FFF8E1"></div>
+          <div class="swatch" style="background:#FFF3E0"></div>
+        </button>
+        <!-- Forest -->
+        <button type="button" class="palette" data-colors='{"body":"#81C784","flap":"#388E3C","paper":"#E8F5E9","background":"#F1F8E9"}'>
+          <div class="swatch" style="background:#81C784"></div>
+          <div class="swatch" style="background:#388E3C"></div>
+          <div class="swatch" style="background:#E8F5E9"></div>
+          <div class="swatch" style="background:#F1F8E9"></div>
+        </button>
+      </div>
+    </fieldset>
+
+    <!-- Message Lines -->
     <fieldset>
       <legend>Message Lines</legend>
       <ul id="lines"></ul>
       <button type="button" id="addLine">+ Add line</button>
     </fieldset>
 
+    <!-- Recipient -->
     <fieldset class="address-group">
       <legend>Recipient</legend>
       <label>To <input type="text" id="toField"></label>
       <label>From <input type="text" id="fromField"></label>
     </fieldset>
 
+    <!-- Finalize -->
     <fieldset>
       <legend>Finalize</legend>
       <button type="button" id="generate">Generate Link</button>
@@ -200,23 +258,28 @@
 
   <script>
   const CardBuilder = (() => {
-    const linesUl       = document.getElementById('lines');
-    const toolbar       = document.getElementById('toolbar');
-    const alignLeftBtn  = document.getElementById('alignLeftBtn');
-    const alignCenterBtn= document.getElementById('alignCenterBtn');
-    const alignRightBtn = document.getElementById('alignRightBtn');
-    const boldBtn       = document.getElementById('boldBtn');
-    const italicBtn     = document.getElementById('italicBtn');
-    const underlineBtn  = document.getElementById('underlineBtn');
-    const addLineBtn    = document.getElementById('addLine');
-    const fileInput     = document.getElementById('stickerFile');
-    const urlInput      = document.getElementById('stickerUrl');
-    const toEl          = document.getElementById('toField');
-    const fromEl        = document.getElementById('fromField');
-    const genBtn        = document.getElementById('generate');
-    const linkWrap      = document.getElementById('linkWrap');
-    const linkField     = document.getElementById('linkField');
-    const copyBtn       = document.getElementById('copyBtn');
+    const linesUl        = document.getElementById('lines');
+    const toolbar        = document.getElementById('toolbar');
+    const alignLeftBtn   = document.getElementById('alignLeftBtn');
+    const alignCenterBtn = document.getElementById('alignCenterBtn');
+    const alignRightBtn  = document.getElementById('alignRightBtn');
+    const boldBtn        = document.getElementById('boldBtn');
+    const italicBtn      = document.getElementById('italicBtn');
+    const underlineBtn   = document.getElementById('underlineBtn');
+    const addLineBtn     = document.getElementById('addLine');
+    const fileInput      = document.getElementById('stickerFile');
+    const urlInput       = document.getElementById('stickerUrl');
+    const bodyColor      = document.getElementById('bodyColor');
+    const flapColor      = document.getElementById('flapColor');
+    const paperColor     = document.getElementById('paperColor');
+    const bgColor        = document.getElementById('bgColor');
+    const palettes       = document.querySelectorAll('.palette');
+    const toEl           = document.getElementById('toField');
+    const fromEl         = document.getElementById('fromField');
+    const genBtn         = document.getElementById('generate');
+    const linkWrap       = document.getElementById('linkWrap');
+    const linkField      = document.getElementById('linkField');
+    const copyBtn        = document.getElementById('copyBtn');
 
     let focusedInput = null;
     let fileDataUrl = '';
@@ -232,6 +295,17 @@
       const r = new FileReader();
       r.onload = () => fileDataUrl = r.result;
       r.readAsDataURL(f);
+    });
+
+    // Apply palette
+    palettes.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = JSON.parse(btn.dataset.colors);
+        bodyColor.value  = c.body;
+        flapColor.value  = c.flap;
+        paperColor.value = c.paper;
+        bgColor.value    = c.background;
+      });
     });
 
     function addLine(text='') {
@@ -282,6 +356,12 @@
       const sticker = fileDataUrl || urlInput.value.trim();
       return {
         sticker,
+        colors: {
+          body:  bodyColor.value,
+          flap:  flapColor.value,
+          paper: paperColor.value,
+          background: bgColor.value
+        },
         to: toEl.value.trim(),
         from: fromEl.value.trim(),
         lines: Array.from(linesUl.querySelectorAll('input')).map(i=>({
@@ -301,7 +381,6 @@
       const p = btoa(encodeURIComponent(JSON.stringify(d)));
       linkField.value = `${location.origin}/ecard.html?d=${p}`;
       linkWrap.style.display = 'flex';
-      // all inputs remain intact
     }
 
     function init() {
