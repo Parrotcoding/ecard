@@ -7,17 +7,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
-    body{background:var(--bg,#f0f0f0);min-height:1800vh}
+    body{background:var(--bg,#f0f0f0);overflow-x:hidden;min-height:180vh}
 
     .envelope {
-      position:fixed;
-      top:65%; left:50%;
+      position:fixed; top:65%; left:50%;
       width:60vw; height:60vh;
       transform:translate(-50%,-50%);
       perspective:800px;
       transition:top .6s, transform .8s;
-      overflow:hidden;          /* clip any overflowing content */
-      background:transparent;
+      overflow:hidden;  /* clips text/paper */
     }
     .envelope.open { top:50%; }
     .envelope.flip { transform:translate(-50%,-50%) rotateY(180deg); }
@@ -27,13 +25,13 @@
       width:100%; height:100%;
       background:var(--body,#A8E6CF);
       border:2px solid var(--body-border,#82C9A1);
-      border-radius:4px;
       z-index:1;
     }
     .mask {
       position:absolute; bottom:2px; left:2px;
       width:calc(100% - 4px); height:60%;
-      background:var(--body,#A8E6CF); z-index:3;
+      background:var(--body);
+      z-index:3;
     }
     .flap {
       position:absolute; top:0; left:0;
@@ -42,66 +40,47 @@
       border:2px solid var(--flap-border,#60A085);
       clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top; transition:transform .6s;
+      backface-visibility:visible; /* ensure it stays visible when flipped */
       z-index:4;
     }
+    /* now stays visible above paper when opened */
     .envelope.open .flap {
       transform:rotateX(180deg);
-      z-index:1;
+      z-index:4;
     }
 
     .paper {
-      position:absolute;
-      bottom:2px; left:2px;
-      width:calc(100% - 4px);
-      height:0;
+      position:absolute; bottom:2px; left:2px;
+      width:calc(100% - 4px); height:0;
       background:var(--paper,#fff8e7);
-      overflow:hidden;             /* hide anything beyond paper area */
-      padding:2rem 1rem 2rem;
-      text-align:center;
-      transition:height .1s linear;
-      z-index:2;
+      overflow:hidden; padding:2rem 1rem;
+      text-align:center; transition:height .1s; z-index:2;
     }
     .line {
-      margin:1rem 0;
-      font-size:1.25rem;
+      margin:1rem 0; font-size:1.25rem;
     }
 
     .sticker {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      height:200px; width:auto;
-      z-index:5; pointer-events:none;
+      height:200px; width:auto; z-index:5;
       transition:opacity .6s;
     }
-    .envelope.flip .sticker {
-      opacity:0;
-    }
+    .envelope.flip .sticker { opacity:0; }
 
-    /* address block on the flipped side */
     .address {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      text-align:center;
-      opacity:0;
-      transition:opacity .6s ease, transform .6s ease;
-      z-index:6;
-      color:#155f46;
+      text-align:center; color:#155f46;
+      opacity:0; transition:opacity .6s; z-index:6;
     }
-    .envelope.flip .address {
-      opacity:1;
-      transform:translate(-50%,-50%) rotateY(180deg);
-    }
+    .envelope.flip .address { opacity:1; }
 
-    /* confetti */
     .confetti {
-      position:absolute; top:0;
-      width:8px; height:8px; border-radius:50%;
-      animation:fall 3s ease-out forwards;
-      z-index:7;
+      position:absolute; top:0; width:8px; height:8px;
+      border-radius:50%; animation:fall 3s ease-out forwards; z-index:7;
     }
-    @keyframes fall {
-      to { transform:translateY(100vh); opacity:0 }
-    }
+    @keyframes fall { to { transform:translateY(100vh); opacity:0 } }
   </style>
 </head>
 <body>
@@ -117,23 +96,21 @@
 
 <script>
 (function(){
-  // Decode data
   const qs = new URLSearchParams(location.search).get('d');
-  if(!qs) { document.body.innerHTML='<h3 style="padding:2rem">Missing card data.</h3>'; return; }
+  if(!qs){ document.body.innerHTML='<h3 style="padding:2rem">Missing data.</h3>'; return; }
   let data;
-  try { data = JSON.parse(decodeURIComponent(atob(qs))); }
-  catch(e) { document.body.innerHTML='<h3 style="padding:2rem">Invalid link.</h3>'; return; }
+  try{ data=JSON.parse(decodeURIComponent(atob(qs))); }
+  catch{ document.body.innerHTML='<h3 style="padding:2rem">Invalid link.</h3>'; return; }
 
-  // Helper to shade colours
+  // shade util
   const shade = hex => {
-    const n = parseInt(hex.slice(1),16), a = Math.round(-0.2*255);
-    const r = Math.max(0,Math.min(255,(n>>16)+a)),
-          g = Math.max(0,Math.min(255,((n>>8)&255)+a)),
-          b = Math.max(0,Math.min(255,(n&255)+a));
-    return "#" + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    const n=parseInt(hex.slice(1),16),a=-51;
+    let r=(n>>16)+a,g=((n>>8)&255)+a,b=(n&255)+a;
+    r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));
+    return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
   };
 
-  // Apply CSS variables
+  // apply colors
   const root = document.documentElement.style;
   root.setProperty('--body', data.colors.body);
   root.setProperty('--body-border', shade(data.colors.body));
@@ -142,72 +119,45 @@
   root.setProperty('--paper', data.colors.paper);
   root.setProperty('--bg', data.colors.bg);
 
-  // Populate sticker
-  const st = document.getElementById('st');
-  if(data.sticker) st.src = data.sticker;
-  else st.remove();
+  // sticker
+  const st=document.getElementById('st');
+  if(data.sticker) st.src=data.sticker; else st.remove();
 
-  // Populate message lines
-  const paper = document.getElementById('paper');
-  data.lines.forEach(text => {
-    const div = document.createElement('div');
-    div.className = 'line';
-    div.textContent = text;
-    paper.appendChild(div);
-  });
+  // lines
+  const paper=document.getElementById('paper');
+  data.lines.forEach(t=>{ const d=document.createElement('div'); d.className='line'; d.textContent=t; paper.appendChild(d); });
 
-  // Populate address
-  const addr = document.getElementById('addr');
-  addr.innerHTML = `
-    <p>To: ${data.to || ''}</p>
-    <p>From: ${data.from || ''}</p>
-  `;
+  // address
+  document.getElementById('addr').innerHTML=
+    `<p>To: ${data.to||''}</p><p>From: ${data.from||''}</p>`;
 
-  // Animation logic
-  const env = document.getElementById('env');
-  let flipped = false;
-  const vh    = window.innerHeight;
-  const maskH = env.clientHeight * 0.6;
-  const extra = 50;
-  const totalH = paper.scrollHeight + maskH + extra;
-  paper.style.height = '0px';
-
-  window.addEventListener('scroll',()=>{
-    const y = window.scrollY;
-    const unroll = 7.5 * vh;
-    const pause  = 0.5 * vh;
-    const retract= 7.5 * vh;
-
-    if(y > 10) env.classList.add('open');
-
-    if(y <= unroll) {
-      paper.style.height = (totalH * (y/unroll)) + 'px';
-    } else if(y <= unroll + pause) {
-      paper.style.height = totalH + 'px';
-    } else if(y <= unroll + pause + retract) {
-      const r = (y - unroll - pause)/retract;
-      paper.style.height = (totalH * (1-r)) + 'px';
-    } else if(!flipped) {
-      flipped = true;
-      env.classList.remove('open');
+  // animation
+  const env=document.getElementById('env'),p=paper;
+  let flipped=false;
+  const vh=innerHeight,maskH=env.clientHeight*0.6,fullH=p.scrollHeight,extra=50,totalH=maskH+fullH+extra;
+  p.style.height='0px';
+  addEventListener('scroll',()=>{
+    const y=scrollY,un=7.5*vh,pause=.5*vh,ret=7.5*vh;
+    if(y>10) env.classList.add('open');
+    if(y<=un) p.style.height=totalH*(y/un)+'px';
+    else if(y<=un+pause) p.style.height=totalH+'px';
+    else if(y<=un+pause+ret){const r=(y-un-pause)/ret; p.style.height=totalH*(1-r)+'px';}
+    else if(!flipped){
+      flipped=true; env.classList.remove('open');
       setTimeout(()=>{
         env.classList.add('flip');
         setInterval(()=>{
-          for(let i=0;i<8;i++){
-            const c = document.createElement('div');
-            c.className = 'confetti';
-            c.style.left = (Math.random()*100)+'vw';
-            c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-            c.style.animationDelay = (Math.random()*0.8)+'s';
-            document.body.appendChild(c);
+          for(let i=0;i<8;i++){ const c=document.createElement('div');
+            c.className='confetti'; c.style.left=Math.random()*100+'vw';
+            c.style.background='hsl('+(Math.random()*360)+',100%,60%)';
+            c.style.animationDelay=Math.random()*.8+'s'; document.body.appendChild(c);
           }
         },800);
       },600);
     }
   });
-
-  // Kickstart on mobile
-  setTimeout(()=>window.scrollTo(0,1),50);
+  // kickstart on mobile
+  setTimeout(()=>scrollTo(0,1),50);
 })();
 </script>
 </body>
