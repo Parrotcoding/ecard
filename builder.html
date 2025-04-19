@@ -32,7 +32,7 @@
       font-weight:600;
     }
 
-    /* Sticker upload / URL */
+    /* Sticker group */
     .sticker-group {
       display:flex; gap:1rem; align-items:flex-end;
     }
@@ -72,9 +72,7 @@
       outline:3px solid var(--focus-ring);
       outline-offset:2px;
     }
-    .tb-icon {
-      width:1.2rem; height:1.2rem; object-fit:contain;
-    }
+    .tb-icon { width:1.2rem; height:1.2rem; object-fit:contain; }
 
     /* Message lines */
     #lines { list-style:none; padding:0; margin:0; }
@@ -96,7 +94,7 @@
     }
     .delete-btn:hover { color:#333 }
 
-    /* Add line button */
+    /* Add line */
     #addLine {
       justify-self:start;
       background:var(--primary); color:#fff; border:none;
@@ -105,7 +103,7 @@
     }
     #addLine:hover { filter:brightness(1.1) }
 
-    /* To / From */
+    /* Recipient group */
     .address-group {
       display:grid; gap:.75rem;
     }
@@ -118,7 +116,7 @@
       outline:3px solid var(--focus-ring); outline-offset:2px;
     }
 
-    /* Generate and link */
+    /* Finalize group */
     #generate {
       background:var(--primary); color:#fff; border:none;
       padding:.6rem 1.4rem; border-radius:9999px;
@@ -140,7 +138,6 @@
       border:none; padding:.6rem 1.4rem;
       border-radius:9999px; cursor:pointer;
     }
-
   </style>
 </head>
 <body>
@@ -164,7 +161,6 @@
   </div>
 
   <form id="cardForm">
-    <!-- Sticker group -->
     <fieldset>
       <legend>Sticker</legend>
       <div class="sticker-group">
@@ -179,21 +175,18 @@
       </div>
     </fieldset>
 
-    <!-- Message lines group -->
     <fieldset>
       <legend>Message Lines</legend>
       <ul id="lines"></ul>
       <button type="button" id="addLine">+ Add line</button>
     </fieldset>
 
-    <!-- Recipient group -->
     <fieldset class="address-group">
       <legend>Recipient</legend>
       <label>To <input type="text" id="toField"></label>
       <label>From <input type="text" id="fromField"></label>
     </fieldset>
 
-    <!-- Generate & link group -->
     <fieldset>
       <legend>Finalize</legend>
       <button type="button" id="generate">Generate Link</button>
@@ -307,6 +300,7 @@
       const p = btoa(encodeURIComponent(JSON.stringify(d)));
       linkField.value = `${location.origin}/ecard.html?d=${p}`;
       linkWrap.style.display = 'flex';
+      // **No clearing of inputs—everything stays in place**
     }
 
     function init() {
