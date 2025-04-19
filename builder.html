@@ -13,11 +13,11 @@
       --input-border: #ccc;
       --focus-ring: rgba(96,160,133,0.6);
     }
-    /* hide native */
+    /* hide native cursor */
     * { cursor: none !important; box-sizing: border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background: var(--bg); padding:2rem; }
-    h1 { text-align:center; margin-bottom:1rem; font-weight:700 }
 
+    h1 { text-align:center; margin-bottom:1rem; font-weight:700 }
     form { max-width:600px; margin:auto; display:grid; gap:1.5rem }
 
     fieldset { border:1px solid var(--input-border); border-radius:8px; padding:1rem }
@@ -38,7 +38,6 @@
     }
     .palette-group { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap }
     .palette {
-      type: button;
       display:flex; gap:.25rem; align-items:center;
       border:2px solid transparent; border-radius:9999px; padding:.25rem;
       background:transparent; transition:border-color .2s;
@@ -59,18 +58,20 @@
     }
     .delete-btn {
       type: button;
-      position:absolute; top:50%; right:.5rem; transform:translateY(-50%);
+      position:absolute; top:50%; right:.5rem;
+      transform:translateY(-50%);
       background:transparent; border:none; font-size:1.2rem; color:#999;
     }
     .delete-btn:hover { color:#333 }
 
-    /* all buttons pill */
+    /* pill buttons */
     button, .tb-btn {
       type: button;
       border:none; border-radius:9999px;
-      padding:.6rem 1.4rem;
+      padding:.6rem;
       background: var(--primary); color:#fff; font-weight:600;
       transition:filter .2s;
+      cursor: none;
     }
     button:hover, .tb-btn:hover { filter: brightness(1.1); }
 
@@ -87,8 +88,9 @@
     /* finalize */
     #linkWrap { display:none; margin-top:1rem; gap:.5rem; align-items:center }
     #linkField {
-      flex:1; padding:.6rem 1rem; border:1px solid var(--input-border);
-      border-radius:9999px; background:#fafafa; outline:none;
+      flex:1; padding:.6rem 1rem;
+      border:1px solid var(--input-border); border-radius:9999px;
+      background:#fafafa; outline:none;
     }
 
     /* toolbar */
@@ -99,7 +101,7 @@
       z-index:1000;
     }
     .tb-btn {
-      width:2.8rem; height:2.8rem;
+      width:2.4rem; height:2.4rem;
       background:transparent; color:#555;
       display:flex; align-items:center; justify-content:center;
       border:none; border-radius:50%;
@@ -107,10 +109,9 @@
     }
     .tb-btn:hover { background:#eee; }
     .tb-btn.active {
-      background: var(--secondary);
-      color: #fff;
+      background: var(--secondary); color: #fff;
     }
-    .tb-icon { width:1.8rem; height:1.8rem; }
+    .tb-icon { width:1.5rem; height:1.5rem; }
 
     /* custom cursor */
     #cur {
@@ -118,20 +119,13 @@
       transition:transform .1s, width .1s, height .1s, background .1s, opacity .1s;
     }
     #cur.default {
-      width:14px; height:14px;
-      background:var(--primary);
-      border-radius:50%;
-      box-shadow:0 0 2px rgba(0,0,0,.4);
-      opacity:1;
+      width:14px; height:14px; background:var(--primary);
+      border-radius:50%; box-shadow:0 0 2px rgba(0,0,0,.4); opacity:1;
     }
-    #cur.click {
-      transform: scale(.5);
-    }
+    #cur.click { transform: scale(.5); }
     #cur.pointer {
-      width:14px; height:14px;
-      background:var(--secondary);
-      border-radius:50%;
-      opacity:0;
+      width:14px; height:14px; background:var(--secondary);
+      border-radius:50%; opacity:1;
     }
     #cur.text {
       width:2px; height:24px; background:#333; opacity:1;
@@ -148,9 +142,15 @@
   <div id="cur" class="default"></div>
 
   <div id="toolbar">
-    <button class="tb-btn" id="alignLeftBtn"><img src="align-left.svg" class="tb-icon" alt="L"></button>
-    <button class="tb-btn" id="alignCenterBtn"><img src="align-center.svg" class="tb-icon" alt="C"></button>
-    <button class="tb-btn" id="alignRightBtn"><img src="align-right.svg" class="tb-icon" alt="R"></button>
+    <button class="tb-btn" id="alignLeftBtn" title="Align left">
+      <img src="align-left.svg" class="tb-icon" alt="L">
+    </button>
+    <button class="tb-btn" id="alignCenterBtn" title="Align center">
+      <img src="align-center.svg" class="tb-icon" alt="C">
+    </button>
+    <button class="tb-btn" id="alignRightBtn" title="Align right">
+      <img src="align-right.svg" class="tb-icon" alt="R">
+    </button>
     <button class="tb-btn" id="boldBtn"><b>B</b></button>
     <button class="tb-btn" id="italicBtn"><i>I</i></button>
     <button class="tb-btn" id="underlineBtn"><u>U</u></button>
@@ -178,7 +178,7 @@
           <div class="swatch" style="background:#fff8e7"></div>
           <div class="swatch" style="background:#f0f0f0"></div>
         </button>
-        <!-- ... other palettes ... -->
+        <!-- …other palettes… -->
       </div>
     </fieldset>
 
@@ -203,30 +203,35 @@
 
   <script>
   (function(){
-    // custom cursor
     const cur = document.getElementById('cur');
     document.addEventListener('mousemove', e => {
-      const t = e.target;
-      let type = 'default', x = e.clientX, y = e.clientY;
-      if (t.closest('button, .tb-btn, .delete-btn, .palette')) {
-        type = 'pointer';
-        const r = t.getBoundingClientRect();
-        x = r.left + r.width/2; y = r.top + r.height/2;
+      const t = e.target, r = t.getBoundingClientRect();
+      let type='default', x=e.clientX, y=e.clientY;
+      // only snap/hide on main action buttons, palettes, delete, NOT toolbar
+      if (t.closest('#addLine, #generate, #copyBtn, .delete-btn, .palette')) {
+        type='pointer';
+        x = r.left + r.width/2;
+        y = r.top  + r.height/2;
         cur.style.opacity = 0;
       } else {
         cur.style.opacity = 1;
-        if (t.matches('input[type="text"], input[type="color"]')) type = 'text';
-        else if (t.matches('input[type="file"]')) type = 'grab';
+        if (t.closest('#toolbar')) {
+          type = 'default';
+        } else if (t.matches('input[type="text"], input[type="color"]')) {
+          type = 'text';
+        } else if (t.matches('input[type="file"]')) {
+          type = 'grab';
+        }
       }
-      cur.className = type;
-      cur.style.left = x+'px'; cur.style.top = y+'px';
+      cur.className=type;
+      cur.style.left=x+'px'; cur.style.top=y+'px';
     });
     document.addEventListener('mousedown', ()=>cur.classList.add('click'));
     document.addEventListener('mouseup',   ()=>cur.classList.remove('click'));
     document.addEventListener('mouseleave',()=>cur.style.display='none');
     document.addEventListener('mouseenter',()=>cur.style.display='block');
 
-    // builder logic
+    // builder functions…
     const linesUl        = document.getElementById('lines'),
           toolbar        = document.getElementById('toolbar'),
           addLineBtn     = document.getElementById('addLine'),
@@ -250,130 +255,97 @@
           linkField      = document.getElementById('linkField'),
           copyBtn        = document.getElementById('copyBtn');
 
-    let focusedInput = null,
-        fileDataUrl  = '';
-
+    let focusedInput = null, fileDataUrl = '';
     fileInput.addEventListener('change', () => {
       const f = fileInput.files[0];
-      if (!f) return fileDataUrl = '';
-      if (f.size > 2*1024*1024) { alert('Max 2 MB'); fileInput.value=''; return; }
-      const r = new FileReader();
-      r.onload = ()=>fileDataUrl = r.result;
+      if (!f) return fileDataUrl='';
+      if (f.size>2*1024*1024){alert('Max 2 MB');fileInput.value='';return;}
+      const r=new FileReader();
+      r.onload=()=>fileDataUrl=r.result;
       r.readAsDataURL(f);
     });
-
-    palettes.forEach(p => p.addEventListener('click', () => {
-      const c = JSON.parse(p.dataset.colors);
-      bodyColor.value  = c.body;
-      flapColor.value  = c.flap;
-      paperColor.value = c.paper;
-      bgColor.value    = c.bg;
+    palettes.forEach(p=>p.addEventListener('click',()=>{
+      const c=JSON.parse(p.dataset.colors);
+      bodyColor.value=c.body; flapColor.value=c.flap;
+      paperColor.value=c.paper; bgColor.value=c.bg;
     }));
 
-    function addLine(text='') {
-      const li = document.createElement('li');
-      const inp = document.createElement('input');
-      inp.type='text'; inp.value=text; inp.placeholder='Your message';
+    function addLine(txt=''){
+      const li=document.createElement('li');
+      const inp=document.createElement('input');
+      inp.type='text'; inp.value=txt; inp.placeholder='Your message';
       inp.addEventListener('focus', showToolbar);
       li.append(inp);
-      const del = document.createElement('button');
-      del.type='button'; del.textContent='✕'; del.className='delete-btn';
-      del.addEventListener('click', ()=>{
-        if (focusedInput===inp) hideToolbar();
-        li.remove();
-      });
-      li.append(del);
+      const d=document.createElement('button');
+      d.type='button'; d.textContent='✕'; d.className='delete-btn';
+      d.addEventListener('click', ()=>{ if(focusedInput===inp) hideToolbar(); li.remove(); });
+      li.append(d);
       linesUl.append(li);
     }
-
-    function showToolbar(e) {
-      focusedInput = e.target;
-      const st = getComputedStyle(focusedInput);
+    function showToolbar(e){
+      focusedInput=e.target;
+      const st=getComputedStyle(focusedInput);
       [alignLeftBtn,alignCenterBtn,alignRightBtn].forEach(b=>b.classList.remove('active'));
-      if (st.textAlign==='center') alignCenterBtn.classList.add('active');
-      else if (st.textAlign==='right') alignRightBtn.classList.add('active');
+      if(st.textAlign==='center') alignCenterBtn.classList.add('active');
+      else if(st.textAlign==='right') alignRightBtn.classList.add('active');
       else alignLeftBtn.classList.add('active');
       [boldBtn,italicBtn,underlineBtn].forEach(b=>b.classList.remove('active'));
-      if (st.fontWeight==='700') boldBtn.classList.add('active');
-      if (st.fontStyle==='italic') italicBtn.classList.add('active');
-      if (st.textDecoration.includes('underline')) underlineBtn.classList.add('active');
-      const r = focusedInput.getBoundingClientRect();
-      toolbar.style.left = r.right + 8 + 'px';
-      toolbar.style.top  = r.top + r.height/2 + 'px';
-      toolbar.style.display = 'flex';
+      if(st.fontWeight==='700') boldBtn.classList.add('active');
+      if(st.fontStyle==='italic') italicBtn.classList.add('active');
+      if(st.textDecoration.includes('underline')) underlineBtn.classList.add('active');
+      const r=e.target.getBoundingClientRect();
+      toolbar.style.left=r.right+8+'px';
+      toolbar.style.top =r.top + r.height/2+'px';
+      toolbar.style.display='flex';
     }
-
-    function hideToolbar() {
-      toolbar.style.display = 'none';
-      focusedInput = null;
+    function hideToolbar(){ toolbar.style.display='none'; focusedInput=null; }
+    function applyAlign(a){ if(!focusedInput) return; focusedInput.style.textAlign=a; showToolbar({target:focusedInput}); }
+    function toggleStyle(btn,prop,val){
+      if(!focusedInput)return;
+      const on=btn.classList.toggle('active');
+      focusedInput.style[prop]=on?val:(prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
     }
-
-    function applyAlign(a) {
-      if (!focusedInput) return;
-      focusedInput.style.textAlign = a;
-      showToolbar({target: focusedInput});
-    }
-
-    function toggleStyle(btn, prop, val) {
-      if (!focusedInput) return;
-      const on = btn.classList.toggle('active');
-      focusedInput.style[prop] = on ? val : (prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
-    }
-
-    function collect() {
-      const sticker = fileDataUrl || urlInput.value.trim();
+    function collect(){
+      const sticker=fileDataUrl||urlInput.value.trim();
       return {
-        sticker,
-        colors: {
-          body: bodyColor.value,
-          flap: flapColor.value,
-          paper: paperColor.value,
-          background: bgColor.value
-        },
-        to:   toEl.value.trim(),
-        from: fromEl.value.trim(),
-        lines: Array.from(linesUl.querySelectorAll('input')).map(i=>({
-          text: i.value.trim(),
-          align: i.style.textAlign||'left',
+        sticker, colors:{body:bodyColor.value,flap:flapColor.value,paper:paperColor.value,background:bgColor.value},
+        to:toEl.value.trim(), from:fromEl.value.trim(),
+        lines:Array.from(linesUl.querySelectorAll('input')).map(i=>({
+          text:i.value.trim(), align:i.style.textAlign||'left',
           bold: i.style.fontWeight==='700',
           italic: i.style.fontStyle==='italic',
           underline: i.style.textDecoration.includes('underline')
         })).filter(l=>l.text)
       };
     }
-
-    function onGenerate() {
-      const d = collect();
-      if (!d.sticker) return alert('Upload or enter a sticker URL.');
-      if (!d.lines.length) return alert('Add at least one line.');
-      const p = btoa(encodeURIComponent(JSON.stringify(d)));
-      linkField.value = `${location.origin}/ecard.html?d=${p}`;
-      linkWrap.style.display = 'flex';
+    function onGenerate(){
+      const d=collect();
+      if(!d.sticker)return alert('Upload or enter a sticker URL.');
+      if(!d.lines.length)return alert('Add at least one line.');
+      const p=btoa(encodeURIComponent(JSON.stringify(d)));
+      linkField.value=`${location.origin}/ecard.html?d=${p}`;
+      linkWrap.style.display='flex';
     }
 
-    // initialize
     addLine('Your first message');
     addLine('A cheerful note');
 
-    addLineBtn.addEventListener('click', ()=>addLine());
-    alignLeftBtn.addEventListener('click', ()=>applyAlign('left'));
-    alignCenterBtn.addEventListener('click', ()=>applyAlign('center'));
-    alignRightBtn.addEventListener('click', ()=>applyAlign('right'));
-    boldBtn.addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
-    italicBtn.addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
-    underlineBtn.addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
-    document.addEventListener('click', e => {
-      if (!toolbar.contains(e.target) && !linesUl.contains(e.target)) hideToolbar();
-    });
+    addLineBtn     .addEventListener('click', ()=>addLine());
+    alignLeftBtn   .addEventListener('click', ()=>applyAlign('left'));
+    alignCenterBtn .addEventListener('click', ()=>applyAlign('center'));
+    alignRightBtn  .addEventListener('click', ()=>applyAlign('right'));
+    boldBtn        .addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
+    italicBtn      .addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
+    underlineBtn   .addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
+    document.addEventListener('click', e=>{ if(!toolbar.contains(e.target)&&!linesUl.contains(e.target)) hideToolbar(); });
 
-    genBtn.addEventListener('click', onGenerate);
-    copyBtn.addEventListener('click', ()=>{
+    genBtn   .addEventListener('click', onGenerate);
+    copyBtn  .addEventListener('click', ()=>{
       navigator.clipboard.writeText(linkField.value)
         .then(()=>copyBtn.textContent='Copied!')
         .catch(()=>alert('Copy failed'));
       setTimeout(()=>copyBtn.textContent='Copy',1200);
     });
-
   })();
   </script>
 </body>
