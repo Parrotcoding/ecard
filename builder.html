@@ -12,122 +12,76 @@
       --bg: #f0f0f0;
       --input-bg: #fff;
       --input-border: #ccc;
-      --toolbar-bg: #fff;
-      --toolbar-border: #ddd;
       --focus-ring: rgba(96,160,133,0.6);
     }
-    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
-    body { background:var(--bg); padding:2rem; }
-    h1 { margin-bottom:1rem; font-weight:700; text-align:center }
+    * { box‑sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
+    body { background:var(--bg); padding:2rem; cursor:none; /* hide native */ }
+    h1 { margin-bottom:1rem; font-weight:700; text-align:center; }
 
     form { max-width:600px; margin:auto; display:grid; gap:1.5rem; }
 
     fieldset {
       border:1px solid var(--input-border);
-      border-radius:8px;
-      padding:1rem;
+      border-radius:8px; padding:1rem;
     }
-    legend {
-      padding:0 .5rem;
-      font-weight:600;
-    }
+    legend { padding:0 .5rem; font-weight:600; }
 
     /* Sticker group */
-    .sticker-group {
-      display:flex; gap:1rem; align-items:flex-end;
-    }
-    .sticker-group label {
-      flex:1; display:flex; flex-direction:column; font-size:.9rem;
-    }
+    .sticker-group { display:flex; gap:1rem; align-items:flex-end; }
+    .sticker-group label { flex:1; display:flex; flex-direction:column; font-size:.9rem; }
     .sticker-group input[type="file"] { padding:.4rem; }
     .sticker-group input[type="text"] {
       padding:.6rem 1rem; border:1px solid var(--input-border);
       border-radius:9999px; background:var(--input-bg);
     }
 
-    /* Colors group */
+    /* Colors */
     .color-group {
       display:grid; grid-template-columns:1fr 1fr; gap:1rem;
       align-items:center;
     }
     .color-group label {
-      display:flex; flex-direction:column; font-size:.9rem;
-      align-items:start;
+      display:flex; flex-direction:column; font-size:.9rem; align-items:start;
     }
     .color-group input[type="color"] {
-      width:2.5rem; height:2.5rem; border:none; padding:0; border-radius:50%;
-      margin-top:.25rem;
+      width:2.5rem; height:2.5rem; border:none; border-radius:50%;
+      margin-top:.25rem; cursor:pointer;
+    }
+    .palette-group { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
+    .palette {
+      display:flex; gap:.25rem; align-items:center; border:none; background:transparent;
       cursor:pointer;
     }
-    .palette-group {
-      display:flex; gap:1rem; margin-top:.75rem; flex-wrap:wrap;
-    }
-    .palette {
-      display:flex; gap:.25rem; border:none; background:transparent;
-      cursor:pointer; align-items:center;
-    }
-    .swatch {
-      width:20px; height:20px; border-radius:50%; border:1px solid #ccc;
-    }
-
-    /* Floating toolbar */
-    #toolbar {
-      position:absolute; display:none;
-      flex-direction:column; gap:.25rem;
-      background:var(--toolbar-bg);
-      border:1px solid var(--toolbar-border);
-      border-radius:9999px; padding:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
-      z-index:100;
-    }
-    .tb-btn {
-      width:2.4rem; height:2.4rem; border:none;
-      background:transparent; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      color:#666; border-radius:50%;
-      transition:background .2s,color .2s; outline:none;
-    }
-    .tb-btn:hover { background:#eee }
-    .tb-btn.active { background:var(--secondary); color:#fff }
-    .tb-btn:focus {
-      outline:3px solid var(--focus-ring);
-      outline-offset:2px;
-    }
-    .tb-icon { width:1.2rem; height:1.2rem; object-fit:contain; }
+    .swatch { width:20px; height:20px; border-radius:50%; border:1px solid #ccc; }
 
     /* Message lines */
     #lines { list-style:none; padding:0; margin:0; }
     #lines li { position:relative; margin-bottom:.75rem; }
     #lines input {
       width:100%; padding:.6rem 2.5rem .6rem 1rem;
-      border:1px solid var(--input-border);
-      border-radius:9999px; background:var(--input-bg);
-      transition:all .2s; outline:none;
+      border:1px solid var(--input-border); border-radius:9999px;
+      background:var(--input-bg); outline:none; transition:all .2s;
     }
     #lines input:focus {
       outline:3px solid var(--focus-ring); outline-offset:2px;
     }
     .delete-btn {
       position:absolute; top:50%; right:.5rem;
-      transform:translateY(-50%); border:none;
-      background:transparent; font-size:1.2rem;
-      color:#999; cursor:pointer;
+      transform:translateY(-50%); background:transparent;
+      border:none; font-size:1.2rem; color:#999; cursor:pointer;
     }
     .delete-btn:hover { color:#333 }
 
     /* Add line */
     #addLine {
-      justify-self:start;
-      background:var(--primary); color:#fff; border:none;
-      padding:.6rem 1.4rem; border-radius:9999px;
+      justify-self:start; background:var(--primary); color:#fff;
+      border:none; padding:.6rem 1.4rem; border-radius:9999px;
       cursor:pointer; font-weight:600; transition:filter .2s;
     }
     #addLine:hover { filter:brightness(1.1) }
 
-    /* Recipient group */
-    .address-group {
-      display:grid; gap:.75rem;
-    }
+    /* Recipient */
+    .address-group { display:grid; gap:.75rem; }
     .address-group input {
       padding:.6rem 1rem; border:1px solid var(--input-border);
       border-radius:9999px; background:var(--input-bg);
@@ -137,7 +91,7 @@
       outline:3px solid var(--focus-ring); outline-offset:2px;
     }
 
-    /* Finalize group */
+    /* Finalize */
     #generate {
       background:var(--primary); color:#fff; border:none;
       padding:.6rem 1.4rem; border-radius:9999px;
@@ -151,53 +105,52 @@
     }
     #linkField {
       flex:1; padding:.6rem 1rem; border:1px solid var(--input-border);
-      border-radius:9999px; background:#fafafa;
-      font-size:.85rem; outline:none;
+      border-radius:9999px; background:#fafafa; font-size:.85rem;
+      outline:none;
     }
     #copyBtn {
-      background:var(--secondary); color:#fff;
-      border:none; padding:.6rem 1.4rem;
-      border-radius:9999px; cursor:pointer;
+      background:var(--secondary); color:#fff; border:none;
+      padding:.6rem 1.4rem; border-radius:9999px; cursor:pointer;
     }
+
+    /* custom pointer dot */
+    #cur {
+      position:fixed; width:20px; height:20px;
+      background:var(--primary); border-radius:50%;
+      box-shadow:0 0 0 2px #fff, 0 0 6px rgba(0,0,0,.25);
+      pointer-events:none; transform:translate(-50%,-50%);
+      transition:transform .1s ease;
+      z-index:2000;
+    }
+    #cur.click { transform:translate(-50%,-50%) scale(0.5); }
   </style>
 </head>
 <body>
 
   <h1>Create Your Seafoam Envelope E‑Card</h1>
 
-  <!-- Floating toolbar -->
+  <!-- Custom pointer -->
+  <div id="cur"></div>
+
+  <!-- toolbar -->
   <div id="toolbar">
-    <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left">
-      <img src="align-left.svg" alt="Left" class="tb-icon">
-    </button>
-    <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center">
-      <img src="align-center.svg" alt="Center" class="tb-icon">
-    </button>
-    <button type="button" class="tb-btn" id="alignRightBtn" title="Align right">
-      <img src="align-right.svg" alt="Right" class="tb-icon">
-    </button>
+    <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left"><img src="align-left.svg" class="tb-icon"></button>
+    <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center"><img src="align-center.svg" class="tb-icon"></button>
+    <button type="button" class="tb-btn" id="alignRightBtn" title="Align right"><img src="align-right.svg" class="tb-icon"></button>
     <button type="button" class="tb-btn" id="boldBtn" title="Bold"><b>B</b></button>
     <button type="button" class="tb-btn" id="italicBtn" title="Italic"><i>I</i></button>
     <button type="button" class="tb-btn" id="underlineBtn" title="Underline"><u>U</u></button>
   </div>
 
   <form id="cardForm">
-    <!-- Sticker -->
     <fieldset>
       <legend>Sticker</legend>
       <div class="sticker-group">
-        <label>
-          Upload
-          <input type="file" id="stickerFile" accept="image/*">
-        </label>
-        <label>
-          or URL
-          <input type="text" id="stickerUrl" placeholder="https://…">
-        </label>
+        <label>Upload<input type="file" id="stickerFile" accept="image/*"></label>
+        <label>or URL<input type="text" id="stickerUrl" placeholder="https://…"></label>
       </div>
     </fieldset>
 
-    <!-- Colors -->
     <fieldset>
       <legend>Colors</legend>
       <div class="color-group">
@@ -207,45 +160,28 @@
         <label>Background<input type="color" id="bgColor" value="#f0f0f0"></label>
       </div>
       <div class="palette-group">
-        <!-- Seafoam -->
         <button type="button" class="palette" data-colors='{"body":"#A8E6CF","flap":"#76C69C","paper":"#fff8e7","background":"#f0f0f0"}'>
           <div class="swatch" style="background:#A8E6CF"></div>
           <div class="swatch" style="background:#76C69C"></div>
           <div class="swatch" style="background:#fff8e7"></div>
           <div class="swatch" style="background:#f0f0f0"></div>
         </button>
-        <!-- Sunset -->
-        <button type="button" class="palette" data-colors='{"body":"#FFD54F","flap":"#FFB300","paper":"#FFF8E1","background":"#FFF3E0"}'>
-          <div class="swatch" style="background:#FFD54F"></div>
-          <div class="swatch" style="background:#FFB300"></div>
-          <div class="swatch" style="background:#FFF8E1"></div>
-          <div class="swatch" style="background:#FFF3E0"></div>
-        </button>
-        <!-- Forest -->
-        <button type="button" class="palette" data-colors='{"body":"#81C784","flap":"#388E3C","paper":"#E8F5E9","background":"#F1F8E9"}'>
-          <div class="swatch" style="background:#81C784"></div>
-          <div class="swatch" style="background:#388E3C"></div>
-          <div class="swatch" style="background:#E8F5E9"></div>
-          <div class="swatch" style="background:#F1F8E9"></div>
-        </button>
+        <!-- add more palettes as needed -->
       </div>
     </fieldset>
 
-    <!-- Message Lines -->
     <fieldset>
       <legend>Message Lines</legend>
       <ul id="lines"></ul>
       <button type="button" id="addLine">+ Add line</button>
     </fieldset>
 
-    <!-- Recipient -->
     <fieldset class="address-group">
       <legend>Recipient</legend>
-      <label>To <input type="text" id="toField"></label>
-      <label>From <input type="text" id="fromField"></label>
+      <label>To<input type="text" id="toField"></label>
+      <label>From<input type="text" id="fromField"></label>
     </fieldset>
 
-    <!-- Finalize -->
     <fieldset>
       <legend>Finalize</legend>
       <button type="button" id="generate">Generate Link</button>
@@ -257,7 +193,17 @@
   </form>
 
   <script>
-  const CardBuilder = (() => {
+  (() => {
+    // pointer logic
+    const cur = document.getElementById('cur');
+    document.addEventListener('mousemove', e => {
+      cur.style.left = e.clientX + 'px';
+      cur.style.top  = e.clientY + 'px';
+    });
+    document.addEventListener('mousedown', ()=>cur.classList.add('click'));
+    document.addEventListener('mouseup',   ()=>cur.classList.remove('click'));
+
+    // existing builder logic
     const linesUl        = document.getElementById('lines');
     const toolbar        = document.getElementById('toolbar');
     const alignLeftBtn   = document.getElementById('alignLeftBtn');
@@ -281,23 +227,21 @@
     const linkField      = document.getElementById('linkField');
     const copyBtn        = document.getElementById('copyBtn');
 
-    let focusedInput = null;
-    let fileDataUrl = '';
+    let focusedInput = null, fileDataUrl = '';
 
+    // file upload → base64
     fileInput.addEventListener('change', () => {
       const f = fileInput.files[0];
-      if (!f) { fileDataUrl = ''; return; }
+      if (!f) return fileDataUrl = '';
       if (f.size > 2*1024*1024) {
-        alert('Max file size 2 MB');
-        fileInput.value = '';
-        return;
+        alert('Max 2 MB'); fileInput.value=''; return;
       }
       const r = new FileReader();
-      r.onload = () => fileDataUrl = r.result;
+      r.onload = ()=>fileDataUrl = r.result;
       r.readAsDataURL(f);
     });
 
-    // Apply palette
+    // palette click
     palettes.forEach(btn => {
       btn.addEventListener('click', () => {
         const c = JSON.parse(btn.dataset.colors);
@@ -316,7 +260,7 @@
       li.append(inp);
       const del = document.createElement('button');
       del.type='button'; del.textContent='✕'; del.className='delete-btn';
-      del.addEventListener('click', ()=>{
+      del.addEventListener('click', () => {
         if (focusedInput===inp) hideToolbar();
         li.remove();
       });
@@ -345,9 +289,13 @@
       toolbar.style.display='none'; focusedInput=null;
     }
 
-    function applyAlign(a) { if(!focusedInput)return; focusedInput.style.textAlign=a; showToolbar({target:focusedInput}); }
+    function applyAlign(a) {
+      if (!focusedInput) return;
+      focusedInput.style.textAlign = a;
+      showToolbar({target:focusedInput});
+    }
     function toggleStyle(btn,prop,val) {
-      if(!focusedInput)return;
+      if (!focusedInput) return;
       const on = btn.classList.toggle('active');
       focusedInput.style[prop] = on? val : (prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
     }
@@ -357,10 +305,10 @@
       return {
         sticker,
         colors: {
-          body:  bodyColor.value,
-          flap:  flapColor.value,
-          paper: paperColor.value,
-          background: bgColor.value
+          body:bodyColor.value,
+          flap:flapColor.value,
+          paper:paperColor.value,
+          background:bgColor.value
         },
         to: toEl.value.trim(),
         from: fromEl.value.trim(),
@@ -376,39 +324,33 @@
 
     function onGenerate() {
       const d = collect();
-      if (!d.sticker) return alert('Upload or enter a sticker URL.');
+      if (!d.sticker) return alert('Upload or enter sticker URL.');
       if (!d.lines.length) return alert('Add at least one line.');
       const p = btoa(encodeURIComponent(JSON.stringify(d)));
       linkField.value = `${location.origin}/ecard.html?d=${p}`;
       linkWrap.style.display = 'flex';
     }
 
-    function init() {
-      addLine('Your first message');
-      addLine('A cheerful note');
-      addLineBtn.addEventListener('click', ()=>addLine());
-      alignLeftBtn.addEventListener('click', ()=>applyAlign('left'));
-      alignCenterBtn.addEventListener('click', ()=>applyAlign('center'));
-      alignRightBtn.addEventListener('click', ()=>applyAlign('right'));
-      boldBtn.addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
-      italicBtn.addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
-      underlineBtn.addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
-      document.addEventListener('click', e=> {
-        if (!toolbar.contains(e.target) && !linesUl.contains(e.target)) hideToolbar();
-      });
-      genBtn.addEventListener('click', onGenerate);
-      copyBtn.addEventListener('click', ()=>{
-        navigator.clipboard.writeText(linkField.value)
-          .then(()=>copyBtn.textContent='Copied!')
-          .catch(()=>alert('Copy failed'));
-        setTimeout(()=>copyBtn.textContent='Copy',1200);
-      });
-    }
-
-    return { init };
+    addLine('Your first message');
+    addLine('A cheerful note');
+    addLineBtn.addEventListener('click', ()=>addLine());
+    alignLeftBtn.addEventListener('click', ()=>applyAlign('left'));
+    alignCenterBtn.addEventListener('click', ()=>applyAlign('center'));
+    alignRightBtn.addEventListener('click', ()=>applyAlign('right'));
+    boldBtn.addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
+    italicBtn.addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
+    underlineBtn.addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
+    document.addEventListener('click', e=> {
+      if (!toolbar.contains(e.target) && !linesUl.contains(e.target)) hideToolbar();
+    });
+    genBtn.addEventListener('click', onGenerate);
+    copyBtn.addEventListener('click', ()=>{
+      navigator.clipboard.writeText(linkField.value)
+        .then(()=>copyBtn.textContent='Copied!')
+        .catch(()=>alert('Copy failed'));
+      setTimeout(()=>copyBtn.textContent='Copy',1200);
+    });
   })();
-
-  document.addEventListener('DOMContentLoaded', CardBuilder.init);
   </script>
 </body>
 </html>
