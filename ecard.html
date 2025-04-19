@@ -12,7 +12,7 @@
     body {
       background:#f0f0f0;
       font-family:Poppins, sans-serif;
-      min-height:1800vh;
+      min-height:1800vh; /* plenty of room */
     }
 
     /* envelope container */
@@ -23,63 +23,69 @@
       perspective:800px;
       transform-style:preserve-3d;
       transition:top .6s ease, transform .8s ease;
-      z-index:10; overflow:hidden;
+      z-index:10;
+      overflow:hidden;
     }
     .envelope.open { top:50%; }
-    .envelope.flip { transform:translate(-50%,-50%) rotateY(180deg); }
+    .envelope.flip {
+      transform:translate(-50%,-50%) rotateY(180deg);
+    }
 
-    /* paper */
+    /* cream paper */
     .paper {
       position:absolute; bottom:2px; left:2px;
       width:calc(100% - 4px); height:0;
-      background:var(--paper,#fff8e7);
-      overflow:hidden; padding:2rem 1rem 2rem;
+      background:#fff8e7;
+      overflow:hidden;
+      padding:2rem 1rem 2rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
-      transition:height .1s linear; z-index:2;
+      transition:height .1s linear;
+      z-index:2;
       text-align:center;
     }
 
-    /* body */
+    /* seafoam green body */
     .body {
       position:absolute; top:0; left:0;
       width:100%; height:100%;
-      background:var(--body,#A8E6CF);
-      border:2px solid var(--body-border,#82C9A1);
-      border-radius:4px; z-index:1;
+      background:#A8E6CF;
+      border:2px solid #82C9A1; border-radius:4px;
+      z-index:1;
     }
 
     /* sticker */
     .sticker {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      height:200px; width:auto; z-index:5;
+      width:auto; height:200px;
+      z-index:5; pointer-events:none;
       transition:opacity .6s ease;
     }
     .envelope.flip .sticker { opacity:0 }
 
-    /* mask */
+    /* pocket mask */
     .mask {
       position:absolute; bottom:2px; left:2px;
       width:calc(100% - 4px); height:60%;
-      background:var(--body,#A8E6CF); z-index:3;
+      background:#A8E6CF; z-index:3;
     }
 
     /* flap */
     .flap {
       position:absolute; top:0; left:0;
       width:100%; height:50%;
-      background:var(--flap,#76C69C);
-      border:2px solid var(--flap-border,#60A085);
+      background:#76C69C; border:2px solid #60A085;
       clip-path:polygon(0 0,100% 0,50% 100%);
       transform-origin:top; transform:rotateX(0deg);
       transition:transform .6s ease, opacity .4s ease;
       z-index:4; backface-visibility:visible;
     }
     .envelope.open .flap {
-      transform:rotateX(180deg); z-index:1;
+      transform:rotateX(180deg);
+      z-index:1; /* behind paper */
     }
 
-    /* each styled line */
+    /* styled message lines */
     .line {
       margin:1rem 0;
       font-size:1.25rem;
@@ -102,7 +108,8 @@
     .confetti {
       position:absolute; top:0;
       width:8px; height:8px; border-radius:50%;
-      animation:fall 3s ease-out forwards; z-index:7;
+      animation:fall 3s ease-out forwards;
+      z-index:7;
     }
     @keyframes fall {
       to { transform:translateY(100vh); opacity:0 }
@@ -122,60 +129,48 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
-    // decode and parse
+    // 1. Decode the builder payload
     const raw = new URLSearchParams(location.search).get('d');
-    if (!raw) return document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
+    if (!raw) {
+      document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
+      return;
+    }
     let data;
     try { data = JSON.parse(decodeURIComponent(atob(raw))); }
-    catch { return document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>'; }
-
-    // shade helper
-    function shade(hex) {
-      const n = parseInt(hex.slice(1),16), a = -0.2*255;
-      let r=(n>>16)+a, g=((n>>8)&255)+a, b=(n&255)+a;
-      r=Math.max(0,Math.min(255,r));
-      g=Math.max(0,Math.min(255,g));
-      b=Math.max(0,Math.min(255,b));
-      return "#"+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+    catch {
+      document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>';
+      return;
     }
 
-    // apply colors
-    const root = document.documentElement.style;
-    root.setProperty('--body', data.colors.body);
-    root.setProperty('--body-border', shade(data.colors.body));
-    root.setProperty('--flap', data.colors.flap);
-    root.setProperty('--flap-border', shade(data.colors.flap));
-    root.setProperty('--paper', data.colors.paper);
-    root.setProperty('--bg', data.colors.bg);
+    // 2. Render sticker
+    const stickerEl = document.getElementById('sticker');
+    if (data.sticker) stickerEl.src = data.sticker;
+    else stickerEl.remove();
 
-    // sticker
-    const st = document.getElementById('sticker');
-    data.sticker ? st.src = data.sticker : st.remove();
-
-    // render lines with styling
+    // 3. Render styled lines
     const paperEl = document.getElementById('paper');
-    function escapeHTML(s){
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    function esc(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
     data.lines.forEach(line => {
-      const d = document.createElement('div');
-      d.className = 'line';
-      d.style.textAlign = line.align;
-      let html = escapeHTML(line.text);
-      if (line.bold)      html = `<strong>${html}</strong>`;
-      if (line.italic)    html = `<em>${html}</em>`;
-      if (line.underline) html = `<u>${html}</u>`;
-      d.innerHTML = html;
-      paperEl.appendChild(d);
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.style.textAlign = line.align;
+      let txt = esc(line.text);
+      if (line.bold)      txt = `<strong>${txt}</strong>`;
+      if (line.italic)    txt = `<em>${txt}</em>`;
+      if (line.underline) txt = `<u>${txt}</u>`;
+      div.innerHTML = txt;
+      paperEl.appendChild(div);
     });
 
-    // render address
-    document.getElementById('address').innerHTML =
-      `<p>To: ${escapeHTML(data.to||'')}</p><p>From: ${escapeHTML(data.from||'')}</p>`;
+    // 4. Render To/From
+    const addrEl = document.getElementById('address');
+    addrEl.innerHTML = `<p>To: ${esc(data.to||'')}</p><p>From: ${esc(data.from||'')}</p>`;
 
-    // animation logic (same as before)
-    const env   = document.getElementById('env');
-    const vh    = window.innerHeight;
+    // 5. Original scroll→open→unroll→retract→flip→confetti logic
+    const env = document.getElementById('env');
+    const vh  = window.innerHeight;
     const maskH = env.clientHeight * 0.6;
     const fullH = paperEl.scrollHeight;
     const extra = 50;
@@ -184,7 +179,7 @@
     paperEl.style.height = '0px';
 
     window.addEventListener('scroll', () => {
-      const y       = window.scrollY;
+      const y = window.scrollY;
       const unroll  = 7.5 * vh;
       const pause   = 0.5 * vh;
       const retract = 7.5 * vh;
