@@ -6,10 +6,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    /* reset & scrollable body */
     * { margin:0; padding:0; box-sizing:border-box; font-family:Poppins,sans-serif }
-    html, body { width:100%; overflow-x:hidden; }
-    body { background:var(--bg,#f0f0f0); min-height:200vh; }
+    html, body { width:100%; overflow-x:hidden; background:var(--bg,#f0f0f0) }
+    body { min-height:2200vh } /* plenty of room */
 
+    /* envelope container */
     .envelope {
       position:fixed; top:65%; left:50%;
       width:60vw; height:60vh;
@@ -19,61 +21,84 @@
       transition:top .6s ease, transform .8s ease;
       overflow:hidden;
     }
-    .envelope.open { top:50%; }
-    .envelope.flip { transform:translate(-50%,-50%) rotateY(180deg); }
+    .envelope.open   { top:50%; }
+    .envelope.flip   { transform:translate(-50%,-50%) rotateY(180deg); }
 
-    .body, .mask, .paper, .sticker, .flap, .address {
+    /* common for front faces */
+    .body, .mask, .flap, .paper, .sticker {
       position:absolute;
+      transform:rotateY(0deg);
       backface-visibility:hidden;
     }
 
     .body {
       top:0; left:0; width:100%; height:100%;
-      background:var(--body,#A8E6CF); border:2px solid var(--body-border,#82C9A1);
+      background:var(--body,#A8E6CF);
+      border:2px solid var(--body-border,#82C9A1);
       z-index:1;
     }
     .mask {
-      bottom:2px; left:2px; width:calc(100% - 4px); height:60%;
-      background:var(--body,#A8E6CF); z-index:3;
+      bottom:2px; left:2px;
+      width:calc(100% - 4px); height:60%;
+      background:var(--body,#A8E6CF);
+      z-index:3;
     }
     .flap {
       top:0; left:0; width:100%; height:50%;
-      background:var(--flap,#76C69C); border:2px solid var(--flap-border,#60A085);
+      background:var(--flap,#76C69C);
+      border:2px solid var(--flap-border,#60A085);
       clip-path:polygon(0 0,100% 0,50% 100%);
-      transform-origin:top; transition:transform .6s ease, opacity .4s ease;
+      transform-origin:top;
+      transition:transform .6s ease, opacity .4s ease;
       z-index:5; opacity:1;
     }
-    .envelope.open .flap { transform:rotateX(180deg); }
-    .envelope.flip .flap { opacity:0; }
+    .envelope.open .flap {
+      transform:rotateX(180deg);
+    }
+    .envelope.flip .flap {
+      opacity:0;
+    }
 
     .paper {
-      bottom:2px; left:2px; width:calc(100% - 4px); height:0;
-      background:var(--paper,#fff8e7); overflow:hidden; padding:2rem 1rem;
-      text-align:center; transition:height .1s linear; z-index:2;
+      bottom:2px; left:2px;
+      width:calc(100% - 4px); height:0;
+      background:var(--paper,#fff8e7);
+      overflow:hidden; padding:2rem 1rem;
+      text-align:center; transition:height .1s linear;
+      z-index:2;
     }
-    .line { margin:1rem 0; font-size:1.25rem; }
+    .line {
+      margin:1rem 0; font-size:1.25rem;
+    }
 
     .sticker {
-      top:50%; left:50%; transform:translate(-50%,-50%);
-      height:200px; width:auto; z-index:4; transition:opacity .6s ease;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      height:200px; width:auto;
+      z-index:4; transition:opacity .6s ease;
     }
-    .envelope.flip .sticker { opacity:0; }
+    .envelope.flip .sticker {
+      opacity:0;
+    }
 
-    /* ADDRESS: starts rotated away, then flips upright */
+    /* back‑face address */
     .address {
-      top:50%; left:50%; width:100%; /* width so text wraps nicely */
+      position:absolute;
+      top:50%; left:50%;
       transform:translate(-50%,-50%) rotateY(180deg);
-      text-align:center; color:#155f46; opacity:0;
-      transition:transform .6s ease, opacity .6s ease;
+      text-align:center; color:#155f46;
+      opacity:0; transition:opacity .6s ease;
       z-index:6;
+      backface-visibility:hidden;
     }
     .envelope.flip .address {
-      transform:translate(-50%,-50%) rotateY(0deg);
       opacity:1;
     }
 
+    /* confetti dots */
     .confetti {
-      position:absolute; top:0; width:8px; height:8px; border-radius:50%;
+      position:absolute; top:0;
+      width:8px; height:8px; border-radius:50%;
       animation:fall 3s ease-out forwards; z-index:7;
     }
     @keyframes fall { to { transform:translateY(100vh); opacity:0 } }
@@ -92,31 +117,30 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
-    // 1) Decode data
+    // 1. Decode data
     const raw = new URLSearchParams(location.search).get('d');
     if (!raw) {
       document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
       return;
     }
     let data;
-    try {
-      data = JSON.parse(decodeURIComponent(atob(raw)));
-    } catch {
+    try { data = JSON.parse(decodeURIComponent(atob(raw))); }
+    catch {
       document.body.innerHTML = '<p style="padding:2rem">Invalid card data.</p>';
       return;
     }
 
-    // 2) Shade helper
+    // 2. Shade helper
     function shade(hex) {
-      const n = parseInt(hex.slice(1),16), adj = -0.2*255;
-      let r=(n>>16)+adj, g=((n>>8)&255)+adj, b=(n&255)+adj;
+      const n = parseInt(hex.slice(1),16), a = -0.2*255;
+      let r=(n>>16)+a, g=((n>>8)&255)+a, b=(n&255)+a;
       r=Math.max(0,Math.min(255,r));
       g=Math.max(0,Math.min(255,g));
       b=Math.max(0,Math.min(255,b));
       return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
     }
 
-    // 3) Apply CSS vars
+    // 3. Apply CSS variables
     const root = document.documentElement.style;
     root.setProperty('--body', data.colors.body);
     root.setProperty('--body-border', shade(data.colors.body));
@@ -125,54 +149,56 @@
     root.setProperty('--paper', data.colors.paper);
     root.setProperty('--bg', data.colors.bg);
 
-    // 4) Sticker
+    // 4. Sticker
     const st = document.getElementById('sticker');
-    if (data.sticker) st.src = data.sticker; else st.remove();
+    if (data.sticker) st.src = data.sticker;
+    else st.remove();
 
-    // 5) Lines
+    // 5. Lines
     const paperEl = document.getElementById('paper');
     data.lines.forEach(txt => {
       const d = document.createElement('div');
-      d.className='line'; d.textContent = txt;
+      d.className = 'line';
+      d.textContent = txt;
       paperEl.appendChild(d);
     });
 
-    // 6) Address
+    // 6. Address
     document.getElementById('address').innerHTML =
       `<p>To: ${data.to||''}</p><p>From: ${data.from||''}</p>`;
 
-    // 7) Set body height for full scroll
+    // 7. Set body height
     const vh = window.innerHeight;
-    const unroll  = 7.5*vh, pause=0.5*vh, retract=7.5*vh, extra=vh;
-    document.body.style.height = (10 + unroll + pause + retract + extra) + 'px';
+    const un = 7.5*vh, pause=0.5*vh, ret=7.5*vh, extra=vh;
+    document.body.style.height = `${10 + un + pause + ret + extra}px`;
 
-    // 8) Animate on scroll
+    // 8. Scroll animation
     const env = document.getElementById('env');
-    let flipped=false;
+    let flipped = false;
     const maskH = env.clientHeight*0.6;
     const fullH = paperEl.scrollHeight;
-    const totalH = maskH + fullH + 50;
-    paperEl.style.height = '0px';
+    const totalH= maskH + fullH + 50;
+    paperEl.style.height='0px';
 
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      if (y > 10) env.classList.add('open');
+    window.addEventListener('scroll',()=>{
+      const y=window.scrollY;
+      if(y>10) env.classList.add('open');
 
-      if (y <= unroll) {
-        paperEl.style.height = `${totalH*(y/unroll)}px`;
-      } else if (y <= unroll+pause) {
+      if(y<=un) {
+        paperEl.style.height = `${totalH * (y/un)}px`;
+      } else if(y<=un+pause) {
         paperEl.style.height = `${totalH}px`;
-      } else if (y <= unroll+pause+retract) {
-        const r = (y - unroll - pause)/retract;
-        paperEl.style.height = `${totalH*(1-r)}px`;
-      } else if (!flipped) {
-        flipped = true;
+      } else if(y<=un+pause+ret) {
+        const r=(y-un-pause)/ret;
+        paperEl.style.height = `${totalH * (1-r)}px`;
+      } else if(!flipped) {
+        flipped=true;
         env.classList.remove('open');
-        setTimeout(() => {
+        setTimeout(()=>{
           env.classList.add('flip');
-          setInterval(() => {
-            for (let i=0; i<8; i++){
-              const c = document.createElement('div');
+          setInterval(()=>{
+            for(let i=0;i<8;i++){
+              const c=document.createElement('div');
               c.className='confetti';
               c.style.left=`${Math.random()*100}vw`;
               c.style.backgroundColor=`hsl(${Math.random()*360},100%,60%)`;
@@ -184,7 +210,7 @@
       }
     });
 
-    // Kickstart on mobile
+    // kickstart mobile
     setTimeout(()=>window.scrollTo(0,1),50);
   });
   </script>
