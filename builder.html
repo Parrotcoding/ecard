@@ -12,56 +12,153 @@
       --bg: #f0f0f0;
       --input-bg: #fff;
       --input-border: #ccc;
+      --toolbar-bg: #fff;
+      --toolbar-border: #ddd;
     }
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:var(--bg); padding:2rem; }
     h1 { margin-bottom:1rem; font-weight:700; }
-    form { max-width:600px; display:grid; gap:1rem; }
 
-    /* File & URL inputs */
+    /* Sticker group */
     .sticker-group {
-      display:flex; gap:1rem; align-items:center;
+      display:flex; gap:1rem; align-items:flex-end;
+      margin-bottom:1rem;
     }
     .sticker-group label {
-      flex:1; display:flex; flex-direction:column; font-size:.9rem;
+      flex:1; font-size:.9rem; display:flex; flex-direction:column;
     }
     .sticker-group input[type="file"] {
-      border:none; background:var(--input-bg);
+      padding:.4rem;
     }
     .sticker-group input[type="text"] {
       padding:.6rem 1rem; border:1px solid var(--input-border);
       border-radius:9999px; background:var(--input-bg); width:100%;
     }
 
-    /* lines + toolbar + other controls (same as before) */
-    /* ... paste your existing styles for #toolbar, #lines, inputs, buttons ... */
+    /* Floating toolbar */
+    #toolbar {
+      position:absolute;
+      display:none;
+      flex-direction:column;
+      gap:.25rem;
+      background:var(--toolbar-bg);
+      border:1px solid var(--toolbar-border);
+      border-radius:9999px;
+      padding:.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:100;
+    }
+    .tb-btn {
+      width:2.4rem; height:2.4rem;
+      border:none; background:transparent;
+      cursor:pointer; display:flex;
+      align-items:center; justify-content:center;
+      color:#666; border-radius:50%;
+      transition:background .2s,color .2s;
+      outline:none;
+    }
+    .tb-btn:hover { background:#eee; }
+    .tb-btn.active { background:var(--secondary); color:#fff; }
+    .tb-btn:focus {
+      outline:3px solid rgba(96,160,133,0.6);
+      outline-offset:2px;
+    }
+    .tb-icon { width:1.2rem; height:1.2rem; object-fit:contain; }
 
-    /* For brevity, assume you merge in all the previous styles here */
+    /* Lines list */
+    #lines { list-style:none; padding:0; margin:0; }
+    #lines li { position:relative; margin-bottom:.75rem; }
+    #lines input {
+      width:100%; padding:.6rem 2.5rem .6rem 1rem;
+      border:1px solid var(--input-border); border-radius:9999px;
+      background:var(--input-bg); transition:all .2s; outline:none;
+    }
+    #lines input:focus {
+      outline:3px solid rgba(96,160,133,0.6); outline-offset:2px;
+    }
+    .delete-btn {
+      position:absolute; top:50%; right:.5rem;
+      transform:translateY(-50%);
+      border:none; background:transparent;
+      font-size:1.2rem; color:#999; cursor:pointer;
+    }
+    .delete-btn:hover { color:#333; }
+
+    /* Other controls */
+    input[type="text"], select {
+      width:100%; padding:.6rem 1rem;
+      border:1px solid var(--input-border);
+      border-radius:9999px; background:var(--input-bg);
+      outline:none; transition:all .2s;
+    }
+    input[type="text"]:focus, select:focus {
+      outline:3px solid rgba(96,160,133,0.6); outline-offset:2px;
+    }
+    button, #addLine {
+      background:var(--primary); color:#fff; border:none;
+      padding:.6rem 1.4rem; border-radius:9999px;
+      cursor:pointer; font-weight:600;
+      transition:filter .2s;
+    }
+    button:hover, #addLine:hover { filter:brightness(1.1); }
+
+    /* Link display */
+    #linkWrap {
+      display:none; gap:.5rem; max-width:600px; margin-top:1rem;
+      align-items:center; flex-wrap:wrap;
+    }
+    #linkField {
+      flex:1; padding:.6rem 1rem; border:1px solid var(--input-border);
+      border-radius:9999px; background:#fafafa; font-size:.85rem;
+      outline:none;
+    }
+    #copyBtn { background:var(--secondary); }
   </style>
 </head>
 <body>
 
   <h1>Create Your Seafoam Envelope E‑Card</h1>
 
+  <!-- Floating toolbar -->
   <div id="toolbar">
-    <!-- your floating toolbar here -->
+    <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left">
+      <img src="align-left.svg" alt="Left" class="tb-icon">
+    </button>
+    <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center">
+      <img src="align-center.svg" alt="Center" class="tb-icon">
+    </button>
+    <button type="button" class="tb-btn" id="alignRightBtn" title="Align right">
+      <img src="align-right.svg" alt="Right" class="tb-icon">
+    </button>
+    <button type="button" class="tb-btn" id="boldBtn" title="Bold"><b>B</b></button>
+    <button type="button" class="tb-btn" id="italicBtn" title="Italic"><i>I</i></button>
+    <button type="button" class="tb-btn" id="underlineBtn" title="Underline"><u>U</u></button>
   </div>
 
   <form id="cardForm">
-    <!-- Sticker upload or URL -->
+    <!-- Upload or URL -->
     <div class="sticker-group">
       <label>
-        Upload sticker<br>
+        Upload sticker
         <input type="file" id="stickerFile" accept="image/*">
       </label>
       <label>
-        or Sticker URL<br>
+        or Sticker URL
         <input type="text" id="stickerUrl" placeholder="https://…">
       </label>
     </div>
 
-    <!-- Message lines, To/From, Generate button -->
-    <!-- reuse your existing markup for lines, addLine, toField, fromField, generate -->
+    <!-- Message lines -->
+    <label>Message lines</label>
+    <ul id="lines"></ul>
+    <button type="button" id="addLine">+ Add line</button>
+
+    <!-- To / From -->
+    <label>To <input type="text" id="toField"></label>
+    <label>From <input type="text" id="fromField"></label>
+
+    <!-- Generate -->
+    <button type="button" id="generate">Generate Link</button>
   </form>
 
   <div id="linkWrap">
@@ -72,35 +169,96 @@
   <script>
   const CardBuilder = (() => {
     // DOM refs
-    const fileInput   = document.getElementById('stickerFile');
-    const urlInput    = document.getElementById('stickerUrl');
-    let fileDataUrl   = '';
+    const linesUl       = document.getElementById('lines');
+    const toolbar       = document.getElementById('toolbar');
+    const alignLeftBtn  = document.getElementById('alignLeftBtn');
+    const alignCenterBtn= document.getElementById('alignCenterBtn');
+    const alignRightBtn = document.getElementById('alignRightBtn');
+    const boldBtn       = document.getElementById('boldBtn');
+    const italicBtn     = document.getElementById('italicBtn');
+    const underlineBtn  = document.getElementById('underlineBtn');
+    const addLineBtn    = document.getElementById('addLine');
+    const fileInput     = document.getElementById('stickerFile');
+    const urlInput      = document.getElementById('stickerUrl');
+    const toEl          = document.getElementById('toField');
+    const fromEl        = document.getElementById('fromField');
+    const generateBtn   = document.getElementById('generate');
+    const linkWrap      = document.getElementById('linkWrap');
+    const linkField     = document.getElementById('linkField');
+    const copyBtn       = document.getElementById('copyBtn');
 
-    // read file as data URL when selected
+    let focusedInput = null;
+    let fileDataUrl = '';
+
+    // Handle file upload as base64
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
-      if (!file) return;
+      if (!file) { fileDataUrl = ''; return; }
       if (file.size > 2*1024*1024) {
-        alert('Max file size is 2 MB.');
+        alert('Max file size 2 MB');
         fileInput.value = '';
         return;
       }
       const reader = new FileReader();
-      reader.onload = () => {
-        fileDataUrl = reader.result;
-      };
+      reader.onload = () => fileDataUrl = reader.result;
       reader.readAsDataURL(file);
     });
 
-    // Collect, but prefer uploaded file over URL
+    function addLine(text='') {
+      const li = document.createElement('li');
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.value = text; inp.placeholder = 'Your message';
+      inp.addEventListener('focus', showToolbar);
+      li.append(inp);
+      const del = document.createElement('button');
+      del.type='button'; del.textContent='✕'; del.className='delete-btn';
+      del.addEventListener('click', ()=>{
+        if (focusedInput===inp) hideToolbar();
+        li.remove();
+      });
+      li.append(del);
+      linesUl.appendChild(li);
+    }
+
+    function showToolbar(e) {
+      focusedInput = e.target;
+      const st = window.getComputedStyle(focusedInput);
+      [alignLeftBtn,alignCenterBtn,alignRightBtn].forEach(b=>b.classList.remove('active'));
+      if (st.textAlign==='center') alignCenterBtn.classList.add('active');
+      else if (st.textAlign==='right') alignRightBtn.classList.add('active');
+      else alignLeftBtn.classList.add('active');
+      [boldBtn,italicBtn,underlineBtn].forEach(b=>b.classList.remove('active'));
+      if (st.fontWeight==='700') boldBtn.classList.add('active');
+      if (st.fontStyle==='italic') italicBtn.classList.add('active');
+      if (st.textDecoration.includes('underline')) underlineBtn.classList.add('active');
+      const r = focusedInput.getBoundingClientRect();
+      toolbar.style.left = r.right + 8 + 'px';
+      toolbar.style.top  = r.top + r.height/2 + 'px';
+      toolbar.style.display = 'flex';
+    }
+
+    function hideToolbar() {
+      toolbar.style.display = 'none'; focusedInput = null;
+    }
+
+    function applyAlign(align) {
+      if (!focusedInput) return;
+      focusedInput.style.textAlign = align;
+      showToolbar({target:focusedInput});
+    }
+    function toggleStyle(btn, prop, val) {
+      if (!focusedInput) return;
+      const on = btn.classList.toggle('active');
+      focusedInput.style[prop] = on ? val : (prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
+    }
+
     function collect() {
       const sticker = fileDataUrl || urlInput.value.trim();
-      // rest of your collect logic (lines, to, from)
-      const data = {
+      return {
         sticker,
-        to: document.getElementById('toField').value.trim(),
-        from: document.getElementById('fromField').value.trim(),
-        lines: Array.from(document.querySelectorAll('#lines input')).map(i=>({
+        to: toEl.value.trim(),
+        from: fromEl.value.trim(),
+        lines: Array.from(linesUl.querySelectorAll('input')).map(i=>({
           text: i.value.trim(),
           align: i.style.textAlign||'left',
           bold: i.style.fontWeight==='700',
@@ -108,7 +266,6 @@
           underline: i.style.textDecoration.includes('underline')
         })).filter(l=>l.text)
       };
-      return data;
     }
 
     function onGenerate() {
@@ -116,14 +273,30 @@
       if (!data.sticker) return alert('Please upload a sticker or enter a URL.');
       if (!data.lines.length) return alert('Add at least one line.');
       const payload = btoa(encodeURIComponent(JSON.stringify(data)));
-      const url = `${location.origin}/ecard.html?d=${payload}`;
-      document.getElementById('linkField').value = url;
-      document.getElementById('linkWrap').style.display = 'flex';
+      linkField.value = `${location.origin}/ecard.html?d=${payload}`;
+      linkWrap.style.display = 'flex';
     }
 
     function init() {
-      // your existing init code: addLine seeds, toolbar wiring, generate click, copy click
-      document.getElementById('generate').addEventListener('click', onGenerate);
+      addLine('Your first message');
+      addLine('A cheerful note');
+      addLineBtn.addEventListener('click', ()=>addLine());
+      alignLeftBtn.addEventListener('click', ()=>applyAlign('left'));
+      alignCenterBtn.addEventListener('click', ()=>applyAlign('center'));
+      alignRightBtn.addEventListener('click', ()=>applyAlign('right'));
+      boldBtn.addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
+      italicBtn.addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
+      underlineBtn.addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
+      document.addEventListener('click', e=>{
+        if (!toolbar.contains(e.target) && !linesUl.contains(e.target)) hideToolbar();
+      });
+      generateBtn.addEventListener('click', onGenerate);
+      copyBtn.addEventListener('click', ()=>{
+        navigator.clipboard.writeText(linkField.value)
+          .then(()=>copyBtn.textContent='Copied!')
+          .catch(()=>alert('Copy failed'));
+        setTimeout(()=>copyBtn.textContent='Copy',1200);
+      });
     }
 
     return { init };
