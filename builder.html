@@ -13,7 +13,7 @@
       --input-border: #ccc;
       --focus-ring: rgba(96,160,133,0.6);
     }
-    /* hide native */
+    /* hide native cursor */
     * { cursor: none!important; box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:var(--bg); padding:2rem; }
     h1 { text-align:center; margin-bottom:1rem; font-weight:700 }
@@ -29,7 +29,7 @@
       padding:.6rem 1rem; border:1px solid var(--input-border); border-radius:9999px;
     }
 
-    /* Colors & palettes */
+    /* Colors */
     .color-group { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem }
     .color-group label { display:flex; flex-direction:column; font-size:.9rem }
     .color-group input[type="color"] {
@@ -61,7 +61,7 @@
     }
     .delete-btn:hover { color:#333 }
 
-    /* Pills */
+    /* Pill‑shaped buttons */
     button, .tb-btn {
       border:none; border-radius:9999px;
       padding:.6rem; background:var(--primary); color:#fff; font-weight:600;
@@ -102,7 +102,7 @@
     }
     .tb-btn:hover { background:#eee }
     .tb-btn.active { background:var(--secondary); color:#fff }
-    .tb-icon { width:1.5rem; height:1.5rem }
+    .tb-icon { width:1.5rem; height:1.5rem; }
 
     /* Font menu */
     .font-menu {
@@ -110,7 +110,7 @@
       pointer-events:auto;
     }
     .font-menu.hidden { display:none }
-    .font-menu .font-option {
+    .font-option {
       position:absolute; left:50%; top:50%;
       width:50px; height:50px; margin:-25px;
       border:1px solid var(--input-border);
@@ -119,11 +119,11 @@
       font-size:.7rem; text-align:center; user-select:none;
       transition:background .2s;
     }
-    .font-menu .font-option.center {
+    .font-option.center {
       width:60px; height:60px; margin:-30px;
       background:#fff8e7; font-size:.75rem; font-weight:700;
     }
-    .font-menu .font-option:hover { background:#eee }
+    .font-option:hover { background:#eee }
 
     /* Custom cursor */
     #cur {
@@ -152,9 +152,9 @@
   <div id="cur" class="default"></div>
 
   <div id="toolbar">
-    <button class="tb-btn" id="alignLeftBtn"   title="Align left"><img src="align-left.svg"   class="tb-icon"></button>
-    <button class="tb-btn" id="alignCenterBtn" title="Align center"><img src="align-center.svg" class="tb-icon"></button>
-    <button class="tb-btn" id="alignRightBtn"  title="Align right"><img src="align-right.svg"  class="tb-icon"></button>
+    <button class="tb-btn" id="alignLeftBtn"   title="Align left"><img src="align-left.svg"   class="tb-icon" alt="L"></button>
+    <button class="tb-btn" id="alignCenterBtn" title="Align center"><img src="align-center.svg" class="tb-icon" alt="C"></button>
+    <button class="tb-btn" id="alignRightBtn"  title="Align right"><img src="align-right.svg"  class="tb-icon" alt="R"></button>
     <button class="tb-btn" id="boldBtn"><b>B</b></button>
     <button class="tb-btn" id="italicBtn"><i>I</i></button>
     <button class="tb-btn" id="underlineBtn"><u>U</u></button>
@@ -247,42 +247,40 @@
     document.addEventListener('mouseleave',()=>cur.style.display='none');
     document.addEventListener('mouseenter',()=>cur.style.display='block');
 
-    // builder elements
-    const toolbar        = document.getElementById('toolbar'),
-          linesUl        = document.getElementById('lines'),
-          addLineBtn     = document.getElementById('addLine'),
-          alignL         = document.getElementById('alignLeftBtn'),
-          alignC         = document.getElementById('alignCenterBtn'),
-          alignR         = document.getElementById('alignRightBtn'),
-          boldBtn        = document.getElementById('boldBtn'),
-          italicBtn      = document.getElementById('italicBtn'),
-          underlineBtn   = document.getElementById('underlineBtn'),
-          fontBtn        = document.getElementById('fontBtn'),
-          fileInput      = document.getElementById('stickerFile'),
-          urlInput       = document.getElementById('stickerUrl'),
-          toEl           = document.getElementById('toField'),
-          fromEl         = document.getElementById('fromField'),
-          colors         = {
+    // builder refs
+    const toolbar      = document.getElementById('toolbar'),
+          linesUl      = document.getElementById('lines'),
+          addLineBtn   = document.getElementById('addLine'),
+          alignL       = document.getElementById('alignLeftBtn'),
+          alignC       = document.getElementById('alignCenterBtn'),
+          alignR       = document.getElementById('alignRightBtn'),
+          boldBtn      = document.getElementById('boldBtn'),
+          italicBtn    = document.getElementById('italicBtn'),
+          underlineBtn = document.getElementById('underlineBtn'),
+          fontBtn      = document.getElementById('fontBtn'),
+          fileInput    = document.getElementById('stickerFile'),
+          urlInput     = document.getElementById('stickerUrl'),
+          toEl         = document.getElementById('toField'),
+          fromEl       = document.getElementById('fromField'),
+          colors       = {
             body:  document.getElementById('bodyColor'),
             flap:  document.getElementById('flapColor'),
             paper: document.getElementById('paperColor'),
             bg:    document.getElementById('bgColor')
           },
-          palettes       = document.querySelectorAll('.palette'),
-          genBtn         = document.getElementById('generate'),
-          linkWrap       = document.getElementById('linkWrap'),
-          linkField      = document.getElementById('linkField'),
-          copyBtn        = document.getElementById('copyBtn');
+          palettes     = document.querySelectorAll('.palette'),
+          genBtn       = document.getElementById('generate'),
+          linkWrap     = document.getElementById('linkWrap'),
+          linkField    = document.getElementById('linkField'),
+          copyBtn      = document.getElementById('copyBtn');
 
-    let focusedInput = null,
-        fileDataUrl  = '',
-        fontMenu     = null;
+    let focusedInput='', fileDataUrl='', fontMenu=null;
 
-    // file → base64
+    // file upload → data URL
     fileInput.addEventListener('change', ()=>{
-      const f=fileInput.files[0];
-      if(!f) return fileDataUrl='';
-      if(f.size>2*1024*1024){alert('Max 2 MB');fileInput.value='';return;}
+      const f = fileInput.files[0];
+      if (!f) return fileDataUrl='';
+      if (f.size>2*1024*1024) { alert('Max 2 MB'); fileInput.value=''; return; }
       const r=new FileReader();
       r.onload=()=>fileDataUrl=r.result;
       r.readAsDataURL(f);
@@ -299,7 +297,7 @@
       });
     });
 
-    // line + toolbar
+    // add line + toolbar logic
     function addLine(txt=''){
       const li=document.createElement('li'),
             inp=document.createElement('input'),
@@ -314,17 +312,17 @@
     function showToolbar(e){
       focusedInput=e.target;
       const st=getComputedStyle(focusedInput);
-      [alignL,alignC,alignR].forEach(b=>b.classList.remove('active'));
+      [alignL,alignC,alignR].forEach(b=>b.classList.toggle('active', false));
       if(st.textAlign==='center') alignC.classList.add('active');
       else if(st.textAlign==='right') alignR.classList.add('active');
       else alignL.classList.add('active');
-      [boldBtn,italicBtn,underlineBtn].forEach(b=>b.classList.remove('active'));
+      [boldBtn,italicBtn,underlineBtn].forEach(b=>b.classList.toggle('active', false));
       if(st.fontWeight==='700') boldBtn.classList.add('active');
       if(st.fontStyle==='italic') italicBtn.classList.add('active');
       if(st.textDecoration.includes('underline')) underlineBtn.classList.add('active');
-      const r=e.target.getBoundingClientRect();
-      toolbar.style.left=r.right+8+'px';
-      toolbar.style.top =r.top + r.height/2+'px';
+      const r=focusedInput.getBoundingClientRect();
+      toolbar.style.left = r.right+8+'px';
+      toolbar.style.top  = r.top + r.height/2+'px';
       toolbar.style.display='flex';
     }
     function hideToolbar(){
@@ -338,8 +336,8 @@
     }
     function toggleStyle(btn,prop,val){
       if(!focusedInput) return;
-      const on=btn.classList.toggle('active');
-      focusedInput.style[prop]=on?val:(prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
+      const on = btn.classList.toggle('active');
+      focusedInput.style[prop] = on?val:(prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
     }
 
     // font menu
@@ -352,32 +350,36 @@
       fontMenu=document.createElement('div');
       fontMenu.id='fontMenu'; fontMenu.className='font-menu hidden';
       const fonts=["Arial","Georgia","Courier New","Times New Roman","Verdana","Comic Sans MS"];
-      let html=`<div class="font-option center">Poppins</div>`;
+      let html=`<div class="font-option center" data-font="Poppins" style="font-family:Poppins,sans-serif">Poppins</div>`;
       fonts.forEach((f,i)=>{
-        const angle=i*60;
-        const label=f.split(' ')[0];
+        const angle=i*60, label=f.split(' ')[0];
         html+=`<div class="font-option" data-font="${f}"
-                 style="transform:rotate(${angle}deg) translate(80px) rotate(-${angle}deg)">
-                 ${label}
-               </div>`;
+                  style="transform:rotate(${angle}deg) translate(80px) rotate(-${angle}deg);
+                         font-family:${f},sans-serif">
+                  ${label}
+                </div>`;
       });
       fontMenu.innerHTML=html;
       document.body.append(fontMenu);
-      fontMenu.querySelectorAll('.font-option[data-font]').forEach(el=>{
+      // position next to fontBtn
+      const btnRect=fontBtn.getBoundingClientRect(),
+            size=180, offset=8;
+      fontMenu.style.top  = btnRect.top + btnRect.height/2 - size/2 + 'px';
+      fontMenu.style.left = btnRect.right + offset + 'px';
+      fontMenu.querySelectorAll('.font-option').forEach(el=>{
         el.addEventListener('click', ()=>{
-          if(focusedInput) focusedInput.style.fontFamily=el.dataset.font;
+          if(focusedInput) focusedInput.style.fontFamily = el.dataset.font;
           fontMenu.classList.add('hidden');
         });
       });
     }
 
-    // collect & generate
+    // generate & copy
     function collect(){
       const sticker=fileDataUrl||urlInput.value.trim();
       return {
         sticker,
-        colors:{ body:colors.body.value, flap:colors.flap.value,
-                 paper:colors.paper.value, background:colors.bg.value },
+        colors:{body:colors.body.value,flap:colors.flap.value,paper:colors.paper.value,background:colors.bg.value},
         to:toEl.value.trim(), from:fromEl.value.trim(),
         lines:Array.from(linesUl.querySelectorAll('input')).map(i=>({
           text:i.value.trim(),
@@ -397,27 +399,28 @@
       linkField.value=`${location.origin}/ecard.html?d=${p}`;
       linkWrap.style.display='flex';
     }
-
-    // wire up
-    addLine('Your first message');
-    addLine('A cheerful note');
-
-    addLineBtn.addEventListener('click', ()=>addLine());
-    alignL.addEventListener('click',()=>applyAlign('left'));
-    alignC.addEventListener('click',()=>applyAlign('center'));
-    alignR.addEventListener('click',()=>applyAlign('right'));
-    boldBtn.addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
-    italicBtn.addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
-    underlineBtn.addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
-    document.addEventListener('click', e=>{
-      if(!toolbar.contains(e.target)&&!linesUl.contains(e.target)) hideToolbar();
-    });
     genBtn.addEventListener('click', onGenerate);
     copyBtn.addEventListener('click', ()=>{
       navigator.clipboard.writeText(linkField.value)
         .then(()=>copyBtn.textContent='Copied!')
         .catch(()=>alert('Copy failed'));
       setTimeout(()=>copyBtn.textContent='Copy',1200);
+    });
+
+    // init with two lines
+    addLine('Your first message');
+    addLine('A cheerful note');
+
+    // wire toolbar
+    addLineBtn .addEventListener('click',()=>addLine());
+    alignL     .addEventListener('click',()=>applyAlign('left'));
+    alignC     .addEventListener('click',()=>applyAlign('center'));
+    alignR     .addEventListener('click',()=>applyAlign('right'));
+    boldBtn    .addEventListener('click',()=>toggleStyle(boldBtn,'fontWeight','700'));
+    italicBtn  .addEventListener('click',()=>toggleStyle(italicBtn,'fontStyle','italic'));
+    underlineBtn.addEventListener('click',()=>toggleStyle(underlineBtn,'textDecoration','underline'));
+    document.addEventListener('click', e=>{
+      if(!toolbar.contains(e.target)&&!linesUl.contains(e.target)) hideToolbar();
     });
   });
   </script>
