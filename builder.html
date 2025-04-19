@@ -16,64 +16,88 @@
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:var(--bg); padding:2rem; }
     h1 { margin-bottom:1rem; font-weight:700; }
-    form {
-      display:grid; gap:1rem; max-width:600px; margin-bottom:2rem;
+    form { max-width:600px; margin-bottom:2rem; }
+
+    /* toolbar */
+    #toolbar {
+      display:none;
+      align-items:center;
+      gap:.5rem;
+      margin-bottom:1rem;
     }
-    label { font-weight:600; font-size:.9rem; display:block; }
-    input[type="text"] {
-      width:100%; padding:.6rem 1rem; border:1px solid var(--input-border);
-      border-radius:9999px; background:var(--input-bg);
+    #toolbar select, #toolbar button {
+      padding:.4rem .8rem;
+      border:1px solid var(--input-border);
+      border-radius:9999px;
+      background:var(--input-bg);
+      cursor:pointer;
     }
-    input[type="color"] {
-      width:2.5rem; height:2.5rem; border:none; padding:0; border-radius:50%;
-      cursor:pointer; appearance:none;
+    #toolbar .style-btn.active {
+      background:var(--secondary);
+      color:#fff;
     }
+
+    /* lines list */
     #lines { list-style:none; margin:0; padding:0; }
     #lines li {
-      display:grid; grid-template-columns:1fr auto auto auto auto auto;
-      gap:.5rem; align-items:center; margin-bottom:.75rem;
+      position:relative;
+      margin-bottom:.75rem;
     }
-    #lines input { border-radius:9999px; }
-    select {
-      padding:.4rem .6rem; border:1px solid var(--input-border);
-      border-radius:9999px; background:var(--input-bg);
+    #lines input {
+      width:100%;
+      padding:.6rem 1rem;
+      border:1px solid var(--input-border);
+      border-radius:9999px;
+      background:var(--input-bg);
+      transition:all .2s;
     }
-    .style-btn {
-      width:2.2rem; height:2.2rem; border:none; border-radius:50%;
-      background:var(--input-border); color:#333; font-weight:700;
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      transition:background .2s;
+    #lines .delete-btn {
+      position:absolute; right:.5rem; top:50%;
+      transform:translateY(-50%);
+      border:none; background:transparent; font-size:1.1rem; cursor:pointer;
+      color:#999;
     }
-    .style-btn.active { background:var(--secondary); color:#fff; }
-    .style-btn:hover { filter:brightness(1.1); }
+    #lines .delete-btn:hover { color:#333; }
 
-    button#addLine {
-      background:var(--secondary); color:#fff; border:none;
-      padding:.5rem 1rem; border-radius:9999px; cursor:pointer;
-      font-size:.9rem; justify-self:start;
+    /* other controls */
+    .controls {
+      display:grid; gap:1rem; max-width:600px;
     }
-    button#generate, #copyBtn {
+    input[type="text"] { width:100%; padding:.6rem 1rem; border:1px solid var(--input-border); border-radius:9999px; }
+    button, #addLine {
       background:var(--primary); color:#fff; border:none;
       padding:.6rem 1.4rem; border-radius:9999px; cursor:pointer;
       font-weight:600; transition:filter .2s;
     }
-    button#generate:hover, #copyBtn:hover { filter:brightness(1.1); }
+    button:hover, #addLine:hover { filter:brightness(1.1); }
+
+    /* link */
     #linkWrap {
-      display:flex; gap:.5rem; max-width:600px; margin-top:1rem;
-      align-items:center; display:none;
+      display:none; gap:.5rem; max-width:600px; margin-top:1rem; align-items:center;
     }
     #linkField {
       flex:1; padding:.6rem 1rem; border:1px solid var(--input-border);
-      border-radius:9999px; background:#fafafa;
-      font-size:.85rem;
+      border-radius:9999px; background:#fafafa; font-size:.85rem;
     }
+    #copyBtn { background:var(--secondary); }
   </style>
 </head>
 <body>
 
   <h1>Create Your Seafoam Envelope E‑Card</h1>
 
-  <form id="cardForm">
+  <div id="toolbar">
+    <select id="alignSel">
+      <option value="left">Left</option>
+      <option value="center">Center</option>
+      <option value="right">Right</option>
+    </select>
+    <button type="button" class="style-btn" id="boldBtn"><strong>B</strong></button>
+    <button type="button" class="style-btn" id="italicBtn"><em>I</em></button>
+    <button type="button" class="style-btn" id="underlineBtn"><u>U</u></button>
+  </div>
+
+  <form id="cardForm" class="controls">
     <label>Square sticker URL
       <input type="text" id="stickerUrl" placeholder="https://…">
     </label>
@@ -94,8 +118,14 @@
   </div>
 
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
+  const CardBuilder = (() => {
+    // DOM refs
     const linesUl   = document.getElementById('lines');
+    const toolbar   = document.getElementById('toolbar');
+    const alignSel  = document.getElementById('alignSel');
+    const boldBtn   = document.getElementById('boldBtn');
+    const italicBtn = document.getElementById('italicBtn');
+    const underlineBtn = document.getElementById('underlineBtn');
     const addLineBtn= document.getElementById('addLine');
     const stickerEl = document.getElementById('stickerUrl');
     const toEl      = document.getElementById('toField');
@@ -105,94 +135,111 @@
     const linkField = document.getElementById('linkField');
     const copyBtn   = document.getElementById('copyBtn');
 
-    function createLineItem(text='') {
+    let focusedInput = null;
+
+    // create a new line <li> + input + delete btn
+    function addLine(text = '') {
       const li = document.createElement('li');
-      // text input
       const input = document.createElement('input');
       input.type = 'text';
       input.value = text;
       input.placeholder = 'Your message';
+      input.addEventListener('focus', onFocus);
+      input.addEventListener('blur', onBlur);
 
-      // alignment selector
-      const align = document.createElement('select');
-      ['left','center','right'].forEach(a=>{
-        const o = document.createElement('option');
-        o.value = a; o.textContent = a;
-        align.appendChild(o);
-      });
-
-      // style toggles
-      const btnBold   = document.createElement('button');
-      btnBold.type    = 'button'; btnBold.textContent = 'B';
-      btnBold.className = 'style-btn';
-      const btnItalic = document.createElement('button');
-      btnItalic.type   = 'button'; btnItalic.textContent = 'I';
-      btnItalic.className='style-btn';
-      const btnUnder  = document.createElement('button');
-      btnUnder.type    = 'button'; btnUnder.textContent = 'U';
-      btnUnder.className='style-btn';
-
-      [btnBold,btnItalic,btnUnder].forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          btn.classList.toggle('active');
-        });
-      });
-
-      // delete line
       const del = document.createElement('button');
-      del.type    = 'button';
+      del.type = 'button';
       del.textContent = '✕';
-      del.className = 'style-btn';
-      del.addEventListener('click',()=>li.remove());
+      del.className = 'delete-btn';
+      del.addEventListener('click', () => {
+        if (focusedInput === input) hideToolbar();
+        li.remove();
+      });
 
-      li.append(input, align, btnBold, btnItalic, btnUnder, del);
+      li.append(input, del);
       linesUl.appendChild(li);
     }
 
-    // seed two lines
-    createLineItem('Your first message');
-    createLineItem('A cheerful note');
+    // when a line input gains focus
+    function onFocus(e) {
+      focusedInput = e.target;
+      // show toolbar and sync its state
+      toolbar.style.display = 'flex';
+      alignSel.value = window.getComputedStyle(focusedInput).textAlign;
+      boldBtn.classList.toggle('active', focusedInput.style.fontWeight === '700');
+      italicBtn.classList.toggle('active', focusedInput.style.fontStyle === 'italic');
+      underlineBtn.classList.toggle('active', focusedInput.style.textDecoration.includes('underline'));
+    }
 
-    addLineBtn.addEventListener('click',()=> createLineItem() );
+    function onBlur() {
+      // small timeout so toolbar clicks still register
+      setTimeout(() => {
+        if (document.activeElement.tagName !== 'INPUT') {
+          hideToolbar();
+        }
+      }, 100);
+    }
 
+    function hideToolbar() {
+      toolbar.style.display = 'none';
+      focusedInput = null;
+    }
+
+    // apply a style update to the focused input
+    function applyStyle() {
+      if (!focusedInput) return;
+      focusedInput.style.textAlign = alignSel.value;
+      focusedInput.style.fontWeight = boldBtn.classList.contains('active') ? '700' : '400';
+      focusedInput.style.fontStyle = italicBtn.classList.contains('active') ? 'italic' : 'normal';
+      focusedInput.style.textDecoration = underlineBtn.classList.contains('active') ? 'underline' : 'none';
+    }
+
+    // collect form data
     function collect() {
       return {
         sticker: stickerEl.value.trim(),
-        to: toEl.value.trim(),
-        from: fromEl.value.trim(),
-        lines: [...linesUl.children].map(li=>{
-          const inp   = li.querySelector('input');
-          const sel   = li.querySelector('select');
-          const btns  = li.querySelectorAll('.style-btn');
-          return {
-            text: inp.value.trim(),
-            align: sel.value,
-            bold: btns[0].classList.contains('active'),
-            italic: btns[1].classList.contains('active'),
-            underline: btns[2].classList.contains('active')
-          };
-        }).filter(l=>l.text)
+        to:      toEl.value.trim(),
+        from:    fromEl.value.trim(),
+        lines: [...linesUl.querySelectorAll('input')].map(i=>({
+          text: i.value.trim(),
+          align: i.style.textAlign || 'left',
+          bold: i.style.fontWeight === '700',
+          italic: i.style.fontStyle === 'italic',
+          underline: i.style.textDecoration === 'underline'
+        })).filter(l=>l.text)
       };
     }
 
-    generate.addEventListener('click',()=>{
+    // generate link
+    function onGenerate() {
       const data = collect();
-      if (!data.lines.length) {
-        return alert('Please add at least one line.');
-      }
+      if (!data.lines.length) return alert('Add at least one line.');
       const payload = btoa(encodeURIComponent(JSON.stringify(data)));
-      const url = `${location.origin}/ecard.html?d=${payload}`;
-      linkField.value = url;
+      linkField.value = `${location.origin}/ecard.html?d=${payload}`;
       linkWrap.style.display = 'flex';
-    });
+    }
 
-    copyBtn.addEventListener('click',()=>{
-      navigator.clipboard.writeText(linkField.value)
-        .then(()=>copyBtn.textContent='Copied!')
-        .catch(()=>alert('Copy failed'));
-      setTimeout(()=>copyBtn.textContent='Copy',1500);
-    });
-  });
+    // init events
+    function init() {
+      addLine('Your first message');
+      addLine('A cheerful note');
+      addLineBtn.addEventListener('click', () => addLine());
+      [alignSel, boldBtn, italicBtn, underlineBtn].forEach(el => 
+        el.addEventListener('click', applyStyle)
+      );
+      generate.addEventListener('click', onGenerate);
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(linkField.value)
+          .then(()=>copyBtn.textContent='Copied!')
+          .catch(()=>alert('Copy failed'));
+        setTimeout(()=>copyBtn.textContent='Copy',1200);
+      });
+    }
+
+    return { init };
+  })();
+
+  document.addEventListener('DOMContentLoaded', CardBuilder.init);
   </script>
 </body>
 </html>
