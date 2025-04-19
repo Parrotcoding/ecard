@@ -6,8 +6,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:Poppins,sans-serif }
-    html, body { width:100%; overflow-x:hidden; }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,sans-serif}
+    html,body{width:100%;overflow-x:hidden;background:var(--bg,#f0f0f0)}
+
+    /* ensure plenty of scroll space */
+    body{min-height:200vh}
 
     .envelope {
       position:fixed; top:65%; left:50%;
@@ -40,11 +43,16 @@
       background:var(--flap,#76C69C);
       border:2px solid var(--flap-border,#60A085);
       clip-path:polygon(0 0,100% 0,50% 100%);
-      transform-origin:top; transition:transform .6s ease;
+      transform-origin:top; transition:transform .6s ease, opacity .4s ease;
       z-index:5; backface-visibility:hidden;
+      opacity:1;
     }
     .envelope.open .flap {
       transform:rotateX(180deg);
+    }
+    /* ← hide flap on flip to show only backside */
+    .envelope.flip .flap {
+      opacity:0;
     }
 
     .paper {
@@ -58,7 +66,6 @@
     .line {
       margin:1rem 0; font-size:1.25rem;
     }
-
     .sticker {
       position:absolute; top:50%; left:50%;
       transform:translate(-50%,-50%);
@@ -75,9 +82,7 @@
       opacity:0; transition:opacity .6s ease;
       z-index:6; backface-visibility:hidden;
     }
-    .envelope.flip .address {
-      opacity:1;
-    }
+    .envelope.flip .address { opacity:1; }
 
     .confetti {
       position:absolute; top:0; width:8px; height:8px; border-radius:50%;
@@ -99,7 +104,7 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', () => {
-    // Decode data
+    // 1. Decode data
     const raw = new URLSearchParams(location.search).get('d');
     if (!raw) {
       document.body.innerHTML = '<p style="padding:2rem">Missing card data.</p>';
@@ -113,17 +118,17 @@
       return;
     }
 
-    // Shade helper
+    // 2. Shade helper
     function shade(hex) {
-      const n = parseInt(hex.slice(1),16), adj = -0.2*255;
-      let r = (n>>16)+adj, g = ((n>>8)&255)+adj, b = (n&255)+adj;
+      const n = parseInt(hex.slice(1),16), a = -0.2*255;
+      let r = (n>>16)+a, g = ((n>>8)&255)+a, b = (n&255)+a;
       r = Math.max(0,Math.min(255,r));
       g = Math.max(0,Math.min(255,g));
       b = Math.max(0,Math.min(255,b));
       return '#' + ((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
     }
 
-    // Apply CSS vars
+    // 3. Apply CSS vars
     const root = document.documentElement.style;
     root.setProperty('--body', data.colors.body);
     root.setProperty('--body-border', shade(data.colors.body));
@@ -132,12 +137,12 @@
     root.setProperty('--paper', data.colors.paper);
     root.setProperty('--bg', data.colors.bg);
 
-    // Sticker
+    // 4. Populate sticker
     const st = document.getElementById('sticker');
     if (data.sticker) st.src = data.sticker;
     else st.remove();
 
-    // Lines
+    // 5. Populate lines
     const paperEl = document.getElementById('paper');
     data.lines.forEach(text => {
       const d = document.createElement('div');
@@ -145,20 +150,19 @@
       paperEl.appendChild(d);
     });
 
-    // Address
+    // 6. Populate address
     document.getElementById('address').innerHTML =
       `<p>To: ${data.to||''}</p><p>From: ${data.from||''}</p>`;
 
-    // Calculate and set page height for scrolling
+    // 7. Calculate scroll height
     const vh = window.innerHeight;
-    const unroll = 7.5 * vh,
-          pause  = 0.5 * vh,
-          retract= 7.5 * vh,
-          extra  = vh; // give one screen of extra
-    const scrollHeight = 10 + unroll + pause + retract + extra;
-    document.body.style.height = scrollHeight + 'px';
+    const unroll  = 7.5 * vh;
+    const pause   = 0.5 * vh;
+    const retract = 7.5 * vh;
+    const extra   = vh; // one extra screen
+    document.body.style.height = (10 + unroll + pause + retract + extra) + 'px';
 
-    // Animation on scroll
+    // 8. Animate
     const env = document.getElementById('env');
     let flipped = false;
     const maskH = env.clientHeight * 0.6;
@@ -185,10 +189,10 @@
           setInterval(() => {
             for (let i=0; i<8; i++){
               const c = document.createElement('div');
-              c.className = 'confetti';
-              c.style.left = `${Math.random()*100}vw`;
-              c.style.backgroundColor = `hsl(${Math.random()*360},100%,60%)`;
-              c.style.animationDelay = `${Math.random()*0.8}s`;
+              c.className='confetti';
+              c.style.left=`${Math.random()*100}vw`;
+              c.style.backgroundColor=`hsl(${Math.random()*360},100%,60%)`;
+              c.style.animationDelay=`${Math.random()*0.8}s`;
               document.body.appendChild(c);
             }
           }, 800);
@@ -196,10 +200,9 @@
       }
     });
 
-    // Kickstart mobile scroll listener
-    setTimeout(() => window.scrollTo(0,1), 50);
+    // Kickstart mobile
+    setTimeout(()=>window.scrollTo(0,1), 50);
   });
   </script>
-
 </body>
 </html>
