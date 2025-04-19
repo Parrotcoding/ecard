@@ -2,188 +2,191 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>E‑Card App Demo</title>
+  <title>E‑Card App Demos</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:#f0f0f0; }
     header {
-      position: sticky; top:0; background:#fff;
+      position:sticky; top:0; background:#fff;
       display:flex; justify-content:space-between; align-items:center;
       padding:1rem 2rem; box-shadow:0 2px 4px rgba(0,0,0,.1); z-index:10;
     }
     header h1 { font-size:1.25rem; }
     header button#create {
       background:#60A085; color:#fff; border:none;
-      padding:.5rem 1rem; border-radius:9999px;
-      cursor:pointer;
+      padding:.5rem 1rem; border-radius:9999px; cursor:pointer;
     }
+    main { display:flex; flex-direction:column; gap:4rem; padding:2rem; }
 
-    main {
-      display:flex; flex-direction:column; gap:4rem;
-      padding:2rem 0;
-    }
     .demo {
-      width:100%; background:#fff; overflow:hidden;
+      position:relative;
+      width:100%; height:60vh;
+      background:#fff; overflow:hidden;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
     }
-
-    /* builder demo */
-    .builder-demo {
+    .frame {
+      position:absolute; top:0; left:0; right:0;
+      height:200%; /* enough scroll room */
+      overflow-y:scroll;
       padding:2rem;
     }
-    .builder-demo h2 {
-      margin-bottom:1rem; font-size:1.1rem; font-weight:600;
-    }
 
-    /* share demo */
-    .share-demo {
-      padding:2rem;
+    /* reuse builder form styles */
+    .frame form {
+      display:grid; gap:1rem; max-width:600px; margin:auto;
     }
-    .share-demo h2 {
-      margin-bottom:1rem; font-size:1.1rem; font-weight:600;
+    .frame input[type="text"], .frame select {
+      padding:.6rem 1rem; border:1px solid #ccc; border-radius:9999px;
+      width:100%; background:#fafafa;
     }
-
-    /* Reuse styles from builder.html for the form */
-    .controls { display:grid; gap:1rem; max-width:600px; margin:auto; }
-    input[type="text"], select, button {
-      font-family:Poppins,sans-serif;
+    .frame input[type="color"] {
+      width:2.5rem; height:2.5rem; border:none; border-radius:50%;
     }
-    .builder-demo .controls input[type="text"],
-    .builder-demo .controls select {
-      width:100%; padding:.6rem 1rem;
-      border:1px solid #ccc; border-radius:9999px;
+    .frame button {
+      padding:.6rem 1.4rem; border:none; border-radius:9999px;
+      background:#60A085; color:#fff; cursor:pointer;
     }
-    .builder-demo .controls label { display:block; }
-    .builder-demo .controls button {
-      background:#60A085; color:#fff; border:none;
-      padding:.6rem 1.4rem; border-radius:9999px;
-      cursor:pointer; font-weight:600;
-    }
-    #demoLines { list-style:none; padding:0; margin:0; }
-    #demoLines li {
+    .frame ul { list-style:none; padding:0; margin:0; }
+    .frame ul li {
       display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem;
     }
-    #demoLines li input {
-      flex:1; padding:.6rem 1rem;
-      border:1px solid #ccc; border-radius:9999px;
+    .frame ul li input { flex:1; }
+    .frame ul li button {
+      width:2rem; height:2rem; border:none; border-radius:50%;
+      background:#e74c3c; color:#fff; cursor:pointer;
     }
-    #demoLines li button {
-      background:#e74c3c; color:#fff; border:none;
-      width:2rem; height:2rem; border-radius:50%;
-      cursor:pointer;
+    .frame .share-controls {
+      display:flex; gap:.5rem; align-items:center; max-width:600px; margin:auto;
     }
-    .color-row { display:flex; gap:1rem; }
-    .color-row label {
-      display:flex; flex-direction:column; align-items:center; gap:.25rem;
+    .frame .share-controls input {
+      flex:1; padding:.6rem 1rem; border:1px solid #ccc; border-radius:9999px;
+      background:#fafafa;
     }
-    .color-row input[type="color"] {
-      width:2rem; height:2rem; border:none; padding:0; border-radius:50%;
-      cursor:pointer;
+    .frame .share-controls button {
+      padding:.6rem 1.2rem; border:none; border-radius:9999px;
+      background:#76C69C; color:#fff; cursor:pointer;
     }
 
-    /* share form */
-    .share-demo .share-controls {
-      display:flex; gap:.5rem; max-width:600px; margin:auto;
-      align-items:center;
-    }
-    #demoLink {
-      flex:1; padding:.6rem 1rem;
-      border:1px solid #ccc; border-radius:9999px;
-    }
-    #demoCopy {
-      background:#76C69C; color:#fff; border:none;
-      padding:.6rem 1.2rem; border-radius:9999px; cursor:pointer;
+    /* pointer */
+    #pointer {
+      position:fixed; width:24px; height:24px;
+      background:rgba(0,0,0,0.7); border-radius:50%;
+      pointer-events:none; transform:translate(-50%,-50%);
+      transition:width .1s ease, height .1s ease;
+      z-index:20;
     }
   </style>
 </head>
 <body>
-
   <header>
     <h1>Seafoam E‑Card App</h1>
     <button id="create">Create</button>
   </header>
 
   <main>
-    <!-- Demo 1: Builder -->
-    <section class="demo builder-demo">
-      <h2>Demo 1: Build your card</h2>
-      <form class="controls">
-        <label>
-          Sticker URL
-          <input type="text" placeholder="https://…/my-sticker.png" disabled>
-        </label>
-
-        <div class="color-row">
-          <label>
-            Body
-            <input type="color" disabled>
+    <!-- Builder Demo -->
+    <section class="demo" id="demo-builder">
+      <div class="frame" id="frame-builder">
+        <!-- replicate your builder.html form, disabled -->
+        <form>
+          <label>Sticker URL
+            <input type="text" placeholder="https://…/sticker.png" disabled>
           </label>
-          <label>
-            Flap
-            <input type="color" disabled>
-          </label>
-          <label>
-            Paper
-            <input type="color" disabled>
-          </label>
-          <label>
-            Background
-            <input type="color" disabled>
-          </label>
-        </div>
-
-        <label>Message Lines</label>
-        <ul id="demoLines">
-          <li>
-            <input type="text" value="Your first message" disabled>
-            <button disabled>✕</button>
-          </li>
-          <li>
-            <input type="text" value="A cheerful note" disabled>
-            <button disabled>✕</button>
-          </li>
-        </ul>
-        <button type="button" disabled>+ Add line</button>
-
-        <div class="color-row">
-          <label>
-            <input type="checkbox" disabled> Bold
-          </label>
-          <label>
-            <input type="checkbox" disabled> Italic
-          </label>
-          <label>
-            <input type="checkbox" disabled> Underline
-          </label>
-        </div>
-
-        <label>
-          To
-          <input type="text" placeholder="Recipient name" disabled>
-        </label>
-        <label>
-          From
-          <input type="text" placeholder="Your name" disabled>
-        </label>
-
-        <button type="button" disabled>Generate Link</button>
-      </form>
+          <div style="display:flex; gap:1rem;">
+            <label>Body <input type="color" disabled></label>
+            <label>Flap <input type="color" disabled></label>
+            <label>Paper <input type="color" disabled></label>
+            <label>Bg <input type="color" disabled></label>
+          </div>
+          <label>Message Lines</label>
+          <ul>
+            <li><input type="text" value="Your first message" disabled><button disabled>✕</button></li>
+            <li><input type="text" value="A cheerful note" disabled><button disabled>✕</button></li>
+          </ul>
+          <button type="button" disabled>+ Add line</button>
+          <div style="display:flex; gap:1rem;">
+            <label><input type="checkbox" disabled> Bold</label>
+            <label><input type="checkbox" disabled> Italic</label>
+            <label><input type="checkbox" disabled> Underline</label>
+          </div>
+          <label>To <input type="text" placeholder="Recipient" disabled></label>
+          <label>From <input type="text" placeholder="Your Name" disabled></label>
+          <button type="button" disabled>Generate Link</button>
+        </form>
+      </div>
     </section>
 
-    <!-- Demo 2: Share -->
-    <section class="demo share-demo">
-      <h2>Demo 2: Share your card</h2>
-      <div class="share-controls">
-        <input id="demoLink" type="text"
-          value="https://…/ecard.html?d=eyJzdGlja2VyIjoiLi4uIiwic3R1ZmYiOiIwMGZmZmYiLCJsaW5lcyI6W3sidGV4dCI6IlNhbXBsZSIsImFsaWduIjoibGVmdCIsImJvbGQiOnRydWUsIml0YWxpYyI6ZmFsc2UsInVuZGVybGluZSI6ZmFsc2V9XSwidG8iOiJIb2JiaXQiLCJmcm9tIjoiWW91In0%3D"
-          readonly
-        >
-        <button id="demoCopy">Copy</button>
+    <!-- Share Demo -->
+    <section class="demo" id="demo-share">
+      <div class="frame" id="frame-share">
+        <div style="margin-top:80vh;"><!-- scroll start lower -->
+          <div class="share-controls">
+            <input type="text" value="https://…/ecard.html?d=XYZ" disabled>
+            <button disabled>Copy</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
+  <div id="pointer"></div>
+
+  <script>
+    (function(){
+      const pointer = document.getElementById('pointer');
+      // Steps for builder demo
+      const steps = [
+        // {demo, x, y, scroll, clickDelay}
+        {demo:'builder', x:200, y:100, scroll:0, click:true},
+        {demo:'builder', x:300, y:200, scroll:200, click:true},
+        {demo:'builder', x:150, y:400, scroll:400, click:true},
+      ];
+      // Steps for share demo
+      const steps2 = [
+        {demo:'share', x:200, y:500, scroll:0, click:false},
+        {demo:'share', x:300, y:600, scroll:300, click:true},
+      ];
+
+      const all = steps.concat(steps2.map(s=>({...s, demo:'share'})));
+
+      let idx = 0;
+      function runStep(){
+        if (idx >= all.length) {
+          // replay
+          idx = 0;
+          setTimeout(runStep, 1000);
+          return;
+        }
+        const {demo, x, y, scroll, click} = all[idx];
+        const frame = document.getElementById(`frame-${demo}`);
+        // scroll
+        frame.scrollTo({ top: scroll, behavior:'smooth' });
+        // move pointer relative to frame
+        const rect = frame.getBoundingClientRect();
+        const px = rect.left + x;
+        const py = rect.top + y;
+        pointer.style.left = px+'px';
+        pointer.style.top  = py+'px';
+        // click anim
+        if (click) {
+          pointer.style.width = '16px';
+          pointer.style.height= '16px';
+          setTimeout(()=>{
+            pointer.style.width = '24px';
+            pointer.style.height= '24px';
+          }, 150);
+        }
+        idx++;
+        setTimeout(runStep, 1000);
+      }
+      // start after load
+      window.addEventListener('load', ()=>{
+        // give time to layout
+        setTimeout(runStep, 500);
+      });
+    })();
+  </script>
 </body>
 </html>
