@@ -14,7 +14,7 @@
       --focus-ring: rgba(96,160,133,0.6);
     }
     /* hide native cursor */
-    * { cursor:none!important; box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
+    * { cursor: none!important; box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
     body { background:var(--bg); padding:2rem; }
     h1 { text-align:center; margin-bottom:1rem; font-weight:700 }
     form { max-width:600px; margin:auto; display:grid; gap:1.5rem }
@@ -22,11 +22,12 @@
     fieldset { border:1px solid var(--input-border); border-radius:8px; padding:1rem }
     legend   { padding:0 .5rem; font-weight:600 }
 
-    /* Sticker */
+    /* Sticker upload/URL */
     .sticker-group { display:flex; gap:1rem; align-items:flex-end }
     .sticker-group input[type="file"] { padding:.4rem; border-radius:4px }
     .sticker-group input[type="text"] {
-      padding:.6rem 1rem; border:1px solid var(--input-border); border-radius:9999px;
+      flex:1; padding:.6rem 1rem; border:1px solid var(--input-border);
+      border-radius:9999px;
     }
 
     /* Colors & palettes */
@@ -61,7 +62,7 @@
     }
     .delete-btn:hover { color:#333 }
 
-    /* Pill buttons */
+    /* Pill‑shaped buttons */
     button, .tb-btn {
       border:none; border-radius:9999px;
       padding:.6rem; background:var(--primary); color:#fff; font-weight:600;
@@ -152,9 +153,9 @@
   <div id="cur" class="default"></div>
 
   <div id="toolbar">
-    <button class="tb-btn" id="alignLeftBtn"   title="Align left"><img src="align-left.svg"   class="tb-icon" alt="L"></button>
+    <button class="tb-btn" id="alignLeftBtn" title="Align left"><img src="align-left.svg" class="tb-icon" alt="L"></button>
     <button class="tb-btn" id="alignCenterBtn" title="Align center"><img src="align-center.svg" class="tb-icon" alt="C"></button>
-    <button class="tb-btn" id="alignRightBtn"  title="Align right"><img src="align-right.svg"  class="tb-icon" alt="R"></button>
+    <button class="tb-btn" id="alignRightBtn" title="Align right"><img src="align-right.svg" class="tb-icon" alt="R"></button>
     <button class="tb-btn" id="boldBtn"><b>B</b></button>
     <button class="tb-btn" id="italicBtn"><i>I</i></button>
     <button class="tb-btn" id="underlineBtn"><u>U</u></button>
@@ -225,6 +226,7 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', ()=> {
+    // custom cursor
     const cur = document.getElementById('cur');
     document.addEventListener('mousemove', e => {
       const t=e.target, r=t.getBoundingClientRect();
@@ -270,11 +272,30 @@
           linkField    = document.getElementById('linkField'),
           copyBtn      = document.getElementById('copyBtn');
 
-    let focusedInput='', fileDataUrl='', fontMenu=null;
+    let focusedInput=null, fileDataUrl='', fontMenu=null;
 
-    fileInput.addEventListener('change', ()=>{ /*…same as before…*/ });
-    palettes.forEach(p=>{ /*…*/ });
+    // handle file → dataURL
+    fileInput.addEventListener('change', ()=>{
+      const f=fileInput.files[0];
+      if(!f) return fileDataUrl='';
+      if(f.size>2*1024*1024){ alert('Max 2 MB'); fileInput.value=''; return; }
+      const r=new FileReader();
+      r.onload=()=>fileDataUrl=r.result;
+      r.readAsDataURL(f);
+    });
 
+    // palettes
+    palettes.forEach(p=>{
+      p.addEventListener('click', ()=>{
+        const c=JSON.parse(p.dataset.colors);
+        colors.body.value=c.body;
+        colors.flap.value=c.flap;
+        colors.paper.value=c.paper;
+        colors.bg.value=c.bg;
+      });
+    });
+
+    // add line + toolbar
     function addLine(txt=''){
       const li=document.createElement('li'),
             inp=document.createElement('input'),
@@ -288,16 +309,17 @@
     function showToolbar(e){
       focusedInput=e.target;
       const st=getComputedStyle(focusedInput);
-      [alignL,alignC,alignR].forEach(b=>b.classList.remove('active'));
+      [alignL,alignC,alignR].forEach(b=>b.classList.toggle('active',false));
       if(st.textAlign==='center') alignC.classList.add('active');
       else if(st.textAlign==='right') alignR.classList.add('active');
       else alignL.classList.add('active');
-      [boldBtn,italicBtn,underlineBtn].forEach(b=>b.classList.remove('active'));
+      [boldBtn,italicBtn,underlineBtn].forEach(b=>b.classList.toggle('active',false));
       if(st.fontWeight==='700') boldBtn.classList.add('active');
       if(st.fontStyle==='italic') italicBtn.classList.add('active');
       if(st.textDecoration.includes('underline')) underlineBtn.classList.add('active');
       const r=focusedInput.getBoundingClientRect();
-      toolbar.style.left=r.right+8+'px'; toolbar.style.top=r.top+r.height/2+'px';
+      toolbar.style.left=r.right+8+'px';
+      toolbar.style.top =r.top + r.height/2+'px';
       toolbar.style.display='flex';
     }
     function hideToolbar(){
@@ -315,7 +337,7 @@
       focusedInput.style[prop]=on?val:(prop==='fontWeight'?'400':prop==='fontStyle'?'normal':'none');
     }
 
-    // Font menu
+    // font menu
     fontBtn.addEventListener('click', e=>{
       e.stopPropagation();
       if(!fontMenu) createFontMenu();
@@ -336,7 +358,6 @@
       });
       fontMenu.innerHTML=html;
       document.body.append(fontMenu);
-      // position beside the toolbar button
       const btnRect=fontBtn.getBoundingClientRect(), size=180, offset=8;
       fontMenu.style.top  = btnRect.top + btnRect.height/2 - size/2 + 'px';
       fontMenu.style.left = btnRect.right + offset + 'px';
@@ -348,25 +369,58 @@
       });
     }
 
+    // collect & generate
     function collect(){
-      /* …same as before… */
+      const sticker=fileDataUrl||urlInput.value.trim();
+      return {
+        sticker,
+        colors:{
+          body:colors.body.value,
+          flap:colors.flap.value,
+          paper:colors.paper.value,
+          background:colors.bg.value
+        },
+        to:toEl.value.trim(),
+        from:fromEl.value.trim(),
+        lines:Array.from(linesUl.querySelectorAll('input')).map(i=>({
+          text:i.value.trim(),
+          align:i.style.textAlign||'left',
+          bold:i.style.fontWeight==='700',
+          italic:i.style.fontStyle==='italic',
+          underline:i.style.textDecoration.includes('underline'),
+          font:i.style.fontFamily||'Poppins'
+        })).filter(l=>l.text)
+      };
     }
     function onGenerate(){
-      /* …same as before… */
+      const d=collect();
+      if(!d.sticker) return alert('Upload or enter sticker URL.');
+      if(!d.lines.length) return alert('Add at least one line.');
+      const p= btoa( encodeURIComponent(JSON.stringify(d)) );
+      linkField.value = `${location.origin}/ecard.html?d=${p}`;
+      linkWrap.style.display='flex';
     }
     genBtn.addEventListener('click', onGenerate);
-    copyBtn.addEventListener('click', ()=>{ /*…copy logic…*/ });
 
+    // copy
+    copyBtn.addEventListener('click', ()=>{
+      navigator.clipboard.writeText(linkField.value)
+        .then(()=>copyBtn.textContent='Copied!')
+        .catch(()=>alert('Copy failed'));
+      setTimeout(()=>copyBtn.textContent='Copy',1200);
+    });
+
+    // initialize
     addLine('Your first message');
     addLine('A cheerful note');
 
-    addLineBtn.addEventListener('click',()=>addLine());
-    alignL  .addEventListener('click',()=>applyAlign('left'));
-    alignC  .addEventListener('click',()=>applyAlign('center'));
-    alignR  .addEventListener('click',()=>applyAlign('right'));
-    boldBtn .addEventListener('click',()=>toggleStyle(boldBtn,'fontWeight','700'));
-    italicBtn.addEventListener('click',()=>toggleStyle(italicBtn,'fontStyle','italic'));
-    underlineBtn.addEventListener('click',()=>toggleStyle(underlineBtn,'textDecoration','underline'));
+    addLineBtn.addEventListener('click', ()=>addLine());
+    alignL.addEventListener('click', ()=>applyAlign('left'));
+    alignC.addEventListener('click', ()=>applyAlign('center'));
+    alignR.addEventListener('click', ()=>applyAlign('right'));
+    boldBtn.addEventListener('click', ()=>toggleStyle(boldBtn,'fontWeight','700'));
+    italicBtn.addEventListener('click', ()=>toggleStyle(italicBtn,'fontStyle','italic'));
+    underlineBtn.addEventListener('click', ()=>toggleStyle(underlineBtn,'textDecoration','underline'));
     document.addEventListener('click', e=>{
       if(!toolbar.contains(e.target)&&!linesUl.contains(e.target)) hideToolbar();
     });
