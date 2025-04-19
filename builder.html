@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>E‑Card Builder</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #60A085;
@@ -13,322 +12,213 @@
       --input-border: #ccc;
       --focus-ring: rgba(96,160,133,0.6);
     }
-    /* Hide native cursor everywhere */
-    * {
-      cursor: none !important;
-      box-sizing: border-box;
-      margin: 0; padding: 0;
-      font-family: Poppins, sans-serif;
-    }
-    body {
-      background: var(--bg);
-      padding: 2rem;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
+    /* hide native cursors */
+    * { cursor:none!important; box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
+    body { background:var(--bg); padding:2rem; }
 
-    form {
-      max-width: 600px;
-      margin: auto;
-      display: grid;
-      gap: 1.5rem;
-    }
+    h1 { text-align:center; margin-bottom:1rem; font-weight:700; }
+    form { max-width:600px; margin:auto; display:grid; gap:1.5rem; }
 
-    /* Group borders: gentle rounding, NOT pill */
     fieldset {
-      border: 1px solid var(--input-border);
-      border-radius: 8px;
-      padding: 1rem;
+      border:1px solid var(--input-border);
+      border-radius:8px;
+      padding:1rem;
     }
-    legend {
-      padding: 0 .5rem;
-      font-weight: 600;
-    }
+    legend { padding:0 .5rem; font-weight:600 }
 
-    /* Sticker inputs */
-    .sticker-group {
-      display: flex;
-      gap: 1rem;
-      align-items: flex-end;
-    }
-    .sticker-group label {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      font-size: .9rem;
-    }
-    .sticker-group input[type="file"] {
-      padding: .4rem;
-      border-radius: 4px;
-    }
+    /* Sticker */
+    .sticker-group { display:flex; gap:1rem; align-items:flex-end }
+    .sticker-group input { font-size:.9rem }
+    .sticker-group input[type="file"] { padding:.4rem; border-radius:4px; }
     .sticker-group input[type="text"] {
-      padding: .6rem 1rem;
-      border: 1px solid var(--input-border);
-      border-radius: 9999px;
+      padding:.6rem 1rem;
+      border:1px solid var(--input-border);
+      border-radius:9999px;
     }
 
-    /* Color pickers */
+    /* Colors */
     .color-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:1rem;
     }
     .color-group label {
-      display: flex;
-      flex-direction: column;
-      font-size: .9rem;
+      font-size:.9rem;
+      display:flex; flex-direction:column; align-items:flex-start;
     }
     .color-group input[type="color"] {
-      width: 2.5rem;
-      height: 2.5rem;
-      border: none;
-      border-radius: 50%;
-      margin-top: .25rem;
+      width:2.5rem; height:2.5rem; border:none; border-radius:50%; margin-top:.2rem;
     }
     .palette-group {
-      display: flex;
-      gap: .5rem;
-      margin-top: .75rem;
-      flex-wrap: wrap;
+      display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap;
     }
     .palette {
-      display: flex;
-      gap: .25rem;
-      align-items: center;
-      background: transparent;
-      border: 2px solid transparent;
-      border-radius: 9999px;  /* pill shape for palettes */
-      padding: .25rem;
-      transition: border-image-source .3s ease;
+      display:flex; gap:.25rem; align-items:center;
+      border:2px solid transparent; border-radius:9999px;
+      padding:.25rem; background:transparent;
+      transition:border-color .2s;
     }
+    .palette:hover { border-color:var(--primary); }
     .swatch {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 1px solid #ccc;
+      width:20px; height:20px; border-radius:50%;
+      border:1px solid #ccc;
     }
 
     /* Message lines */
-    #lines { list-style: none; padding: 0; margin: 0; }
-    #lines li { position: relative; margin-bottom: .75rem; }
+    #lines { list-style:none; padding:0; margin:0 }
+    #lines li { position:relative; margin-bottom:.75rem }
     #lines input {
-      width: 80%;
-      padding: .6rem 2.5rem .6rem 1rem;
-      border: 1px solid var(--input-border);
-      border-radius: 9999px;
-      outline: none;
-      transition: all .2s;
+      width:80%; padding:.6rem 2.5rem .6rem 1rem;
+      border:1px solid var(--input-border);
+      border-radius:9999px; outline:none;
+      transition:all .2s;
     }
     #lines input:focus {
-      outline: 3px solid var(--focus-ring);
-      outline-offset: 2px;
+      outline:3px solid var(--focus-ring); outline-offset:2px;
     }
     .delete-btn {
-      position: absolute;
-      top: 50%; right: .5rem;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      font-size: 1.2rem;
-      color: #999;
+      position:absolute; top:50%; right:.5rem; transform:translateY(-50%);
+      border:none; background:transparent; font-size:1.2rem; color:#999;
     }
-    .delete-btn:hover { color: #333; }
+    .delete-btn:hover { color:#333 }
 
-    /* Buttons & palettes get the pill-shaped gradient border */
-    .tb-btn,
-    #addLine,
-    #generate,
-    #copyBtn,
-    .palette {
-      border: 2px solid transparent;
-      border-radius: 9999px;
-      background-clip: padding-box;
-      transition: border-image-source .3s ease;
+    /* Buttons get nice pill shapes */
+    button,
+    .tb-btn {
+      border:2px solid transparent;
+      border-radius:9999px;
+      padding:.6rem 1.4rem;
+      background:var(--primary);
+      color:#fff;
+      font-weight:600;
+      transition:filter .2s;
     }
-    .tb-btn:hover,
-    #addLine:hover,
-    #generate:hover,
-    #copyBtn:hover,
-    .palette:hover {
-      border-image-source: conic-gradient(
-        from 0deg,
-        #60A085,
-        #76C69C,
-        #60A085
-      );
-      border-image-slice: 1;
-    }
+    button:hover { filter:brightness(1.1); }
 
-    /* Specific buttons */
-    #addLine {
-      padding: .6rem 1.4rem;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 600;
-      transition: filter .2s;
-    }
-    #addLine:hover { filter: brightness(1.1); }
-
-    /* Recipient fields */
-    .address-group {
-      display: grid;
-      gap: .75rem;
-    }
+    /* Recipient */
+    .address-group { display:grid; gap:.75rem }
     .address-group input {
-      padding: .6rem 1rem;
-      border: 1px solid var(--input-border);
-      border-radius: 9999px;
-      outline: none;
-      transition: all .2s;
+      padding:.6rem 1rem; border:1px solid var(--input-border);
+      border-radius:9999px; outline:none; transition:all .2s;
     }
     .address-group input:focus {
-      outline: 3px solid var(--focus-ring);
-      outline-offset: 2px;
+      outline:3px solid var(--focus-ring); outline-offset:2px;
     }
 
     /* Finalize */
-    #generate {
-      padding: .6rem 1.4rem;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 600;
-      transition: filter .2s;
-    }
-    #generate:hover { filter: brightness(1.1); }
-
-    #linkWrap {
-      display: none;
-      margin-top: 1rem;
-      gap: .5rem;
-      align-items: center;
-    }
+    #linkWrap { display:none; margin-top:1rem; gap:.5rem; align-items:center }
     #linkField {
-      flex: 1;
-      padding: .6rem 1rem;
-      border: 1px solid var(--input-border);
-      border-radius: 9999px;
-      background: #fafafa;
-      outline: none;
-    }
-    #copyBtn {
-      padding: .6rem 1.4rem;
-      background: var(--secondary);
-      color: #fff;
-      font-weight: 600;
+      flex:1; padding:.6rem 1rem;
+      border:1px solid var(--input-border);
+      border-radius:9999px; background:#fafafa; outline:none;
     }
 
-    /* Toolbar */
+    /* Floating toolbar */
     #toolbar {
-      position: absolute;
-      display: none;
-      flex-direction: column;
-      gap: .25rem;
-      background: #fff;
-      border: 2px solid transparent;
-      border-radius: 9999px; /* pill */
-      padding: .5rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1);
-      z-index: 1000;
-      transition: border-image-source .3s ease;
+      position:absolute; display:none; flex-direction:column; gap:.25rem;
+      background:#fff; border:1px solid var(--input-border);
+      border-radius:9999px; padding:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:1000;
+    }
+    .tb-btn {
+      width:2.4rem; height:2.4rem; background:transparent;
+      display:flex; align-items:center; justify-content:center;
+      border:none;
     }
 
-    /* Cursor */
+    /* custom cursor */
     #cur {
-      position: fixed;
-      pointer-events: none;
-      z-index: 2000;
-      transition: transform .1s,
-                  width .1s, height .1s,
-                  background .1s, border-radius .1s,
-                  opacity .1s;
+      position:fixed; pointer-events:none; z-index:2000;
+      transition:transform .1s, width .1s, height .1s, background .1s, border-radius .1s, opacity .1s;
     }
     #cur.default {
-      width: 12px; height: 12px;
-      background: var(--primary);
-      border-radius: 50%;
-      box-shadow: 0 0 2px rgba(0,0,0,.4);
-      opacity: 1;
+      width:14px; height:14px; background:var(--primary); border-radius:0;
+      box-shadow:0 0 2px rgba(0,0,0,.4); opacity:1;
     }
     #cur.pointer {
-      width: 16px; height: 16px;
-      background: var(--secondary);
-      border-radius: 4px;
-      opacity: 0;
+      width:14px; height:14px; background:var(--secondary); border-radius:0;
+      opacity:0;
     }
     #cur.text {
-      width: 2px; height: 24px;
-      background: #333;
-      border-radius: 0;
-      opacity: 1;
+      width:2px; height:24px; background:#333; opacity:1;
     }
     #cur.grab {
-      width: 20px; height: 20px;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M2,2 L18,18 M18,2 L2,18" stroke="%235F9E44" stroke-width="2"/></svg>') center/contain no-repeat;
-      opacity: 1;
+      width:20px; height:20px;
+      background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M2,2 L18,18 M18,2 L2,18" stroke="%235F9E44" stroke-width="2"/></svg>') center/contain no-repeat;
+      opacity:1;
     }
   </style>
 </head>
 <body>
   <h1>Create Your Seafoam Envelope E‑Card</h1>
+
+  <!-- custom cursor element -->
   <div id="cur" class="default"></div>
 
+  <!-- toolbar -->
   <div id="toolbar">
-    <button type="button" class="tb-btn" id="alignLeftBtn"><img src="align-left.svg" class="tb-icon"></button>
-    <button type="button" class="tb-btn" id="alignCenterBtn"><img src="align-center.svg" class="tb-icon"></button>
-    <button type="button" class="tb-btn" id="alignRightBtn"><img src="align-right.svg" class="tb-icon"></button>
+    <button type="button" class="tb-btn" id="alignLeftBtn"><img src="align-left.svg" width="16"></button>
+    <button type="button" class="tb-btn" id="alignCenterBtn"><img src="align-center.svg" width="16"></button>
+    <button type="button" class="tb-btn" id="alignRightBtn"><img src="align-right.svg" width="16"></button>
     <button type="button" class="tb-btn" id="boldBtn"><b>B</b></button>
     <button type="button" class="tb-btn" id="italicBtn"><i>I</i></button>
     <button type="button" class="tb-btn" id="underlineBtn"><u>U</u></button>
   </div>
 
   <form id="cardForm">
-    <fieldset>
-      <legend>Sticker</legend>
+    <fieldset><legend>Sticker</legend>
       <div class="sticker-group">
-        <label>Upload<input type="file" id="stickerFile" accept="image/*"></label>
+        <label>Upload<input type="file" id="stickerFile"></label>
         <label>or URL<input type="text" id="stickerUrl" placeholder="https://…"></label>
       </div>
     </fieldset>
 
-    <fieldset>
-      <legend>Colors</legend>
+    <fieldset><legend>Colors</legend>
       <div class="color-group">
         <label>Body<input type="color" id="bodyColor" value="#A8E6CF"></label>
         <label>Flap<input type="color" id="flapColor" value="#76C69C"></label>
+        <label>Paper<input type="color" id="paperColor" value="#fff8e7"></label>
+        <label>Background<input type="color" id="bgColor" value="#f0f0f0"></label>
       </div>
       <div class="palette-group">
-        <button type="button" class="palette" data-colors='{"body":"#A8E6CF","flap":"#76C69C"}'>
+        <button type="button" class="palette" data-colors='{"body":"#A8E6CF","flap":"#76C69C","paper":"#fff8e7","bg":"#f0f0f0"}'>
           <div class="swatch" style="background:#A8E6CF"></div>
           <div class="swatch" style="background:#76C69C"></div>
+          <div class="swatch" style="background:#fff8e7"></div>
+          <div class="swatch" style="background:#f0f0f0"></div>
         </button>
-        <button type="button" class="palette" data-colors='{"body":"#FFD54F","flap":"#FFB300"}'>
+        <button type="button" class="palette" data-colors='{"body":"#FFD54F","flap":"#FFB300","paper":"#FFF8E1","bg":"#FFF3E0"}'>
           <div class="swatch" style="background:#FFD54F"></div>
           <div class="swatch" style="background:#FFB300"></div>
+          <div class="swatch" style="background:#FFF8E1"></div>
+          <div class="swatch" style="background:#FFF3E0"></div>
         </button>
-        <button type="button" class="palette" data-colors='{"body":"#81C784","flap":"#388E3C"}'>
+        <button type="button" class="palette" data-colors='{"body":"#81C784","flap":"#388E3C","paper":"#E8F5E9","bg":"#F1F8E9"}'>
           <div class="swatch" style="background:#81C784"></div>
           <div class="swatch" style="background:#388E3C"></div>
+          <div class="swatch" style="background:#E8F5E9"></div>
+          <div class="swatch" style="background:#F1F8E9"></div>
+        </button>
+        <button type="button" class="palette" data-colors='{"body":"#FF8A65","flap":"#FF7043","paper":"#FFF3E0","bg":"#FBE9E7"}'>
+          <div class="swatch" style="background:#FF8A65"></div>
+          <div class="swatch" style="background:#FF7043"></div>
+          <div class="swatch" style="background:#FFF3E0"></div>
+          <div class="swatch" style="background:#FBE9E7"></div>
         </button>
       </div>
     </fieldset>
 
-    <fieldset>
-      <legend>Message Lines</legend>
+    <fieldset><legend>Message Lines</legend>
       <ul id="lines"></ul>
       <button type="button" id="addLine">+ Add line</button>
     </fieldset>
 
-    <fieldset class="address-group">
-      <legend>Recipient</legend>
+    <fieldset class="address-group"><legend>Recipient</legend>
       <label>To<input type="text" id="toField"></label>
       <label>From<input type="text" id="fromField"></label>
     </fieldset>
 
-    <fieldset>
-      <legend>Finalize</legend>
+    <fieldset><legend>Finalize</legend>
       <button type="button" id="generate">Generate Link</button>
       <div id="linkWrap">
         <input id="linkField" readonly>
@@ -339,31 +229,33 @@
 
   <script>
   (function(){
-    // custom cursor
+    // custom square cursor
     const cur = document.getElementById('cur');
-    document.addEventListener('mousemove', e=>{
-      const t=e.target;
-      let type='default',x=e.clientX,y=e.clientY;
-      if(t.closest('button, .tb-btn, .delete-btn, .palette')){
-        type='pointer';
-        const r=t.getBoundingClientRect();
-        x=r.left+r.width/2; y=r.top+r.height/2;
-        cur.style.opacity=0;
+    document.addEventListener('mousemove', e => {
+      const t = e.target;
+      let type = 'default', x = e.clientX, y = e.clientY;
+      if (t.closest('button, .tb-btn, .delete-btn, .palette')) {
+        type = 'pointer';
+        const r = t.getBoundingClientRect();
+        x = r.left + r.width/2;
+        y = r.top  + r.height/2;
+        cur.style.opacity = 0;
       } else {
-        cur.style.opacity=1;
-        if(t.matches('input[type="text"], input[type="color"]')) type='text';
-        else if(t.matches('input[type="file"]')) type='grab';
+        cur.style.opacity = 1;
+        if (t.matches('input[type="text"], input[type="color"]')) type = 'text';
+        else if (t.matches('input[type="file"]')) type = 'grab';
       }
-      cur.className=type;
-      cur.style.left=x+'px'; cur.style.top=y+'px';
+      cur.className = type;
+      cur.style.left = x + 'px';
+      cur.style.top  = y + 'px';
     });
     document.addEventListener('mousedown', ()=>cur.classList.add('click'));
     document.addEventListener('mouseup',   ()=>cur.classList.remove('click'));
     document.addEventListener('mouseleave',()=>cur.style.display='none');
     document.addEventListener('mouseenter',()=>cur.style.display='block');
 
-    // builder logic...
-    // (palette clicks, file upload, addLine, toolbar placement, generate, copy)
+    // builder logic (add lines, toolbar, palettes, generate, copy)…
+    // Make sure every <button> has type="button" so clicks don’t submit/reset form.
   })();
   </script>
 </body>
