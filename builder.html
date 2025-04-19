@@ -14,87 +14,154 @@
       --input-border: #ccc;
       --toolbar-bg: #fff;
       --toolbar-border: #ddd;
+      --focus-ring: rgba(96, 160, 133, 0.6);
     }
-    * { box-sizing:border-box; margin:0; padding:0; font-family:Poppins,sans-serif }
-    body { background:var(--bg); padding:2rem; }
-    h1 { margin-bottom:1rem; font-weight:700; }
-    form { max-width:600px; display:grid; gap:1rem; margin-bottom:2rem; }
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: Poppins, sans-serif;
+    }
+    body {
+      background: var(--bg);
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    form {
+      max-width: 600px;
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
 
-    /* Floating toolbar */
+    /* ==== Floating toolbar ==== */
     #toolbar {
-      position:absolute;
-      display:none;
-      flex-direction:column;
-      gap:.25rem;
-      background:var(--toolbar-bg);
-      border:1px solid var(--toolbar-border);
-      border-radius:9999px;
-      padding:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
-      z-index:100;
+      position: absolute;
+      display: none;
+      flex-direction: column;
+      gap: .25rem;
+      background: var(--toolbar-bg);
+      border: 1px solid var(--toolbar-border);
+      border-radius: 9999px;
+      padding: .5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      z-index: 100;
     }
     .tb-btn {
-      width:2.4rem;
-      height:2.4rem;
-      border:none;
-      background:transparent;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#666;
-      border-radius:50%;
-      transition:background .2s,color .2s;
+      width: 2.4rem;
+      height: 2.4rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      border-radius: 50%;
+      transition: background .2s, color .2s;
+      outline: none; /* remove default */
     }
-    .tb-btn:hover { background:#eee; }
-    .tb-btn.active { background:var(--secondary); color:#fff; }
+    .tb-btn:hover {
+      background: #eee;
+    }
+    .tb-btn.active {
+      background: var(--secondary);
+      color: #fff;
+    }
+    .tb-btn:focus {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
     .tb-icon {
-      width:1.2rem;
-      height:1.2rem;
-      object-fit:contain;
+      width: 1.2rem;
+      height: 1.2rem;
+      object-fit: contain;
     }
 
-    /* Lines list */
-    #lines { list-style:none; padding:0; margin:0; }
-    #lines li { position:relative; margin-bottom:.75rem; }
+    /* ==== Lines list ==== */
+    #lines {
+      list-style: none;
+      padding: 0; margin: 0;
+    }
+    #lines li {
+      position: relative;
+      margin-bottom: .75rem;
+    }
     #lines input {
-      width:100%; padding:.6rem 2.5rem .6rem 1rem;
-      border:1px solid var(--input-border);
-      border-radius:9999px;
-      background:var(--input-bg);
-      transition:all .2s;
+      width: 100%;
+      padding: .6rem 2.5rem .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
+      background: var(--input-bg);
+      transition: all .2s;
+      outline: none;
+    }
+    #lines input:focus {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
     }
     .delete-btn {
-      position:absolute; top:50%; right:.5rem;
-      transform:translateY(-50%);
-      border:none; background:transparent;
-      font-size:1.2rem; color:#999; cursor:pointer;
+      position: absolute;
+      top: 50%; right: .5rem;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      font-size: 1.2rem;
+      color: #999;
+      cursor: pointer;
     }
-    .delete-btn:hover { color:#333; }
+    .delete-btn:hover {
+      color: #333;
+    }
 
-    /* Other controls */
+    /* ==== Other controls ==== */
     input[type="text"], select {
-      width:100%; padding:.6rem 1rem;
-      border:1px solid var(--input-border);
-      border-radius:9999px; background:var(--input-bg);
+      width: 100%;
+      padding: .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
+      background: var(--input-bg);
+      outline: none;
+    }
+    input[type="text"]:focus, select:focus {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
     }
     button, #addLine {
-      background:var(--primary); color:#fff; border:none;
-      padding:.6rem 1.4rem; border-radius:9999px;
-      cursor:pointer; font-weight:600;
-      transition:filter .2s;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: .6rem 1.4rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: filter .2s;
     }
-    button:hover, #addLine:hover { filter:brightness(1.1); }
+    button:hover, #addLine:hover {
+      filter: brightness(1.1);
+    }
 
-    /* Link display */
-    #linkWrap { display:none; gap:.5rem; max-width:600px; align-items:center; }
-    #linkField {
-      flex:1; padding:.6rem 1rem;
-      border:1px solid var(--input-border);
-      border-radius:9999px; background:#fafafa;
-      font-size:.85rem;
+    /* ==== Link display ==== */
+    #linkWrap {
+      display: none;
+      gap: .5rem;
+      max-width: 600px;
+      align-items: center;
     }
-    #copyBtn { background:var(--secondary); }
+    #linkField {
+      flex: 1;
+      padding: .6rem 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 9999px;
+      background: #fafafa;
+      font-size: .85rem;
+      outline: none;
+    }
+    #copyBtn {
+      background: var(--secondary);
+    }
   </style>
 </head>
 <body>
