@@ -52,7 +52,8 @@
     .tb-btn svg {
       width:1.2rem;
       height:1.2rem;
-      fill:currentColor;
+      fill:none;
+      stroke:currentColor;
       display:block;
     }
 
@@ -60,8 +61,7 @@
     #lines { list-style:none; padding:0; margin:0; }
     #lines li { position:relative; margin-bottom:.75rem; }
     #lines input {
-      width:100%;
-      padding:.6rem 2.5rem .6rem 1rem;
+      width:100%; padding:.6rem 2.5rem .6rem 1rem;
       border:1px solid var(--input-border);
       border-radius:9999px;
       background:var(--input-bg);
@@ -107,13 +107,13 @@
   <!-- Floating toolbar -->
   <div id="toolbar">
     <button type="button" class="tb-btn" id="alignLeftBtn" title="Align left">
-      <svg viewBox="0 0 16 16"><rect x="0" y="2" width="16" height="2"/><rect x="0" y="6" width="10" height="2"/><rect x="0" y="10" width="16" height="2"/><rect x="0" y="14" width="10" height="2"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6h8m-8 4h12M6 14h8m-8 4h12"/></svg>
     </button>
     <button type="button" class="tb-btn" id="alignCenterBtn" title="Align center">
-      <svg viewBox="0 0 16 16"><rect x="0" y="2" width="16" height="2"/><rect x="3" y="6" width="10" height="2"/><rect x="0" y="10" width="16" height="2"/><rect x="3" y="14" width="10" height="2"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h8M6 10h12M8 14h8M6 18h12"/></svg>
     </button>
     <button type="button" class="tb-btn" id="alignRightBtn" title="Align right">
-      <svg viewBox="0 0 16 16"><rect x="0" y="2" width="16" height="2"/><rect x="6" y="6" width="10" height="2"/><rect x="0" y="10" width="16" height="2"/><rect x="6" y="14" width="10" height="2"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6h-8m8 4H6m12 4h-8m8 4H6"/></svg>
     </button>
     <button type="button" class="tb-btn" id="boldBtn" title="Bold"><b>B</b></button>
     <button type="button" class="tb-btn" id="italicBtn" title="Italic"><i>I</i></button>
@@ -142,23 +142,22 @@
 
   <script>
   const CardBuilder = (() => {
-    // references
-    const linesUl       = document.getElementById('lines');
-    const toolbar       = document.getElementById('toolbar');
-    const alignLeftBtn  = document.getElementById('alignLeftBtn');
-    const alignCenterBtn= document.getElementById('alignCenterBtn');
-    const alignRightBtn = document.getElementById('alignRightBtn');
-    const boldBtn       = document.getElementById('boldBtn');
-    const italicBtn     = document.getElementById('italicBtn');
-    const underlineBtn  = document.getElementById('underlineBtn');
-    const addLineBtn    = document.getElementById('addLine');
-    const stickerEl     = document.getElementById('stickerUrl');
-    const toEl          = document.getElementById('toField');
-    const fromEl        = document.getElementById('fromField');
-    const generate      = document.getElementById('generate');
-    const linkWrap      = document.getElementById('linkWrap');
-    const linkField     = document.getElementById('linkField');
-    const copyBtn       = document.getElementById('copyBtn');
+    const linesUl        = document.getElementById('lines');
+    const toolbar        = document.getElementById('toolbar');
+    const alignLeftBtn   = document.getElementById('alignLeftBtn');
+    const alignCenterBtn = document.getElementById('alignCenterBtn');
+    const alignRightBtn  = document.getElementById('alignRightBtn');
+    const boldBtn        = document.getElementById('boldBtn');
+    const italicBtn      = document.getElementById('italicBtn');
+    const underlineBtn   = document.getElementById('underlineBtn');
+    const addLineBtn     = document.getElementById('addLine');
+    const stickerEl      = document.getElementById('stickerUrl');
+    const toEl           = document.getElementById('toField');
+    const fromEl         = document.getElementById('fromField');
+    const generate       = document.getElementById('generate');
+    const linkWrap       = document.getElementById('linkWrap');
+    const linkField      = document.getElementById('linkField');
+    const copyBtn        = document.getElementById('copyBtn');
 
     let focusedInput = null;
 
@@ -187,7 +186,6 @@
     function showToolbar(e) {
       focusedInput = e.target;
       const styles = window.getComputedStyle(focusedInput);
-      // sync active states
       [alignLeftBtn,alignCenterBtn,alignRightBtn].forEach(b=>b.classList.remove('active'));
       if (styles.textAlign === 'center')      alignCenterBtn.classList.add('active');
       else if (styles.textAlign === 'right')  alignRightBtn.classList.add('active');
@@ -217,9 +215,9 @@
     function toggleStyle(btn, prop, val) {
       if (!focusedInput) return;
       const active = btn.classList.toggle('active');
-      if (prop === 'fontWeight') focusedInput.style.fontWeight     = active ? val : '400';
-      if (prop === 'fontStyle')  focusedInput.style.fontStyle      = active ? val : 'normal';
-      if (prop === 'textDecoration') focusedInput.style.textDecoration = active ? val : 'none';
+      if (prop === 'fontWeight')         focusedInput.style.fontWeight     = active ? val : '400';
+      if (prop === 'fontStyle')          focusedInput.style.fontStyle      = active ? val : 'normal';
+      if (prop === 'textDecoration')     focusedInput.style.textDecoration = active ? val : 'none';
     }
 
     function collect() {
