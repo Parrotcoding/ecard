@@ -9,7 +9,7 @@
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
 
-    /* workspace: paper + assets */
+    /* workspace */
     #workspace { display:flex; gap:1rem; }
     #paper {
       position:relative; flex:1;
@@ -74,13 +74,13 @@
       z-index:10; cursor:move; margin:-6px 0 0 -6px;
     }
 
-    /* show handles on selected elements */
+    /* show handles on selected */
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle {
       display:block !important;
     }
 
-    /* basic element styles */
+    /* base element styles */
     .element, .shape-wrapper { position:absolute; user-select:none; }
     .text-element {
       min-width:50px; min-height:20px; padding:.2rem;
@@ -95,17 +95,11 @@
       background:rgba(96,160,133,0.3); border:2px solid #60A085;
       border-radius:50%;
     }
-
-    /* image wrapper */
     .image-wrapper {
       width:100px; height:100px;
       background-size:contain; background-repeat:no-repeat; background-position:center;
     }
-
-    /* ensure wrapper has transparent fill */
-    .shape-wrapper {
-      background-color: transparent;
-    }
+    .shape-wrapper { background-color:transparent; }
   </style>
 </head>
 <body>
@@ -118,14 +112,12 @@
     </div>
   </div>
 
-  <!-- Toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- Shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -149,11 +141,11 @@
       thumb.addEventListener('dblclick', ()=>{
         const p = prompt('Crop % x,y,width,height','0,0,100,100');
         if(!p) return;
-        const [x,y,w,h] = p.split(',').map(parseFloat);
+        const [x,y,w,h] = p.split(',').map(n=>parseFloat(n));
         const img = new Image();
         img.onload = ()=>{
-          const cw=img.width*(w/100), ch=img.height*(h/100);
-          const sx=img.width*(x/100), sy=img.height*(y/100);
+          const cw=img.width*(w/100), ch=img.height*(h/100),
+                sx=img.width*(x/100), sy=img.height*(y/100);
           const c=document.createElement('canvas');
           c.width=cw; c.height=ch;
           c.getContext('2d').drawImage(img,sx,sy,cw,ch,0,0,cw,ch);
@@ -164,7 +156,6 @@
       assetList.append(thumb);
     }
 
-    // PAPER click: show toolbar, deselect on blank
     paper.addEventListener('click', e=>{
       if(e.target === paper) deselect();
       clickX=e.offsetX; clickY=e.offsetY;
@@ -178,7 +169,6 @@
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
-    // Add Text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt=document.createElement('div');
@@ -192,7 +182,6 @@
       txt.focus();
     });
 
-    // Add Image via URL & to Assets
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url=prompt('Enter image URL:');
@@ -207,7 +196,6 @@
       toolbar.style.display='none';
     });
 
-    // Shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
@@ -272,18 +260,15 @@
       selectedEl=null;
     }
 
-    // drop behavior
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
         const src=e.dataTransfer.getData('text/plain');
         if(!src) return;
-        // set background image
         el.style.backgroundImage=`url(${src})`;
         el.style.backgroundSize='cover';
         el.style.backgroundPosition='center';
-        // if triangle: remove fill, clip to polygon, top layer
         if(el.classList.contains('shape-wrapper')){
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none');
@@ -296,7 +281,6 @@
           ).join(', ');
           el.style.clipPath=`polygon(${pct})`;
         }
-        // raise above others
         el.style.zIndex='999';
       });
     }
@@ -328,24 +312,47 @@
     function startResize(dir,el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
-        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={ x:e.clientX,y:e.clientY,
+        const r=el.getBoundingClientRect(),
+              pr=paper.getBoundingClientRect();
+        const start={
+          x:e.clientX, y:e.clientY,
           left:r.left-pr.left, top:r.top-pr.top,
-          w:r.width, h:r.height
+          w:r.width, h:r.height,
+          aspect: r.width/r.height
         };
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
         function doResize(ev){
           let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-          let L=start.left, T=start.top, W=start.w, H=start.h;
-          if(dir.includes('e')) W=start.w+dx;
-          if(dir.includes('s')) H=start.h+dy;
-          if(dir.includes('w')){ W=start.w-dx; L=start.left+dx; }
-          if(dir.includes('n')){ H=start.h-dy; T=start.top+dy; }
-          el.style.width=`${W}px`;
-          el.style.height=`${H}px`;
-          el.style.left=`${L}px`;
-          el.style.top=`${T}px`;
+          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
+
+          // freeform adjustments
+          if(dir.includes('e')) newW = start.w + dx;
+          if(dir.includes('s')) newH = start.h + dy;
+          if(dir.includes('w')){
+            newW = start.w - dx;
+            newL = start.left + dx;
+          }
+          if(dir.includes('n')){
+            newH = start.h - dy;
+            newT = start.top + dy;
+          }
+
+          // shift-key => preserve aspect ratio
+          if(ev.shiftKey){
+            // drive by width always
+            newH = newW / start.aspect;
+            if(dir.includes('n')){
+              // if dragging north, adjust top so bottom stays in place
+              newT = start.top + (start.h - newH);
+            }
+          }
+
+          // apply
+          el.style.width  = `${newW}px`;
+          el.style.height = `${newH}px`;
+          el.style.left   = `${newL}px`;
+          el.style.top    = `${newT}px`;
         }
       };
     }
@@ -368,7 +375,8 @@
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
-          const start={ x:e.clientX,y:e.clientY,
+          const start={
+            x:e.clientX, y:e.clientY,
             wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
           };
@@ -380,7 +388,7 @@
             const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
             const minX=Math.min(...xs), minY=Math.min(...ys);
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
-            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
+            pts = abs.map(p=>[p[0]-minX,p[1]-minY]);
             wrap.style.left=`${start.wrapL+minX}px`;
             wrap.style.top =`${start.wrapT+minY}px`;
             wrap.style.width=`${maxX-minX}px`;
