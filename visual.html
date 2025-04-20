@@ -6,11 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin:0; padding:1rem;
-      background:#f0f0f0;
-      font-family:'Poppins',sans-serif;
-    }
+    body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
     #workspace { display:flex; gap:1rem; }
     #paper {
@@ -19,8 +15,7 @@
       min-height:400px; resize:vertical; overflow:auto;
     }
     #assets {
-      width:200px;
-      background:#fafafa; border:2px solid #ddd;
+      width:200px; background:#fafafa; border:2px solid #ddd;
       padding:.5rem; overflow:auto;
     }
     #assets h2 { margin:0 0 .5rem; font-size:1rem }
@@ -28,52 +23,38 @@
       width:100%; margin-bottom:.5rem; cursor:grab;
       border:1px solid #ccc; border-radius:4px;
     }
-
-    /* toolbar */
     #toolbar {
       position:absolute; display:none;
-      background:rgba(255,255,255,0.95);
-      border:1px solid #ccc; border-radius:8px;
-      padding:.25rem; display:flex; gap:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1000;
     }
     #toolbar button {
-      width:32px; height:32px;
-      border:none; border-radius:50%;
-      background:#A8E6CF;
-      display:flex; align-items:center; justify-content:center;
+      width:32px; height:32px; border:none; border-radius:50%;
+      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
       cursor:pointer;
     }
     #toolbar button:hover { background:#76C69C }
     #toolbar img { width:20px; height:20px }
     .icon-text { color:#fff; font-size:1rem; font-weight:700 }
 
-    /* shapes submenu */
     #shapeMenu {
       position:absolute; display:none;
-      background:rgba(255,255,255,0.95);
-      border:1px solid #ccc; border-radius:8px;
-      padding:.25rem; display:flex; gap:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1001;
     }
     #shapeMenu button {
-      width:32px; height:32px;
-      border:none; border-radius:4px;
-      background:#A8E6CF;
-      display:flex; align-items:center; justify-content:center;
+      width:32px; height:32px; border:none; border-radius:4px;
+      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
       cursor:pointer;
     }
     #shapeMenu button:hover { background:#76C69C }
 
-    /* handles hidden by default */
     .resize-handle, .vertex-handle { display:none; }
-
     .resize-handle {
       position:absolute; width:10px; height:10px;
-      background:#fff; border:1px solid #60A085;
-      z-index:10;
+      background:#fff; border:1px solid #60A085; z-index:10;
     }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px }
@@ -82,42 +63,31 @@
 
     .vertex-handle {
       position:absolute; width:12px; height:12px;
-      background:#fff; border:2px solid #60A085;
-      border-radius:50%; z-index:10; cursor:move;
-      margin:-6px 0 0 -6px;
+      background:#fff; border:2px solid #60A085; border-radius:50%;
+      z-index:10; cursor:move; margin:-6px 0 0 -6px;
     }
-
-    /* show handles on selected */
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle {
       display:block !important;
     }
 
-    .element, .shape-wrapper {
-      position:absolute; user-select:none;
-    }
+    .element, .shape-wrapper { position:absolute; user-select:none; }
     .text-element {
-      min-width:50px; min-height:20px;
-      padding:.2rem; background:transparent; outline:none;
-      cursor:text;
+      min-width:50px; min-height:20px; padding:.2rem; background:transparent;
+      outline:none; cursor:text;
     }
     .shape-rect {
       width:100px; height:60px;
-      background:rgba(96,160,133,0.3);
-      border:2px solid #60A085;
+      background:rgba(96,160,133,0.3); border:2px solid #60A085;
     }
     .shape-circle {
       width:60px; height:60px;
-      background:rgba(96,160,133,0.3);
-      border:2px solid #60A085;
+      background:rgba(96,160,133,0.3); border:2px solid #60A085;
       border-radius:50%;
     }
-    /* image wrappers */
     .image-wrapper {
       width:100px; height:100px;
-      background-size:contain;
-      background-repeat:no-repeat;
-      background-position:center;
+      background-size:contain; background-repeat:no-repeat; background-position:center;
     }
   </style>
 </head>
@@ -131,14 +101,12 @@
     </div>
   </div>
 
-  <!-- Toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- Shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -153,11 +121,9 @@
     const assetList = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // add a thumbnail asset
     function addAsset(src){
       const thumb = document.createElement('img');
-      thumb.src = src;
-      thumb.draggable = true;
+      thumb.src = src; thumb.draggable = true;
       thumb.addEventListener('dragstart', e=>{
         e.dataTransfer.setData('text/plain', src);
       });
@@ -169,7 +135,7 @@
         img.onload = ()=>{
           const cw=img.width*(w/100), ch=img.height*(h/100),
                 sx=img.width*(x/100), sy=img.height*(y/100);
-          const c = document.createElement('canvas');
+          const c=document.createElement('canvas');
           c.width=cw; c.height=ch;
           c.getContext('2d').drawImage(img,sx,sy,cw,ch,0,0,cw,ch);
           thumb.src = c.toDataURL();
@@ -179,28 +145,25 @@
       assetList.append(thumb);
     }
 
-    // PAPER click: deselect if blank, always show toolbar
     paper.addEventListener('click', e=>{
-      if(e.target === paper) deselect();
-      clickX = e.offsetX; clickY = e.offsetY;
-      const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top  = `${e.pageY - tb.height - 12}px`;
-      toolbar.style.display = 'flex';
-      shapeMenu.style.display = 'none';
+      if(e.target===paper) deselect();
+      clickX=e.offsetX; clickY=e.offsetY;
+      const tb=toolbar.getBoundingClientRect();
+      toolbar.style.left=`${e.pageX-tb.width/2}px`;
+      toolbar.style.top=`${e.pageY-tb.height-12}px`;
+      toolbar.style.display='flex';
+      shapeMenu.style.display='none';
       e.stopPropagation();
     });
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
-    // Add Text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
-      const txt = document.createElement('div');
+      const txt=document.createElement('div');
       txt.className='element text-element';
       txt.contentEditable=true;
-      txt.style.left=`${clickX}px`;
-      txt.style.top =`${clickY}px`;
+      txt.style.left=`${clickX}px`; txt.style.top=`${clickY}px`;
       txt.textContent='Enter text';
       paper.append(txt);
       initElement(txt,false);
@@ -208,28 +171,25 @@
       txt.focus();
     });
 
-    // Add Image via URL → wrapper + asset
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
-      const url = prompt('Enter image URL:');
+      const url=prompt('Enter image URL:');
       if(!url) return;
-      const wrap = document.createElement('div');
-      wrap.className = 'element image-wrapper';
-      wrap.style.left = `${clickX}px`;
-      wrap.style.top  = `${clickY}px`;
-      wrap.style.backgroundImage = `url(${url})`;
+      const wrap=document.createElement('div');
+      wrap.className='element image-wrapper';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.backgroundImage=`url(${url})`;
       paper.append(wrap);
       initElement(wrap,false);
       addAsset(url);
       toolbar.style.display='none';
     });
 
-    // Shapes menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
-      const r = e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left = `${r.right+8}px`;
-      shapeMenu.style.top  = `${r.top}px`;
+      const r=e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left=`${r.right+8}px`;
+      shapeMenu.style.top=`${r.top}px`;
       shapeMenu.style.display='flex';
     });
     shapeMenu.addEventListener('click', e=>{
@@ -245,38 +205,31 @@
     function insertBasic(type){
       const el=document.createElement('div');
       el.className='element '+(type==='rect'?'shape-rect':'shape-circle');
-      el.style.left=`${clickX}px`;
-      el.style.top =`${clickY}px`;
+      el.style.left=`${clickX}px`; el.style.top=`${clickY}px`;
       paper.append(el);
       initElement(el,false);
     }
     function insertTriangle(){
       const wrap=document.createElement('div');
       wrap.className='shape-wrapper';
-      wrap.style.left   =`${clickX}px`;
-      wrap.style.top    =`${clickY}px`;
-      wrap.style.width  ='80px';
-      wrap.style.height ='70px';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.width='80px'; wrap.style.height='70px';
       const svgNS="http://www.w3.org/2000/svg";
       const svg=document.createElementNS(svgNS,'svg');
-      svg.setAttribute('width','100%');
-      svg.setAttribute('height','100%');
+      svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
       const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points','0,70 40,0 80,70');
       poly.setAttribute('fill','rgba(96,160,133,0.3)');
       poly.setAttribute('stroke','#60A085');
       poly.setAttribute('stroke-width','2');
-      svg.append(poly);
-      wrap.append(svg);
+      svg.append(poly); wrap.append(svg);
       paper.append(wrap);
       initElement(wrap,true,poly);
     }
 
     function initElement(el,isTri,poly){
       makeDraggable(el);
-      if(el.classList.contains('shape-rect')||
-         el.classList.contains('shape-circle')||
-         isTri) enableDrop(el);
+      enableDrop(el);
       if(isTri) makeTriangleResizable(el,poly);
       else makeResizable(el);
       el.addEventListener('mousedown', e=>{
@@ -296,18 +249,27 @@
       selectedEl=null;
     }
 
-    // drag assets into shapes
     function enableDrop(el){
-      el.addEventListener('dragover',e=>e.preventDefault());
-      el.addEventListener('drop',e=>{
+      el.addEventListener('dragover', e=>e.preventDefault());
+      el.addEventListener('drop', e=>{
         e.preventDefault();
         const src=e.dataTransfer.getData('text/plain');
         if(!src) return;
         el.style.backgroundImage=`url(${src})`;
         el.style.backgroundSize='cover';
         el.style.backgroundPosition='center';
-        if(el.classList.contains('shape-wrapper'))
-          el.style.clipPath='polygon(50% 0%,0% 100%,100% 100%)';
+        if(el.classList.contains('shape-wrapper')){
+          // recompute clip-path from current polygon points
+          const poly=el.querySelector('polygon');
+          const pts=poly.getAttribute('points')
+                       .split(' ')
+                       .map(p=>p.split(',').map(Number));
+          const W=el.clientWidth, H=el.clientHeight;
+          const pct=pts.map(([x,y])=>
+            `${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`
+          ).join(', ');
+          el.style.clipPath = `polygon(${pct})`;
+        }
       });
     }
 
@@ -318,8 +280,8 @@
         e.preventDefault();
         dx=e.clientX-el.offsetLeft;
         dy=e.clientY-el.offsetTop;
-        document.addEventListener('mousemove',onmove);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
+        document.addEventListener('mousemove', onmove);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
       });
       function onmove(e){
         el.style.left=`${e.clientX-dx}px`;
@@ -332,30 +294,26 @@
         const h=document.createElement('div');
         h.className='resize-handle handle-'+dir;
         el.append(h);
-        h.addEventListener('mousedown',startResize(dir,el));
+        h.addEventListener('mousedown', startResize(dir,el));
       });
     }
     function startResize(dir,el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
         const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={ x:e.clientX,y:e.clientY,
+        const start={x:e.clientX,y:e.clientY,
           left:r.left-pr.left, top:r.top-pr.top,
-          w:r.width, h:r.height
+          w:r.width,h:r.height
         };
-        document.addEventListener('mousemove',doResize);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',doResize),{once:true});
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
         function doResize(ev){
           let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
           let L=start.left, T=start.top, W=start.w, H=start.h;
           if(dir.includes('e')) W=start.w+dx;
           if(dir.includes('s')) H=start.h+dy;
-          if(dir.includes('w')){
-            W=start.w-dx; L=start.left+dx;
-          }
-          if(dir.includes('n')){
-            H=start.h-dy; T=start.top+dy;
-          }
+          if(dir.includes('w')){ W=start.w-dx; L=start.left+dx; }
+          if(dir.includes('n')){ H=start.h-dy; T=start.top+dy; }
           el.style.width=`${W}px`;
           el.style.height=`${H}px`;
           el.style.left=`${L}px`;
@@ -374,20 +332,20 @@
       function update(){
         handles.forEach((h,i)=>{
           h.style.left=`${pts[i][0]}px`;
-          h.style.top =`${pts[i][1]}px`;
+          h.style.top=`${pts[i][1]}px`;
         });
-        poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
+        poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
       handles.forEach((h,i)=>{
-        h.addEventListener('mousedown',e=>{
+        h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
           const start={ x:e.clientX,y:e.clientY,
             wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
           };
-          document.addEventListener('mousemove',onDrag);
-          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onDrag),{once:true});
+          document.addEventListener('mousemove', onDrag);
+          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
           function onDrag(ev){
             const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
             const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
@@ -395,10 +353,10 @@
             const minX=Math.min(...xs), minY=Math.min(...ys);
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left   =`${start.wrapL+minX}px`;
-            wrap.style.top    =`${start.wrapT+minY}px`;
-            wrap.style.width  =`${maxX-minX}px`;
-            wrap.style.height =`${maxY-minY}px`;
+            wrap.style.left=`${start.wrapL+minX}px`;
+            wrap.style.top=`${start.wrapT+minY}px`;
+            wrap.style.width=`${maxX-minX}px`;
+            wrap.style.height=`${maxY-minY}px`;
             update();
           }
         });
