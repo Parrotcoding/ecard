@@ -7,77 +7,92 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
-      margin: 0; padding: 1rem;
-      background: #f0f0f0;
-      font-family: 'Poppins', sans-serif;
+      margin:0; padding:1rem;
+      background:#f0f0f0;
+      font-family:'Poppins',sans-serif;
     }
-    h1 {
-      text-align:center; margin-bottom:1rem;
-    }
+    h1 { text-align:center; margin-bottom:1rem }
+
     #paper {
-      position: relative;
-      margin: auto;
-      width: 60vw;
-      min-height: 300px;
-      background: #fff8e7;
-      border: 2px solid #82C9A1;
-      resize: vertical;
-      overflow: auto;
+      position:relative;
+      margin:auto;
+      width:60vw;
+      min-height:300px;
+      background:#fff8e7;
+      border:2px solid #82C9A1;
+      resize:vertical;
+      overflow:auto;
     }
+
     /* toolbar */
     #toolbar {
-      position: absolute;
-      display: none;
-      background: rgba(255,255,255,0.95);
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 0.25rem;
-      display: flex; gap:0.5rem;
-      z-index: 1000;
+      position:absolute;
+      display:none;
+      background:rgba(255,255,255,0.95);
+      border:1px solid #ccc;
+      border-radius:8px;
+      padding:.25rem;
+      display:flex; gap:.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:1000;
     }
     #toolbar button {
       width:32px; height:32px;
-      border:none; background:#A8E6CF; border-radius:50%;
+      border:none; border-radius:50%;
+      background:#A8E6CF;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer;
     }
     #toolbar button:hover { background:#76C69C }
     #toolbar img { width:20px; height:20px; pointer-events:none }
-    .icon-text {
-      font-size:1rem; font-weight:bold; color:#fff;
-    }
-    /* shape submenu */
+    .icon-text { color:#fff; font-size:1rem; font-weight:700; }
+
+    /* shapes submenu */
     #shapeMenu {
       position:absolute;
       display:none;
-      background: rgba(255,255,255,0.95);
+      background:rgba(255,255,255,0.95);
       border:1px solid #ccc;
       border-radius:8px;
       padding:.25rem;
       display:flex; gap:.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1001;
     }
     #shapeMenu button {
       width:32px; height:32px;
-      border:none; background:#A8E6CF; border-radius:4px;
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      border:none; border-radius:4px;
+      background:#A8E6CF;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
     }
     #shapeMenu button:hover { background:#76C69C }
+
+    /* resize handle */
+    .resize-handle {
+      position:absolute;
+      width:10px; height:10px;
+      background:#fff;
+      border:1px solid #60A085;
+      right:0; bottom:0;
+      cursor:se-resize;
+      z-index:10;
+    }
+
     /* elements */
-    .element { position:absolute; cursor:move }
+    .element { position:absolute; cursor:move; }
     .text-element {
       min-width:50px; min-height:20px;
       padding:.2rem; background:transparent; outline:none;
     }
     .shape-rect {
       width:100px; height:60px;
-      background: rgba(96,160,133,0.3);
+      background:rgba(96,160,133,0.3);
       border:2px solid #60A085;
     }
     .shape-circle {
       width:60px; height:60px;
-      background: rgba(96,160,133,0.3);
+      background:rgba(96,160,133,0.3);
       border:2px solid #60A085;
       border-radius:50%;
     }
@@ -87,6 +102,7 @@
       border-right:40px solid transparent;
       border-bottom:70px solid rgba(96,160,133,0.3);
       position:relative;
+      transform-origin:0 0;
     }
     .shape-triangle::after {
       content:'';
@@ -101,17 +117,16 @@
 </head>
 <body>
   <h1>Visual E‑Card Editor</h1>
-
   <div id="paper"></div>
 
-  <!-- Toolbar -->
+  <!-- toolbar -->
   <div id="toolbar">
-    <button id="btnText"   title="Add Text"><span class="icon-text">T</span></button>
-    <button id="btnImage"  title="Add Image"><img src="image.svg" alt="Img"></button>
-    <button id="btnShape"  title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
+    <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
+    <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
+    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- Shapes submenu -->
+  <!-- shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -123,42 +138,41 @@
     const paper     = document.getElementById('paper');
     const toolbar   = document.getElementById('toolbar');
     const shapeMenu = document.getElementById('shapeMenu');
-    let clickX = 0, clickY = 0, focusedInput=null;
+    let clickX=0, clickY=0, fontMenu=null;
 
-    // Show toolbar on paper click
-    paper.addEventListener('click', e => {
+    // show toolbar above cursor
+    paper.addEventListener('click', e=>{
       e.stopPropagation();
-      clickX = e.offsetX;
-      clickY = e.offsetY;
-      toolbar.style.left = e.pageX + 'px';
-      toolbar.style.top  = e.pageY + 'px';
+      clickX = e.offsetX; clickY = e.offsetY;
       toolbar.style.display = 'flex';
-      shapeMenu.style.display = 'none';
+      const tb = toolbar.getBoundingClientRect();
+      toolbar.style.left = (e.pageX - tb.width/2) + 'px';
+      toolbar.style.top  = (e.pageY - tb.height - 12) + 'px';
+      shapeMenu.style.display='none';
     });
 
-    // Prevent toolbar clicks from hiding it
-    toolbar.addEventListener('click', e => e.stopPropagation());
-    shapeMenu.addEventListener('click', e => e.stopPropagation());
-
-    // Hide when clicking elsewhere
-    document.addEventListener('click', () => {
-      toolbar.style.display = 'none';
-      shapeMenu.style.display = 'none';
+    // prevent toolbar/shapeMenu clicks from hiding them
+    [toolbar, shapeMenu].forEach(el=>
+      el.addEventListener('click', e=>e.stopPropagation())
+    );
+    document.addEventListener('click', ()=>{
+      toolbar.style.display='none';
+      shapeMenu.style.display='none';
     });
 
     // Add text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const div = document.createElement('div');
-      div.className = 'element text-element';
-      div.contentEditable = true;
-      div.style.left = clickX + 'px';
-      div.style.top  = clickY + 'px';
-      div.textContent = 'Enter text';
+      div.className='element text-element';
+      div.contentEditable=true;
+      div.style.left=clickX+'px';
+      div.style.top= clickY+'px';
+      div.textContent='Enter text';
       paper.append(div);
       makeDraggable(div);
+      toolbar.style.display='none';
       div.focus();
-      toolbar.style.display = 'none';
     });
 
     // Add image
@@ -167,64 +181,96 @@
       const url = prompt('Enter image URL:');
       if(!url) return;
       const img = document.createElement('img');
-      img.className = 'element';
-      img.src = url;
-      img.style.left = clickX + 'px';
-      img.style.top  = clickY + 'px';
-      img.style.height = '100px';
+      img.className='element';
+      img.src=url;
+      img.style.height='100px';
+      img.style.left=clickX+'px';
+      img.style.top= clickY+'px';
       paper.append(img);
       makeDraggable(img);
-      toolbar.style.display = 'none';
+      makeResizable(img);
+      toolbar.style.display='none';
     });
 
-    // Show shape menu
+    // Show shapes submenu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
-      const rect = e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left = rect.right + 8 + 'px';
-      shapeMenu.style.top  = rect.top + 'px';
-      shapeMenu.style.display = 'flex';
+      const r=e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left = r.right + 8 + 'px';
+      shapeMenu.style.top  = r.top + 'px';
+      shapeMenu.style.display='flex';
     });
 
     // Insert shape
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
       if(!btn) return;
-      const shape = btn.dataset.shape;
+      const type = btn.dataset.shape;
       let el;
-      if(shape==='rect') {
-        el = document.createElement('div');
-        el.className = 'element shape-rect';
-      } else if(shape==='circle') {
-        el = document.createElement('div');
-        el.className = 'element shape-circle';
-      } else if(shape==='triangle') {
-        el = document.createElement('div');
-        el.className = 'element shape-triangle';
+      if(type==='rect'){
+        el=document.createElement('div'); el.className='element shape-rect';
+      } else if(type==='circle'){
+        el=document.createElement('div'); el.className='element shape-circle';
+      } else {
+        el=document.createElement('div'); el.className='element shape-triangle';
+        el.dataset.baseWidth=80; el.dataset.baseHeight=70;
       }
-      el.style.left = clickX + 'px';
-      el.style.top  = clickY + 'px';
+      el.style.left = clickX+'px';
+      el.style.top  = clickY+'px';
       paper.append(el);
       makeDraggable(el);
-      shapeMenu.style.display = 'none';
-      toolbar.style.display   = 'none';
+      makeResizable(el);
+      shapeMenu.style.display='none';
+      toolbar.style.display='none';
     });
 
-    // Draggable helper
-    function makeDraggable(el) {
+    // Draggable
+    function makeDraggable(el){
       let dx, dy;
-      el.addEventListener('mousedown', e=> {
+      el.addEventListener('mousedown', e=>{
         e.preventDefault();
         dx = e.clientX - el.offsetLeft;
         dy = e.clientY - el.offsetTop;
         document.addEventListener('mousemove', onDrag);
-        document.addEventListener('mouseup', ()=> {
+        document.addEventListener('mouseup', ()=>{
           document.removeEventListener('mousemove', onDrag);
         }, { once:true });
       });
       function onDrag(e){
-        el.style.left = (e.clientX - dx) + 'px';
-        el.style.top  = (e.clientY - dy) + 'px';
+        el.style.left = (e.clientX - dx)+'px';
+        el.style.top  = (e.clientY - dy)+'px';
+      }
+    }
+
+    // Resizable (handles bottom-right)
+    function makeResizable(el){
+      const handle = document.createElement('div');
+      handle.className='resize-handle';
+      el.append(handle);
+      let startX, startY, startW, startH;
+      handle.addEventListener('mousedown', e=>{
+        e.stopPropagation();
+        startX = e.clientX;
+        startY = e.clientY;
+        startW = el.offsetWidth;
+        startH = el.offsetHeight;
+        document.addEventListener('mousemove', onResize);
+        document.addEventListener('mouseup', ()=>{
+          document.removeEventListener('mousemove', onResize);
+        }, { once:true });
+      });
+      function onResize(e){
+        const nw = startW + (e.clientX - startX);
+        const nh = startH + (e.clientY - startY);
+        if(el.classList.contains('shape-triangle')){
+          const bw = +el.dataset.baseWidth;
+          const bh = +el.dataset.baseHeight;
+          const sx = nw / bw, sy = nh / bh;
+          el.style.transform = `scale(${sx},${sy})`;
+        } else {
+          el.style.width  = nw+'px';
+          el.style.height = nh+'px';
+        }
       }
     }
   })();
