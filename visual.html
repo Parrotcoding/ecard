@@ -16,12 +16,9 @@
     #paper {
       position:relative;
       margin:auto;
-      width:60vw;
-      min-height:300px;
-      background:#fff8e7;
-      border:2px solid #82C9A1;
-      resize:vertical;
-      overflow:auto;
+      width:60vw; min-height:300px;
+      background:#fff8e7; border:2px solid #82C9A1;
+      resize:vertical; overflow:auto;
     }
 
     /* toolbar */
@@ -62,11 +59,14 @@
     }
     #shapeMenu button:hover { background:#76C69C }
 
-    /* resize handles */
+    /* handles hidden by default */
+    .resize-handle, .vertex-handle { display:none; }
+
+    /* resize handles (rect/circle) */
     .resize-handle {
       position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085;
-      z-index:10; display:none;
+      z-index:10;
     }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px }
@@ -78,7 +78,13 @@
       position:absolute; width:12px; height:12px;
       background:#fff; border:2px solid #60A085;
       border-radius:50%; z-index:10; cursor:move;
-      margin:-6px 0 0 -6px; display:none;
+      margin:-6px 0 0 -6px;
+    }
+
+    /* only show handles when element is selected */
+    .element.selected .resize-handle,
+    .shape-wrapper.selected .vertex-handle {
+      display: block !important;
     }
 
     /* elements */
@@ -128,40 +134,44 @@
     const shapeMenu = document.getElementById('shapeMenu');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // Show toolbar above cursor
+    // click on canvas: deselect, show toolbar
     paper.addEventListener('click', e=>{
       deselect();
       e.stopPropagation();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left = (e.pageX - tb.width/2) + 'px';
-      toolbar.style.top  = (e.pageY - tb.height - 12) + 'px';
+      toolbar.style.left = `${e.pageX - tb.width/2}px`;
+      toolbar.style.top  = `${e.pageY - tb.height - 12}px`;
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
     });
-    [toolbar, shapeMenu].forEach(el=> el.addEventListener('click', e=> e.stopPropagation()));
-    document.addEventListener('click', ()=> {
-      toolbar.style.display='none';
-      shapeMenu.style.display='none';
+
+    // prevent closing when clicking toolbar or shape menu
+    [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
+
+    // click outside: hide toolbar/menu and deselect
+    document.addEventListener('click', ()=>{
+      toolbar.style.display = 'none';
+      shapeMenu.style.display = 'none';
       deselect();
     });
 
-    // Insert text
+    // Add text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
       txt.className = 'element text-element';
       txt.contentEditable = true;
-      txt.style.left = clickX + 'px';
-      txt.style.top  = clickY + 'px';
+      txt.style.left = `${clickX}px`;
+      txt.style.top  = `${clickY}px`;
       txt.textContent = 'Enter text';
       paper.append(txt);
       initElement(txt, false);
-      toolbar.style.display='none';
+      toolbar.style.display = 'none';
       txt.focus();
     });
 
-    // Insert image
+    // Add image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
@@ -169,40 +179,40 @@
       const img = document.createElement('img');
       img.className = 'element';
       img.src = url;
-      img.style.left   = clickX + 'px';
-      img.style.top    = clickY + 'px';
+      img.style.left   = `${clickX}px`;
+      img.style.top    = `${clickY}px`;
       img.style.height = '100px';
       paper.append(img);
       initElement(img, false);
-      toolbar.style.display='none';
+      toolbar.style.display = 'none';
     });
 
-    // Show shapes menu
+    // Show shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r = e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left = r.right + 8 + 'px';
-      shapeMenu.style.top  = r.top + 'px';
-      shapeMenu.style.display='flex';
+      shapeMenu.style.left = `${r.right + 8}px`;
+      shapeMenu.style.top  = `${r.top}px`;
+      shapeMenu.style.display = 'flex';
     });
 
-    // Insert shape
+    // Insert shape types
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
       if(!btn) return;
       const type = btn.dataset.shape;
-      if(type==='triangle') insertTriangle();
+      if(type === 'triangle') insertTriangle();
       else insertBasic(type);
-      shapeMenu.style.display='none';
-      toolbar.style.display='none';
+      shapeMenu.style.display = 'none';
+      toolbar.style.display = 'none';
     });
 
     // Helpers
     function insertBasic(type){
       const el = document.createElement('div');
       el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
-      el.style.left = clickX + 'px';
-      el.style.top  = clickY + 'px';
+      el.style.left = `${clickX}px`;
+      el.style.top  = `${clickY}px`;
       paper.append(el);
       initElement(el, false);
     }
@@ -210,12 +220,12 @@
     function insertTriangle(){
       const wrap = document.createElement('div');
       wrap.className = 'shape-wrapper';
-      wrap.style.left   = clickX +'px';
-      wrap.style.top    = clickY +'px';
+      wrap.style.left   = `${clickX}px`;
+      wrap.style.top    = `${clickY}px`;
       wrap.style.width  = '80px';
       wrap.style.height = '70px';
 
-      const svgNS="http://www.w3.org/2000/svg";
+      const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS,'svg');
       svg.setAttribute('width','100%');
       svg.setAttribute('height','100%');
@@ -227,6 +237,7 @@
       svg.append(poly);
       wrap.append(svg);
       paper.append(wrap);
+
       initElement(wrap, true, poly);
     }
 
@@ -234,7 +245,6 @@
       makeDraggable(el);
       if(isTri) makeTriangleResizable(el, poly);
       else makeResizable(el);
-      // select on click
       el.addEventListener('mousedown', e=>{
         e.stopPropagation();
         select(el);
@@ -242,23 +252,21 @@
     }
 
     function select(el){
-      if(selectedEl===el) return;
+      if(selectedEl === el) return;
       deselect();
       selectedEl = el;
-      const handles = el.querySelectorAll('.resize-handle, .vertex-handle');
-      handles.forEach(h=> h.style.display = 'block');
+      el.classList.add('selected');
     }
 
     function deselect(){
       if(!selectedEl) return;
-      selectedEl.querySelectorAll('.resize-handle, .vertex-handle')
-        .forEach(h=>h.style.display='none');
+      selectedEl.classList.remove('selected');
       selectedEl = null;
     }
 
     // Draggable
     function makeDraggable(el){
-      let dx,dy;
+      let dx, dy;
       el.addEventListener('mousedown', e=>{
         if(e.target.matches('.resize-handle, .vertex-handle')) return;
         e.preventDefault();
@@ -268,8 +276,8 @@
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
       });
       function onmove(e){
-        el.style.left = (e.clientX - dx)+'px';
-        el.style.top  = (e.clientY - dy)+'px';
+        el.style.left = `${e.clientX - dx}px`;
+        el.style.top  = `${e.clientY - dy}px`;
       }
     }
 
@@ -307,15 +315,15 @@
             newH = start.h - dy;
             newT = start.top + dy;
           }
-          el.style.width  = newW + 'px';
-          el.style.height = newH + 'px';
-          el.style.left   = newL + 'px';
-          el.style.top    = newT + 'px';
+          el.style.width  = `${newW}px`;
+          el.style.height = `${newH}px`;
+          el.style.left   = `${newL}px`;
+          el.style.top    = `${newT}px`;
         }
       };
     }
 
-    // Triangle vertex resizing
+    // Triangle resizing via vertex handles
     function makeTriangleResizable(wrap, poly){
       let pts = [[0,70],[40,0],[80,70]];
       const handles = pts.map((_,i)=>{
@@ -324,43 +332,39 @@
         wrap.append(h);
         return h;
       });
-
       function update(){
-        // position pts
         handles.forEach((h,i)=>{
-          h.style.left = pts[i][0] + 'px';
-          h.style.top  = pts[i][1] + 'px';
+          h.style.left = `${pts[i][0]}px`;
+          h.style.top  = `${pts[i][1]}px`;
         });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
-
       handles.forEach((h,i)=>{
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
           const start = {
-            x: e.clientX, y: e.clientY,
-            wrapL: wrap.offsetLeft, wrapT: wrap.offsetTop,
-            pts: pts.map(p=>p.slice())
+            x:e.clientX, y:e.clientY,
+            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
+            pts:pts.map(p=>p.slice())
           };
           document.addEventListener('mousemove', onDrag);
           document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
           function onDrag(ev){
             const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
-            const abs = start.pts.map((p,j)=> j===i ? [p[0]+dx, p[1]+dy] : p );
-            const xs = abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+            const abs = start.pts.map((p,j)=> j===i ? [p[0]+dx, p[1]+dy] : p);
+            const xs = abs.map(p=>p[0]), ys = abs.map(p=>p[1]);
             const minX = Math.min(...xs), minY = Math.min(...ys);
             const maxX = Math.max(...xs), maxY = Math.max(...ys);
             pts = abs.map(p=>[p[0]-minX, p[1]-minY]);
-            wrap.style.left   = start.wrapL + minX + 'px';
-            wrap.style.top    = start.wrapT + minY + 'px';
-            wrap.style.width  = (maxX - minX) + 'px';
-            wrap.style.height = (maxY - minY) + 'px';
+            wrap.style.left   = `${start.wrapL + minX}px`;
+            wrap.style.top    = `${start.wrapT + minY}px`;
+            wrap.style.width  = `${maxX - minX}px`;
+            wrap.style.height = `${maxY - minY}px`;
             update();
           }
         });
       });
-
       update();
     }
 
