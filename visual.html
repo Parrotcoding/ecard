@@ -62,7 +62,7 @@
     }
     #shapeMenu button:hover { background:#76C69C }
 
-    /* resize handles */
+    /* resize handles (rect/circle) */
     .resize-handle {
       position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085;
@@ -73,13 +73,12 @@
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px }
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px }
 
-    /* vertex handles for triangle */
+    /* triangle vertex handles */
     .vertex-handle {
       position:absolute; width:12px; height:12px;
       background:#fff; border:2px solid #60A085;
-      border-radius:50%;
-      z-index:10; cursor:move;
-      margin:-6px 0 0 -6px; /* center on point */
+      border-radius:50%; z-index:10; cursor:move;
+      margin:-6px 0 0 -6px;
     }
 
     /* elements */
@@ -102,21 +101,20 @@
       border:2px solid #60A085;
       border-radius:50%;
     }
-    /* triangle is done via SVG */
   </style>
 </head>
 <body>
   <h1>Visual E‑Card Editor</h1>
   <div id="paper"></div>
 
-  <!-- toolbar -->
+  <!-- Toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- shapes submenu -->
+  <!-- Shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -130,7 +128,7 @@
     const shapeMenu = document.getElementById('shapeMenu');
     let clickX=0, clickY=0;
 
-    // show toolbar above cursor
+    // Show toolbar above cursor
     paper.addEventListener('click', e=>{
       e.stopPropagation();
       clickX = e.offsetX; clickY = e.offsetY;
@@ -146,11 +144,11 @@
       shapeMenu.style.display='none';
     });
 
-    // add text
+    // Add text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
-      txt.className='element text-element';
+      txt.className = 'element text-element';
       txt.contentEditable = true;
       txt.style.left = clickX + 'px';
       txt.style.top  = clickY + 'px';
@@ -161,33 +159,33 @@
       txt.focus();
     });
 
-    // add image
+    // Add image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
       if(!url) return;
       const img = document.createElement('img');
-      img.className='element';
-      img.src=url;
-      img.style.left  = clickX + 'px';
-      img.style.top   = clickY + 'px';
-      img.style.height= '100px';
+      img.className = 'element';
+      img.src = url;
+      img.style.left   = clickX + 'px';
+      img.style.top    = clickY + 'px';
+      img.style.height = '100px';
       paper.append(img);
       makeDraggable(img);
       makeResizable(img, false);
       toolbar.style.display='none';
     });
 
-    // show shape menu
+    // Show shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
-      const r=e.currentTarget.getBoundingClientRect();
+      const r = e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left = r.right + 8 + 'px';
       shapeMenu.style.top  = r.top + 'px';
       shapeMenu.style.display='flex';
     });
 
-    // insert shape
+    // Insert shapes
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
       if(!btn) return;
@@ -209,15 +207,14 @@
     }
 
     function insertTriangle(){
-      // wrapper for SVG + handles
       const wrap = document.createElement('div');
       wrap.className = 'shape-wrapper';
-      wrap.style.left = clickX + 'px';
-      wrap.style.top  = clickY + 'px';
+      wrap.style.left   = clickX +'px';
+      wrap.style.top    = clickY +'px';
       wrap.style.width  = '80px';
       wrap.style.height = '70px';
-      // create SVG
-      const svgNS = "http://www.w3.org/2000/svg";
+
+      const svgNS="http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS,'svg');
       svg.setAttribute('width','100%');
       svg.setAttribute('height','100%');
@@ -229,16 +226,16 @@
       svg.append(poly);
       wrap.append(svg);
       paper.append(wrap);
+
       makeDraggable(wrap);
       makeTriangleResizable(wrap, poly);
     }
 
-    // draggable
+    // Draggable
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
-        if(e.target.classList.contains('resize-handle')
-         || e.target.classList.contains('vertex-handle')) return;
+        if(e.target.matches('.resize-handle, .vertex-handle')) return;
         e.preventDefault();
         dx = e.clientX - el.offsetLeft;
         dy = e.clientY - el.offsetTop;
@@ -246,40 +243,36 @@
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
       });
       function onmove(e){
-        el.style.left = (e.clientX - dx) + 'px';
-        el.style.top  = (e.clientY - dy) + 'px';
+        el.style.left = (e.clientX - dx)+'px';
+        el.style.top  = (e.clientY - dy)+'px';
       }
     }
 
-    // basic rectangle/circle resizing
-    function makeResizable(el, isTriangle){
-      if(isTriangle) return;
+    // Rectangle/Circle resizing
+    function makeResizable(el, tri){
+      if(tri) return;
       ['nw','ne','sw','se'].forEach(dir=>{
         const h = document.createElement('div');
         h.className = 'resize-handle handle-'+dir;
         el.append(h);
-        h.addEventListener('mousedown', startResize(dir, el, false));
+        h.addEventListener('mousedown', startResize(dir, el));
       });
     }
-    function startResize(dir, el, isTri){
+    function startResize(dir, el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
         const rect = el.getBoundingClientRect();
-        const parentRect = paper.getBoundingClientRect();
+        const pRect= paper.getBoundingClientRect();
         const start = {
-          x: e.clientX,
-          y: e.clientY,
-          left: rect.left - parentRect.left,
-          top:  rect.top  - parentRect.top,
-          w: rect.width,
-          h: rect.height
+          x:e.clientX, y:e.clientY,
+          left:rect.left-pRect.left, top:rect.top-pRect.top,
+          w:rect.width, h:rect.height
         };
         document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), {once:true});
         function doResize(ev){
-          let dx = ev.clientX - start.x;
-          let dy = ev.clientY - start.y;
-          let newL = start.left, newT = start.top, newW = start.w, newH = start.h;
+          let dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+          let newL=start.left, newT=start.top, newW=start.w, newH=start.h;
           if(dir.includes('e')) newW = start.w + dx;
           if(dir.includes('s')) newH = start.h + dy;
           if(dir.includes('w')){
@@ -295,42 +288,56 @@
           el.style.left   = newL + 'px';
           el.style.top    = newT + 'px';
         }
-      }
+      };
     }
 
-    // triangle vertex resizing
+    // Triangle vertex resizing with wrapper resizing
     function makeTriangleResizable(wrap, poly){
-      // initial points
       let pts = [[0,70],[40,0],[80,70]];
-      const updateHandles = handles => {
+      const handles = pts.map((_,i)=>{
+        const h = document.createElement('div');
+        h.className = 'vertex-handle';
+        wrap.append(h);
+        return h;
+      });
+
+      function update(){
         handles.forEach((h,i)=>{
           h.style.left = pts[i][0] + 'px';
           h.style.top  = pts[i][1] + 'px';
         });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
-      };
-      // create 3 handles
-      const handles = pts.map((p,i)=>{
-        const h = document.createElement('div');
-        h.className = 'vertex-handle';
-        wrap.append(h);
-        let start;
+      }
+
+      handles.forEach((h,i)=>{
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
-          start = { x:e.clientX, y:e.clientY, idx:i, pts: pts.map(p=>p.slice()) };
+          const start = {
+            x: e.clientX, y: e.clientY,
+            wrapL: wrap.offsetLeft, wrapT: wrap.offsetTop,
+            pts: pts.map(p=>p.slice())
+          };
           document.addEventListener('mousemove', onDrag);
           document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
+          function onDrag(ev){
+            const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+            const abs = start.pts.map((p,j)=> j===i ? [p[0]+dx, p[1]+dy] : p );
+            const xs = abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+            const minX = Math.min(...xs), minY = Math.min(...ys);
+            const maxX = Math.max(...xs), maxY = Math.max(...ys);
+            pts = abs.map(p=>[p[0]-minX, p[1]-minY]);
+            wrap.style.left   = start.wrapL + minX + 'px';
+            wrap.style.top    = start.wrapT + minY + 'px';
+            wrap.style.width  = (maxX - minX) + 'px';
+            wrap.style.height = (maxY - minY) + 'px';
+            update();
+          }
         });
-        function onDrag(ev){
-          const dx = ev.clientX - start.x;
-          const dy = ev.clientY - start.y;
-          pts = start.pts.map((p,j)=> j===start.idx ? [p[0]+dx, p[1]+dy] : p );
-          updateHandles(handles);
-        }
-        return h;
       });
-      updateHandles(handles);
+
+      update();
     }
+
   })();
   </script>
 </body>
