@@ -155,7 +155,7 @@
 
   <!-- shape menu -->
   <div id="shapeMenu">
-    <button data-shape="rect" title="Rectangle">◻</button>
+    <button data-shape="rect"   title="Rectangle">◻</button>
     <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
@@ -168,7 +168,7 @@
     <button id="tbAlignLeft"   title="Left"><img src="align-left.svg"   alt="Left"></button>
     <button id="tbAlignCenter" title="Center"><img src="align-center.svg" alt="Center"></button>
     <button id="tbAlignRight"  title="Right"><img src="align-right.svg"  alt="Right"></button>
-    <button id="tbFont" title="Choose font">Aa</button>
+    <button id="tbFont"        title="Choose font">Aa</button>
     <input type="number" id="tbFontSize" min="8" max="72" title="Font Size">px
     <input type="color"  id="tbColor"      title="Text Color">
   </div>
@@ -235,12 +235,15 @@
       }
     }
 
-    paper.addEventListener('click', e=>{
-      if(e.target===paper) deselect();
-      clickX = e.offsetX; clickY = e.offsetY;
+    paper.addEventListener('click', e => {
+      // only show toolbar when clicking empty paper
+      if (e.target !== paper) return;
+      deselect();
+      clickX = e.offsetX;
+      clickY = e.offsetY;
       const tbRect = toolbar.getBoundingClientRect();
-      toolbar.style.left  = `${e.pageX - tbRect.width/2}px`;
-      toolbar.style.top   = `${e.pageY - tbRect.height - 12}px`;
+      toolbar.style.left    = `${e.pageX - tbRect.width/2}px`;
+      toolbar.style.top     = `${e.pageY - tbRect.height - 12}px`;
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
       e.stopPropagation();
@@ -253,14 +256,14 @@
       toolbar.style.display='none'; 
       shapeMenu.style.display='none'; 
       fontWheel.classList.remove('open');
-      fontWheel.style.display = 'none';
-      fontWheel.style.pointerEvents = 'none';
+      fontWheel.style.display='none';
+      fontWheel.style.pointerEvents='none';
     });
 
     // insert text
     document.getElementById('btnText').onclick = e=>{
       e.stopPropagation();
-      const txt=document.createElement('div');
+      const txt = document.createElement('div');
       txt.className='element text-element'; txt.contentEditable=true;
       txt.style.left=`${clickX}px`; txt.style.top=`${clickY}px`;
       txt.textContent='Enter text';
@@ -282,7 +285,7 @@
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left=`${r.right+8}px`;
-      shapeMenu.style.top=`${r.top}px`;
+      shapeMenu.style.top=``${r.top}px`;
       shapeMenu.style.display='flex';
     };
     shapeMenu.addEventListener('click', e=>{
@@ -458,7 +461,7 @@
           e.stopPropagation(); e.preventDefault(); select(wrap);
           const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
           document.addEventListener('mousemove',ondrag);
-          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
+          document.addEventListener('mouseup',()=>document.removeEventListener__('mousemove',ondrag),{once:true});
           function ondrag(ev){
             const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
             const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
