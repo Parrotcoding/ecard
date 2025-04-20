@@ -15,85 +15,59 @@
       background:#fff8e7; border:2px solid #82C9A1;
       min-height:400px; resize:vertical; overflow:auto;
     }
-    #assets {
-      width:200px; background:#fafafa; border:2px solid #ddd;
-      padding:.5rem; overflow:auto;
-    }
-    #assetList img {
-      width:100%; margin-bottom:.5rem; cursor:grab;
-      border:1px solid #ccc; border-radius:4px;
-    }
+    #assets { width:200px; background:#fafafa; border:2px solid #ddd; padding:.5rem; overflow:auto; }
+    #assetList img { width:100%; margin-bottom:.5rem; cursor:grab; border:1px solid #ccc; border-radius:4px; }
 
-    /* Main toolbar */
+    /* Insert toolbar */
     #toolbar {
       position:absolute; display:none;
-      background:rgba(255,255,255,0.95);
-      border:1px solid #ccc; border-radius:8px;
-      padding:.25rem; display:flex; gap:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1000;
     }
-    #toolbar button {
-      width:36px; height:36px; border:none; border-radius:50%;
-      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-    }
+    #toolbar button { width:36px; height:36px; border:none; border-radius:50%; background:#A8E6CF; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     #toolbar button:hover { background:#76C69C; }
     #toolbar button img { width:20px; height:20px; }
 
     /* Shape menu */
     #shapeMenu {
       position:absolute; display:none;
-      background:rgba(255,255,255,0.95);
-      border:1px solid #ccc; border-radius:8px;
-      padding:.25rem; display:flex; gap:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1001;
     }
-    #shapeMenu button {
-      width:32px; height:32px; border:none; border-radius:4px;
-      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
-      cursor:pointer;
-    }
+    #shapeMenu button { width:32px; height:32px; border:none; border-radius:4px; background:#A8E6CF; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     #shapeMenu button:hover { background:#76C69C; }
 
     /* Text toolbar */
     #textToolbar {
       position:absolute; display:none;
       background:#fff; border:1px solid #ccc; border-radius:4px;
-      padding:.25rem; display:flex; gap:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
-      z-index:2000;
-      flex-wrap:nowrap; white-space:nowrap; width:max-content;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:2000; flex-wrap:nowrap; white-space:nowrap; width:max-content;
     }
-    #textToolbar button {
-      border:none; background:transparent; cursor:pointer; font-size:1rem;
-    }
-    #textToolbar select,
-    #textToolbar input[type="color"],
-    #textToolbar input[type="number"] {
+    #textToolbar button { border:none; background:transparent; cursor:pointer; font-size:1rem; }
+    #textToolbar select, #textToolbar input[type="color"], #textToolbar input[type="number"] {
       width:3rem; border:1px solid #ccc; border-radius:4px; padding:2px;
     }
 
     /* Handles */
     .resize-handle, .vertex-handle, .rotate-handle { display:none; }
     .resize-handle {
-      position:absolute; width:10px; height:10px;
-      background:#fff; border:1px solid #60A085; z-index:10;
+      position:absolute; width:10px; height:10px; background:#fff; border:1px solid #60A085; z-index:10;
     }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px; }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px; }
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px; }
     .vertex-handle {
-      position:absolute; width:12px; height:12px;
-      background:#fff; border:2px solid #60A085; border-radius:50%;
-      z-index:10; cursor:move; margin:-6px 0 0 -6px;
+      position:absolute; width:12px; height:12px; background:#fff; border:2px solid #60A085;
+      border-radius:50%; z-index:10; cursor:move; margin:-6px 0 0 -6px;
     }
     .rotate-handle {
-      position:absolute; top:-20px; left:50%; transform:translateX(-50%);
-      width:12px; height:12px; background:#fff;
-      border:2px solid #60A085; border-radius:50%; cursor:grab; z-index:11;
+      position:absolute; top:-24px; left:50%; transform:translateX(-50%);
+      width:12px; height:12px; background:#fff; border:2px solid #60A085;
+      border-radius:50%; cursor:grab; z-index:11;
     }
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle,
@@ -103,23 +77,10 @@
 
     /* Elements */
     .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
-    .text-element {
-      min-width:50px; min-height:20px; padding:.2rem;
-      background:transparent; outline:none; cursor:text;
-    }
-    .shape-rect {
-      width:100px; height:60px;
-      background:rgba(96,160,133,0.3); border:2px solid #60A085;
-    }
-    .shape-circle {
-      width:60px; height:60px;
-      background:rgba(96,160,133,0.3); border:2px solid #60A085;
-      border-radius:50%;
-    }
-    .image-wrapper {
-      width:100px; height:100px;
-      background-size:contain; background-repeat:no-repeat; background-position:center;
-    }
+    .text-element { min-width:50px; min-height:20px; padding:.2rem; background:transparent; outline:none; cursor:text; }
+    .shape-rect { width:100px; height:60px; background:rgba(96,160,133,0.3); border:2px solid #60A085; }
+    .shape-circle { width:60px; height:60px; background:rgba(96,160,133,0.3); border:2px solid #60A085; border-radius:50%; }
+    .image-wrapper { width:100px; height:100px; background-size:contain; background-repeat:no-repeat; background-position:center; }
     .shape-wrapper { background-color:transparent; }
   </style>
 </head>
@@ -133,7 +94,7 @@
     </div>
   </div>
 
-  <!-- Main toolbar -->
+  <!-- Insert toolbar -->
   <div id="toolbar">
     <button id="btnText" title="Add Text">T</button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Image"></button>
@@ -161,57 +122,61 @@
 
   <script>
   (function(){
-    const paper       = document.getElementById('paper');
-    const toolbar     = document.getElementById('toolbar');
-    const shapeMenu   = document.getElementById('shapeMenu');
+    const paper = document.getElementById('paper');
+    const toolbar = document.getElementById('toolbar');
+    const shapeMenu = document.getElementById('shapeMenu');
     const textToolbar = document.getElementById('textToolbar');
-    const assetList   = document.getElementById('assetList');
+    const assetList = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
 
-    function rgbToHex(rgb) {
-      const [r,g,b] = rgb.match(/\d+/g).map(Number);
-      return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    function rgbToHex(rgb){
+      const [r,g,b]=rgb.match(/\d+/g).map(Number);
+      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
 
-    function deselect() {
-      if (!selectedEl) return;
+    function deselect(){
+      if(!selectedEl) return;
       selectedEl.classList.remove('selected');
-      selectedEl = null;
-      textToolbar.style.display = 'none';
+      selectedEl=null;
+      textToolbar.style.display='none';
     }
 
-    function select(el) {
-      if (selectedEl === el) return;
+    function select(el){
+      if(selectedEl===el) return;
       deselect();
-      selectedEl = el;
+      selectedEl=el;
       el.classList.add('selected');
-      // hide insert toolbar on element select
-      toolbar.style.display = 'none';
-      shapeMenu.style.display = 'none';
-      if (el.classList.contains('text-element')) {
-        // position above text, with gap
-        const rect   = el.getBoundingClientRect();
-        const tbRect = textToolbar.getBoundingClientRect();
-        let left = rect.left;
-        let top  = rect.top - tbRect.height - 12;
-        if (top < 12) top = rect.bottom + 12;
-        textToolbar.style.left  = `${left}px`;
-        textToolbar.style.top   = `${top}px`;
-        textToolbar.style.display = 'flex';
-        document.getElementById('tbFontSize').value = parseInt(getComputedStyle(el).fontSize);
-        document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(el).color);
+      // hide insert toolbar
+      toolbar.style.display='none';
+      shapeMenu.style.display='none';
+      if(el.classList.contains('text-element')){
+        // measure after making visible
+        textToolbar.style.visibility='hidden';
+        textToolbar.style.display='flex';
+        const rect=el.getBoundingClientRect();
+        const tbRect=textToolbar.getBoundingClientRect();
+        const scrollY=window.scrollY;
+        let left=rect.left+window.scrollX;
+        let top=scrollY+rect.top - tbRect.height - 8;
+        if(top < scrollY+8){
+          top = scrollY+rect.bottom+8;
+        }
+        textToolbar.style.left=`${left}px`;
+        textToolbar.style.top=`${top}px`;
+        textToolbar.style.visibility='visible';
+        document.getElementById('tbFontSize').value=parseInt(getComputedStyle(el).fontSize);
+        document.getElementById('tbColor').value=rgbToHex(getComputedStyle(el).color);
       }
     }
 
-    // show insert toolbar on paper click
     paper.addEventListener('click', e=>{
-      if (e.target === paper) deselect();
-      clickX = e.offsetX; clickY = e.offsetY;
-      const tbRect = toolbar.getBoundingClientRect();
-      toolbar.style.left  = `${e.pageX - tbRect.width/2}px`;
-      toolbar.style.top   = `${e.pageY - tbRect.height - 12}px`;
-      toolbar.style.display = 'flex';
-      shapeMenu.style.display = 'none';
+      if(e.target===paper) deselect();
+      clickX=e.offsetX; clickY=e.offsetY;
+      const tbRect=toolbar.getBoundingClientRect();
+      toolbar.style.left=`${e.pageX - tbRect.width/2}px`;
+      toolbar.style.top=`${e.pageY - tbRect.height -12}px`;
+      toolbar.style.display='flex';
+      shapeMenu.style.display='none';
       e.stopPropagation();
     });
     [toolbar, shapeMenu, textToolbar].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
@@ -220,49 +185,41 @@
     // Insert text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
-      const txt = document.createElement('div');
-      txt.className = 'element text-element';
-      txt.contentEditable = true;
-      txt.style.left = `${clickX}px`;
-      txt.style.top  = `${clickY}px`;
-      txt.textContent = 'Enter text';
-      paper.append(txt);
-      initElement(txt,false);
-      toolbar.style.display='none';
-      txt.focus();
+      const txt=document.createElement('div');
+      txt.className='element text-element'; txt.contentEditable=true;
+      txt.style.left=`${clickX}px`; txt.style.top=`${clickY}px`;
+      txt.textContent='Enter text';
+      paper.append(txt); initElement(txt,false);
+      toolbar.style.display='none'; txt.focus();
     });
 
     // Insert image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
-      const url = prompt('Enter image URL:');
-      if (!url) return;
+      const url=prompt('Enter image URL:'); if(!url) return;
       addAsset(url);
-      const wrap = document.createElement('div');
-      wrap.className = 'element image-wrapper';
-      wrap.style.left = `${clickX}px`;
-      wrap.style.top  = `${clickY}px`;
-      wrap.style.backgroundImage = `url(${url})`;
-      paper.append(wrap);
-      initElement(wrap,false);
+      const wrap=document.createElement('div');
+      wrap.className='element image-wrapper';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.backgroundImage=`url(${url})`;
+      paper.append(wrap); initElement(wrap,false);
       toolbar.style.display='none';
     });
 
     // Insert shape
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
-      const r = e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left  = `${r.right + 8}px`;
-      shapeMenu.style.top   = `${r.top}px`;
-      shapeMenu.style.display = 'flex';
+      const r=e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left=`${r.right+8}px`;
+      shapeMenu.style.top=`${r.top}px`;
+      shapeMenu.style.display='flex';
     });
     shapeMenu.addEventListener('click', e=>{
-      const btn = e.target.closest('[data-shape]'); if(!btn) return;
-      const type = btn.dataset.shape;
-      if (type==='triangle') insertTriangle();
+      const btn=e.target.closest('[data-shape]'); if(!btn) return;
+      const type=btn.dataset.shape;
+      if(type==='triangle') insertTriangle();
       else insertBasic(type);
-      shapeMenu.style.display='none';
-      toolbar.style.display='none';
+      shapeMenu.style.display='none'; toolbar.style.display='none';
     });
 
     // Text toolbar actions
@@ -306,10 +263,7 @@
     }
 
     function initElement(el,isTri,poly){
-      makeDraggable(el);
-      enableDrop(el);
-      addResizeHandles(el);
-      addRotateHandle(el);
+      makeDraggable(el); enableDrop(el); addResizeHandles(el); addRotateHandle(el);
       if(isTri) makeTriangleResizable(el,poly);
       el.addEventListener('mousedown', e=>{ e.stopPropagation(); select(el); });
     }
@@ -339,12 +293,9 @@
         if(el.classList.contains('shape-wrapper')){
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
-          const pts=poly.getAttribute('points').split(' ')
-                     .map(p=>p.split(',').map(Number));
+          const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
           const W=el.clientWidth,H=el.clientHeight;
-          const pct=pts.map(([x,y])=>
-            `${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`
-          ).join(', ');
+          const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
           el.style.clipPath=`polygon(${pct})`;
         }
         el.style.zIndex='999';
@@ -364,8 +315,7 @@
         e.stopPropagation(); e.preventDefault();
         const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
         const start={ x:e.clientX,y:e.clientY,
-          left:r.left-pr.left, top:r.top-pr.top,
-          w:r.width, h:r.height, aspect:r.width/r.height
+          left:r.left-pr.left, top:r.top-pr.top, w:r.width, h:r.height, aspect:r.width/r.height
         };
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',doResize),{once:true});
@@ -383,26 +333,22 @@
           el.style.width=`${newW}px`;
           el.style.height=`${newH}px`;
           el.style.left=`${newL}px`;
-          el.style.top=`${newT}px`;
+          el.style.top =`${newT}px`;
         }
       };
     }
 
     function addRotateHandle(el){
-      const h=document.createElement('div');
-      h.className='rotate-handle'; el.append(h);
+      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
         e.stopPropagation(); e.preventDefault();
-        const rect=el.getBoundingClientRect(),
-              cx=rect.left+rect.width/2, cy=rect.top+rect.height/2,
-              startAng=Math.atan2(e.clientY-cy,e.clientX-cx);
+        const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+        const startAng=Math.atan2(e.clientY-cy,e.clientX-cx);
         let currRot=parseFloat(el.dataset.rot||0);
         const onmove=ev=>{
-          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx),
-                delta=ang-startAng,
+          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx), delta=ang-startAng,
                 deg=currRot+delta*180/Math.PI;
-          el.style.transform=`rotate(${deg}deg)`;
-          el.dataset.rot=deg;
+          el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
         };
         document.addEventListener('mousemove',onmove);
         document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
@@ -412,24 +358,16 @@
     function makeTriangleResizable(wrap,poly){
       let pts=[[0,70],[40,0],[80,70]];
       const handles=pts.map((_,i)=>{
-        const h=document.createElement('div');
-        h.className='vertex-handle'; wrap.append(h); return h;
+        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
       });
       function update(){
-        handles.forEach((h,i)=>{
-          h.style.left=`${pts[i][0]}px`;
-          h.style.top =`${pts[i][1]}px`;
-        });
+        handles.forEach((h,i)=>{ h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`; });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
       handles.forEach((h,i)=>{
         h.addEventListener('mousedown', e=>{
-          e.stopPropagation(); e.preventDefault();
-          select(wrap);
-          const start={ x:e.clientX,y:e.clientY,
-            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
-            pts:pts.map(p=>p.slice())
-          };
+          e.stopPropagation(); e.preventDefault(); select(wrap);
+          const start={ x:e.clientX,y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
           document.addEventListener('mousemove', ondrag);
           document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',ondrag),{once:true});
           function ondrag(ev){
@@ -439,10 +377,8 @@
             const minX=Math.min(...xs), minY=Math.min(...ys);
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left=`${start.wrapL+minX}px`;
-            wrap.style.top =`${start.wrapT+minY}px`;
-            wrap.style.width=`${maxX-minX}px`;
-            wrap.style.height=`${maxY-minY}px`;
+            wrap.style.left=`${start.wrapL+minX}px`; wrap.style.top=`${start.wrapT+minY}px`;
+            wrap.style.width=`${maxX-minX}px`; wrap.style.height=`${maxY-minY}px`;
             update();
           }
         });
