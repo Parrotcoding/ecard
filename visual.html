@@ -12,11 +12,7 @@
       font-family:'Poppins',sans-serif;
     }
     h1 { text-align:center; margin-bottom:1rem }
-
-    /* workspace: paper + assets sidebar */
-    #workspace {
-      display:flex; gap:1rem;
-    }
+    #workspace { display:flex; gap:1rem; }
     #paper {
       position:relative; flex:1;
       background:#fff8e7; border:2px solid #82C9A1;
@@ -91,10 +87,10 @@
       margin:-6px 0 0 -6px;
     }
 
-    /* show only on selected */
+    /* show handles on selected */
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle {
-      display: block !important;
+      display:block !important;
     }
 
     .element, .shape-wrapper {
@@ -115,6 +111,13 @@
       background:rgba(96,160,133,0.3);
       border:2px solid #60A085;
       border-radius:50%;
+    }
+    /* image wrappers */
+    .image-wrapper {
+      width:100px; height:100px;
+      background-size:contain;
+      background-repeat:no-repeat;
+      background-position:center;
     }
   </style>
 </head>
@@ -150,7 +153,7 @@
     const assetList = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // add an asset thumbnail
+    // add a thumbnail asset
     function addAsset(src){
       const thumb = document.createElement('img');
       thumb.src = src;
@@ -158,7 +161,6 @@
       thumb.addEventListener('dragstart', e=>{
         e.dataTransfer.setData('text/plain', src);
       });
-      // optional: crop on dblclick
       thumb.addEventListener('dblclick', ()=>{
         const p = prompt('Crop % x,y,width,height','0,0,100,100');
         if(!p) return;
@@ -169,8 +171,7 @@
                 sx=img.width*(x/100), sy=img.height*(y/100);
           const c = document.createElement('canvas');
           c.width=cw; c.height=ch;
-          c.getContext('2d')
-           .drawImage(img,sx,sy,cw,ch,0,0,cw,ch);
+          c.getContext('2d').drawImage(img,sx,sy,cw,ch,0,0,cw,ch);
           thumb.src = c.toDataURL();
         };
         img.src = src;
@@ -178,15 +179,15 @@
       assetList.append(thumb);
     }
 
-    // PAPER click: deselect blank, always show toolbar
+    // PAPER click: deselect if blank, always show toolbar
     paper.addEventListener('click', e=>{
       if(e.target === paper) deselect();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left  = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top   = `${e.pageY - tb.height - 12}px`;
+      toolbar.style.left = `${e.pageX - tb.width/2}px`;
+      toolbar.style.top  = `${e.pageY - tb.height - 12}px`;
       toolbar.style.display = 'flex';
-      shapeMenu.style.display='none';
+      shapeMenu.style.display = 'none';
       e.stopPropagation();
     });
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
@@ -207,27 +208,26 @@
       txt.focus();
     });
 
-    // Add Image (via link)—also add to assets
+    // Add Image via URL → wrapper + asset
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
       if(!url) return;
-      const img = document.createElement('img');
-      img.className='element';
-      img.src=url;
-      img.style.left   =`${clickX}px`;
-      img.style.top    =`${clickY}px`;
-      img.style.height ='100px';
-      paper.append(img);
-      initElement(img,false);
+      const wrap = document.createElement('div');
+      wrap.className = 'element image-wrapper';
+      wrap.style.left = `${clickX}px`;
+      wrap.style.top  = `${clickY}px`;
+      wrap.style.backgroundImage = `url(${url})`;
+      paper.append(wrap);
+      initElement(wrap,false);
       addAsset(url);
       toolbar.style.display='none';
     });
 
-    // Show shapes menu
+    // Shapes menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
-      const r=e.currentTarget.getBoundingClientRect();
+      const r = e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left = `${r.right+8}px`;
       shapeMenu.style.top  = `${r.top}px`;
       shapeMenu.style.display='flex';
@@ -253,10 +253,10 @@
     function insertTriangle(){
       const wrap=document.createElement('div');
       wrap.className='shape-wrapper';
-      wrap.style.left=`${clickX}px`;
-      wrap.style.top =`${clickY}px`;
-      wrap.style.width='80px';
-      wrap.style.height='70px';
+      wrap.style.left   =`${clickX}px`;
+      wrap.style.top    =`${clickY}px`;
+      wrap.style.width  ='80px';
+      wrap.style.height ='70px';
       const svgNS="http://www.w3.org/2000/svg";
       const svg=document.createElementNS(svgNS,'svg');
       svg.setAttribute('width','100%');
@@ -272,9 +272,11 @@
       initElement(wrap,true,poly);
     }
 
-    function initElement(el, isTri, poly){
+    function initElement(el,isTri,poly){
       makeDraggable(el);
-      enableDrop(el);
+      if(el.classList.contains('shape-rect')||
+         el.classList.contains('shape-circle')||
+         isTri) enableDrop(el);
       if(isTri) makeTriangleResizable(el,poly);
       else makeResizable(el);
       el.addEventListener('mousedown', e=>{
@@ -294,18 +296,18 @@
       selectedEl=null;
     }
 
+    // drag assets into shapes
     function enableDrop(el){
-      el.addEventListener('dragover', e=>e.preventDefault());
-      el.addEventListener('drop', e=>{
+      el.addEventListener('dragover',e=>e.preventDefault());
+      el.addEventListener('drop',e=>{
         e.preventDefault();
         const src=e.dataTransfer.getData('text/plain');
         if(!src) return;
         el.style.backgroundImage=`url(${src})`;
         el.style.backgroundSize='cover';
         el.style.backgroundPosition='center';
-        if(el.classList.contains('shape-wrapper')){
+        if(el.classList.contains('shape-wrapper'))
           el.style.clipPath='polygon(50% 0%,0% 100%,100% 100%)';
-        }
       });
     }
 
@@ -337,15 +339,15 @@
       return function(e){
         e.stopPropagation(); e.preventDefault();
         const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={x:e.clientX,y:e.clientY,
-          left:r.left-pr.left,top:r.top-pr.top,
-          w:r.width,h:r.height
+        const start={ x:e.clientX,y:e.clientY,
+          left:r.left-pr.left, top:r.top-pr.top,
+          w:r.width, h:r.height
         };
         document.addEventListener('mousemove',doResize);
         document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',doResize),{once:true});
         function doResize(ev){
-          let dx=ev.clientX-start.x,dy=ev.clientY-start.y;
-          let L=start.left,T=start.top,W=start.w,H=start.h;
+          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+          let L=start.left, T=start.top, W=start.w, H=start.h;
           if(dir.includes('e')) W=start.w+dx;
           if(dir.includes('s')) H=start.h+dy;
           if(dir.includes('w')){
@@ -372,7 +374,7 @@
       function update(){
         handles.forEach((h,i)=>{
           h.style.left=`${pts[i][0]}px`;
-          h.style.top=`${pts[i][1]}px`;
+          h.style.top =`${pts[i][1]}px`;
         });
         poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
       }
@@ -380,23 +382,23 @@
         h.addEventListener('mousedown',e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
-          const start={x:e.clientX,y:e.clientY,
-            wrapL:wrap.offsetLeft,wrapT:wrap.offsetTop,
+          const start={ x:e.clientX,y:e.clientY,
+            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
           };
           document.addEventListener('mousemove',onDrag);
           document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onDrag),{once:true});
           function onDrag(ev){
-            const dx=ev.clientX-start.x,dy=ev.clientY-start.y;
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
             const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
             const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
-            const minX=Math.min(...xs),minY=Math.min(...ys);
-            const maxX=Math.max(...xs),maxY=Math.max(...ys);
+            const minX=Math.min(...xs), minY=Math.min(...ys);
+            const maxX=Math.max(...xs), maxY=Math.max(...ys);
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left=`${start.wrapL+minX}px`;
-            wrap.style.top=`${start.wrapT+minY}px`;
-            wrap.style.width=`${maxX-minX}px`;
-            wrap.style.height=`${maxY-minY}px`;
+            wrap.style.left   =`${start.wrapL+minX}px`;
+            wrap.style.top    =`${start.wrapT+minY}px`;
+            wrap.style.width  =`${maxX-minX}px`;
+            wrap.style.height =`${maxY-minY}px`;
             update();
           }
         });
