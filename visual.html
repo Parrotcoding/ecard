@@ -68,12 +68,9 @@
     #fontWheel.open { display:block; }
     #fontWheel .fontOption {
       position:absolute; top:0; left:0;
-      transform:translate(-50%,-50%);
-      opacity:0;
-      padding:.25rem .5rem;
-      background:#fff; border:1px solid #ccc; border-radius:4px;
-      white-space:nowrap;
-      transition:transform .4s ease, opacity .4s ease;
+      transform:translate(-50%,-50%); opacity:0;
+      padding:.25rem .5rem; background:#fff; border:1px solid #ccc; border-radius:4px;
+      white-space:nowrap; transition:transform .4s ease, opacity .4s ease;
       cursor:pointer; font-family:inherit;
     }
     #fontWheel.open .fontOption:nth-child(1) {
@@ -94,9 +91,7 @@
 
     /* handles */
     .resize-handle, .vertex-handle, .rotate-handle { display:none; }
-    .resize-handle {
-      position:absolute; width:10px; height:10px; background:#fff; border:1px solid #60A085;
-    }
+    .resize-handle { position:absolute; width:10px; height:10px; background:#fff; border:1px solid #60A085; }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px; }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px; }
@@ -155,7 +150,7 @@
 
   <!-- shape menu -->
   <div id="shapeMenu">
-    <button data-shape="rect"   title="Rectangle">◻</button>
+    <button data-shape="rect" title="Rectangle">◻</button>
     <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
@@ -165,9 +160,9 @@
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
     <button id="tbUnderline"><u>U</u></button>
-    <button id="tbAlignLeft"   title="Left"><img src="align-left.svg"   alt="Left"></button>
+    <button id="tbAlignLeft" title="Left"><img src="align-left.svg" alt="Left"></button>
     <button id="tbAlignCenter" title="Center"><img src="align-center.svg" alt="Center"></button>
-    <button id="tbAlignRight"  title="Right"><img src="align-right.svg"  alt="Right"></button>
+    <button id="tbAlignRight" title="Right"><img src="align-right.svg" alt="Right"></button>
     <button id="tbFont"        title="Choose font">Aa</button>
     <input type="number" id="tbFontSize" min="8" max="72" title="Font Size">px
     <input type="color"  id="tbColor"      title="Text Color">
@@ -256,7 +251,7 @@
       toolbar.style.display='none'; 
       shapeMenu.style.display='none'; 
       fontWheel.classList.remove('open');
-      fontWheel.style.display='none';
+      fontWheel.style.display = 'none';
       fontWheel.style.pointerEvents='none';
     });
 
@@ -283,9 +278,9 @@
     // insert shape
     document.getElementById('btnShape').onclick = e=>{
       e.stopPropagation();
-      const r=e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left=`${r.right+8}px`;
-      shapeMenu.style.top=``${r.top}px`;
+      const r = e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left  = `${r.right+8}px`;
+      shapeMenu.style.top   = `${r.top}px`;
       shapeMenu.style.display='flex';
     };
     shapeMenu.addEventListener('click', e=>{
@@ -324,7 +319,7 @@
         }
         fontWheel.classList.remove('open');
         fontWheel.style.display = 'none';
-        fontWheel.style.pointerEvents = 'none';
+        fontWheel.style.pointerEvents='none';
       });
     });
 
@@ -461,7 +456,7 @@
           e.stopPropagation(); e.preventDefault(); select(wrap);
           const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
           document.addEventListener('mousemove',ondrag);
-          document.addEventListener('mouseup',()=>document.removeEventListener__('mousemove',ondrag),{once:true});
+          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
           function ondrag(ev){
             const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
             const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
