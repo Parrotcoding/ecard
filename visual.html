@@ -63,10 +63,10 @@
       position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085; z-index:10;
     }
-    .handle-nw { cursor:nwse-resize; top:-5px; left:-5px }
-    .handle-ne { cursor:nesw-resize; top:-5px; right:-5px }
-    .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px }
-    .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px }
+    .handle-nw { cursor:nwse-resize; top:-5px; left:-5px; }
+    .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
+    .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px; }
+    .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px; }
 
     .vertex-handle {
       position:absolute; width:12px; height:12px;
@@ -112,12 +112,14 @@
     </div>
   </div>
 
+  <!-- Toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
+  <!-- Shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -309,46 +311,51 @@
         h.addEventListener('mousedown', startResize(dir,el));
       });
     }
-    function startResize(dir,el){
-      return function(e){
+
+    function startResize(dir, el) {
+      return function(e) {
         e.stopPropagation(); e.preventDefault();
-        const r=el.getBoundingClientRect(),
-              pr=paper.getBoundingClientRect();
-        const start={
-          x:e.clientX, y:e.clientY,
-          left:r.left-pr.left, top:r.top-pr.top,
-          w:r.width, h:r.height,
-          aspect: r.width/r.height
+        const r = el.getBoundingClientRect(),
+              pr = paper.getBoundingClientRect();
+        const start = {
+          x: e.clientX, y: e.clientY,
+          left: r.left - pr.left,  top: r.top - pr.top,
+          w: r.width,             h: r.height,
+          aspect: r.width / r.height
         };
         document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
-        function doResize(ev){
-          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
+        document.addEventListener('mouseup', ()=>
+          document.removeEventListener('mousemove', doResize),
+          { once: true }
+        );
 
-          // freeform adjustments
-          if(dir.includes('e')) newW = start.w + dx;
-          if(dir.includes('s')) newH = start.h + dy;
-          if(dir.includes('w')){
+        function doResize(ev) {
+          let dx = ev.clientX - start.x,
+              dy = ev.clientY - start.y,
+              newW = start.w,
+              newH = start.h,
+              newL = start.left,
+              newT = start.top;
+
+          if (dir.includes('e')) newW = start.w + dx;
+          if (dir.includes('s')) newH = start.h + dy;
+          if (dir.includes('w')) {
             newW = start.w - dx;
             newL = start.left + dx;
           }
-          if(dir.includes('n')){
+          if (dir.includes('n')) {
             newH = start.h - dy;
             newT = start.top + dy;
           }
 
-          // shift-key => preserve aspect ratio
-          if(ev.shiftKey){
-            // drive by width always
+          // lock aspect only for non-images
+          if (!el.classList.contains('image-wrapper') && ev.shiftKey) {
             newH = newW / start.aspect;
-            if(dir.includes('n')){
-              // if dragging north, adjust top so bottom stays in place
+            if (dir.includes('n')) {
               newT = start.top + (start.h - newH);
             }
           }
 
-          // apply
           el.style.width  = `${newW}px`;
           el.style.height = `${newH}px`;
           el.style.left   = `${newL}px`;
@@ -357,10 +364,10 @@
       };
     }
 
-    function makeTriangleResizable(wrap,poly){
-      let pts=[[0,70],[40,0],[80,70]];
-      const handles=pts.map((_,i)=>{
-        const h=document.createElement('div');
+    function makeTriangleResizable(wrap, poly){
+      let pts = [[0,70],[40,0],[80,70]];
+      const handles = pts.map((_,i)=>{
+        const h = document.createElement('div');
         h.className='vertex-handle'; wrap.append(h);
         return h;
       });
@@ -375,7 +382,7 @@
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
-          const start={
+          const start={ 
             x:e.clientX, y:e.clientY,
             wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
@@ -384,7 +391,7 @@
           document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
           function onDrag(ev){
             const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
+            const abs=start.pts.map((p,j)=> j===i ? [p[0]+dx,p[1]+dy] : p);
             const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
             const minX=Math.min(...xs), minY=Math.min(...ys);
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
