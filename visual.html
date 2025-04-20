@@ -8,6 +8,8 @@
   <style>
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
+
+    /* workspace: paper + assets */
     #workspace { display:flex; gap:1rem; }
     #paper {
       position:relative; flex:1;
@@ -23,6 +25,8 @@
       width:100%; margin-bottom:.5rem; cursor:grab;
       border:1px solid #ccc; border-radius:4px;
     }
+
+    /* toolbar */
     #toolbar {
       position:absolute; display:none;
       background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
@@ -38,6 +42,7 @@
     #toolbar img { width:20px; height:20px }
     .icon-text { color:#fff; font-size:1rem; font-weight:700 }
 
+    /* shape menu */
     #shapeMenu {
       position:absolute; display:none;
       background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
@@ -51,7 +56,9 @@
     }
     #shapeMenu button:hover { background:#76C69C }
 
+    /* handles hidden by default */
     .resize-handle, .vertex-handle { display:none; }
+
     .resize-handle {
       position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085; z-index:10;
@@ -66,15 +73,18 @@
       background:#fff; border:2px solid #60A085; border-radius:50%;
       z-index:10; cursor:move; margin:-6px 0 0 -6px;
     }
+
+    /* show handles on selected elements */
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle {
       display:block !important;
     }
 
+    /* basic element styles */
     .element, .shape-wrapper { position:absolute; user-select:none; }
     .text-element {
-      min-width:50px; min-height:20px; padding:.2rem; background:transparent;
-      outline:none; cursor:text;
+      min-width:50px; min-height:20px; padding:.2rem;
+      background:transparent; outline:none; cursor:text;
     }
     .shape-rect {
       width:100px; height:60px;
@@ -85,9 +95,16 @@
       background:rgba(96,160,133,0.3); border:2px solid #60A085;
       border-radius:50%;
     }
+
+    /* image wrapper */
     .image-wrapper {
       width:100px; height:100px;
       background-size:contain; background-repeat:no-repeat; background-position:center;
+    }
+
+    /* ensure wrapper has transparent fill */
+    .shape-wrapper {
+      background-color: transparent;
     }
   </style>
 </head>
@@ -101,12 +118,14 @@
     </div>
   </div>
 
+  <!-- Toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
+  <!-- Shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -130,11 +149,11 @@
       thumb.addEventListener('dblclick', ()=>{
         const p = prompt('Crop % x,y,width,height','0,0,100,100');
         if(!p) return;
-        const [x,y,w,h] = p.split(',').map(n=>parseFloat(n));
+        const [x,y,w,h] = p.split(',').map(parseFloat);
         const img = new Image();
         img.onload = ()=>{
-          const cw=img.width*(w/100), ch=img.height*(h/100),
-                sx=img.width*(x/100), sy=img.height*(y/100);
+          const cw=img.width*(w/100), ch=img.height*(h/100);
+          const sx=img.width*(x/100), sy=img.height*(y/100);
           const c=document.createElement('canvas');
           c.width=cw; c.height=ch;
           c.getContext('2d').drawImage(img,sx,sy,cw,ch,0,0,cw,ch);
@@ -145,12 +164,13 @@
       assetList.append(thumb);
     }
 
+    // PAPER click: show toolbar, deselect on blank
     paper.addEventListener('click', e=>{
-      if(e.target===paper) deselect();
+      if(e.target === paper) deselect();
       clickX=e.offsetX; clickY=e.offsetY;
       const tb=toolbar.getBoundingClientRect();
       toolbar.style.left=`${e.pageX-tb.width/2}px`;
-      toolbar.style.top=`${e.pageY-tb.height-12}px`;
+      toolbar.style.top =`${e.pageY-tb.height-12}px`;
       toolbar.style.display='flex';
       shapeMenu.style.display='none';
       e.stopPropagation();
@@ -158,6 +178,7 @@
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
+    // Add Text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt=document.createElement('div');
@@ -171,6 +192,7 @@
       txt.focus();
     });
 
+    // Add Image via URL & to Assets
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url=prompt('Enter image URL:');
@@ -185,11 +207,12 @@
       toolbar.style.display='none';
     });
 
+    // Shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left=`${r.right+8}px`;
-      shapeMenu.style.top=`${r.top}px`;
+      shapeMenu.style.top =`${r.top}px`;
       shapeMenu.style.display='flex';
     });
     shapeMenu.addEventListener('click', e=>{
@@ -249,27 +272,32 @@
       selectedEl=null;
     }
 
+    // drop behavior
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
         const src=e.dataTransfer.getData('text/plain');
         if(!src) return;
+        // set background image
         el.style.backgroundImage=`url(${src})`;
         el.style.backgroundSize='cover';
         el.style.backgroundPosition='center';
+        // if triangle: remove fill, clip to polygon, top layer
         if(el.classList.contains('shape-wrapper')){
-          // recompute clip-path from current polygon points
           const poly=el.querySelector('polygon');
-          const pts=poly.getAttribute('points')
-                       .split(' ')
-                       .map(p=>p.split(',').map(Number));
+          poly.setAttribute('fill','none');
+          poly.style.pointerEvents='none';
+          const pts=poly.getAttribute('points').split(' ')
+                     .map(p=>p.split(',').map(Number));
           const W=el.clientWidth, H=el.clientHeight;
           const pct=pts.map(([x,y])=>
             `${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`
           ).join(', ');
-          el.style.clipPath = `polygon(${pct})`;
+          el.style.clipPath=`polygon(${pct})`;
         }
+        // raise above others
+        el.style.zIndex='999';
       });
     }
 
@@ -301,9 +329,9 @@
       return function(e){
         e.stopPropagation(); e.preventDefault();
         const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={x:e.clientX,y:e.clientY,
+        const start={ x:e.clientX,y:e.clientY,
           left:r.left-pr.left, top:r.top-pr.top,
-          w:r.width,h:r.height
+          w:r.width, h:r.height
         };
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
@@ -332,7 +360,7 @@
       function update(){
         handles.forEach((h,i)=>{
           h.style.left=`${pts[i][0]}px`;
-          h.style.top=`${pts[i][1]}px`;
+          h.style.top =`${pts[i][1]}px`;
         });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
@@ -354,7 +382,7 @@
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
             wrap.style.left=`${start.wrapL+minX}px`;
-            wrap.style.top=`${start.wrapT+minY}px`;
+            wrap.style.top =`${start.wrapT+minY}px`;
             wrap.style.width=`${maxX-minX}px`;
             wrap.style.height=`${maxY-minY}px`;
             update();
