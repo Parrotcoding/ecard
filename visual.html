@@ -62,11 +62,11 @@
     }
     #shapeMenu button:hover { background:#76C69C }
 
-    /* resize handles (rect/circle) */
+    /* resize handles */
     .resize-handle {
       position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085;
-      z-index:10;
+      z-index:10; display:none;
     }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px }
@@ -78,7 +78,7 @@
       position:absolute; width:12px; height:12px;
       background:#fff; border:2px solid #60A085;
       border-radius:50%; z-index:10; cursor:move;
-      margin:-6px 0 0 -6px;
+      margin:-6px 0 0 -6px; display:none;
     }
 
     /* elements */
@@ -126,10 +126,11 @@
     const paper     = document.getElementById('paper');
     const toolbar   = document.getElementById('toolbar');
     const shapeMenu = document.getElementById('shapeMenu');
-    let clickX=0, clickY=0;
+    let clickX=0, clickY=0, selectedEl=null;
 
     // Show toolbar above cursor
     paper.addEventListener('click', e=>{
+      deselect();
       e.stopPropagation();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
@@ -138,13 +139,14 @@
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
     });
-    [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
-    document.addEventListener('click', ()=>{
+    [toolbar, shapeMenu].forEach(el=> el.addEventListener('click', e=> e.stopPropagation()));
+    document.addEventListener('click', ()=> {
       toolbar.style.display='none';
       shapeMenu.style.display='none';
+      deselect();
     });
 
-    // Add text
+    // Insert text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
@@ -154,12 +156,12 @@
       txt.style.top  = clickY + 'px';
       txt.textContent = 'Enter text';
       paper.append(txt);
-      makeDraggable(txt);
+      initElement(txt, false);
       toolbar.style.display='none';
       txt.focus();
     });
 
-    // Add image
+    // Insert image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
@@ -171,12 +173,11 @@
       img.style.top    = clickY + 'px';
       img.style.height = '100px';
       paper.append(img);
-      makeDraggable(img);
-      makeResizable(img, false);
+      initElement(img, false);
       toolbar.style.display='none';
     });
 
-    // Show shape menu
+    // Show shapes menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r = e.currentTarget.getBoundingClientRect();
@@ -185,7 +186,7 @@
       shapeMenu.style.display='flex';
     });
 
-    // Insert shapes
+    // Insert shape
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
       if(!btn) return;
@@ -196,14 +197,14 @@
       toolbar.style.display='none';
     });
 
+    // Helpers
     function insertBasic(type){
       const el = document.createElement('div');
       el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
       el.style.left = clickX + 'px';
       el.style.top  = clickY + 'px';
       paper.append(el);
-      makeDraggable(el);
-      makeResizable(el, false);
+      initElement(el, false);
     }
 
     function insertTriangle(){
@@ -226,9 +227,33 @@
       svg.append(poly);
       wrap.append(svg);
       paper.append(wrap);
+      initElement(wrap, true, poly);
+    }
 
-      makeDraggable(wrap);
-      makeTriangleResizable(wrap, poly);
+    function initElement(el, isTri, poly){
+      makeDraggable(el);
+      if(isTri) makeTriangleResizable(el, poly);
+      else makeResizable(el);
+      // select on click
+      el.addEventListener('mousedown', e=>{
+        e.stopPropagation();
+        select(el);
+      });
+    }
+
+    function select(el){
+      if(selectedEl===el) return;
+      deselect();
+      selectedEl = el;
+      const handles = el.querySelectorAll('.resize-handle, .vertex-handle');
+      handles.forEach(h=> h.style.display = 'block');
+    }
+
+    function deselect(){
+      if(!selectedEl) return;
+      selectedEl.querySelectorAll('.resize-handle, .vertex-handle')
+        .forEach(h=>h.style.display='none');
+      selectedEl = null;
     }
 
     // Draggable
@@ -249,8 +274,7 @@
     }
 
     // Rectangle/Circle resizing
-    function makeResizable(el, tri){
-      if(tri) return;
+    function makeResizable(el){
       ['nw','ne','sw','se'].forEach(dir=>{
         const h = document.createElement('div');
         h.className = 'resize-handle handle-'+dir;
@@ -291,7 +315,7 @@
       };
     }
 
-    // Triangle vertex resizing with wrapper resizing
+    // Triangle vertex resizing
     function makeTriangleResizable(wrap, poly){
       let pts = [[0,70],[40,0],[80,70]];
       const handles = pts.map((_,i)=>{
@@ -302,6 +326,7 @@
       });
 
       function update(){
+        // position pts
         handles.forEach((h,i)=>{
           h.style.left = pts[i][0] + 'px';
           h.style.top  = pts[i][1] + 'px';
@@ -312,6 +337,7 @@
       handles.forEach((h,i)=>{
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
+          select(wrap);
           const start = {
             x: e.clientX, y: e.clientY,
             wrapL: wrap.offsetLeft, wrapT: wrap.offsetTop,
