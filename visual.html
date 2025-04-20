@@ -28,7 +28,6 @@
       padding:.5rem; overflow:auto;
     }
     #assets h2 { margin:0 0 .5rem; font-size:1rem }
-    #assetUpload { width:100%; margin-bottom:.5rem }
     #assetList img {
       width:100%; margin-bottom:.5rem; cursor:grab;
       border:1px solid #ccc; border-radius:4px;
@@ -75,7 +74,6 @@
     /* handles hidden by default */
     .resize-handle, .vertex-handle { display:none; }
 
-    /* resize handles (rect/circle) */
     .resize-handle {
       position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085;
@@ -86,7 +84,6 @@
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px }
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px }
 
-    /* triangle vertex handles */
     .vertex-handle {
       position:absolute; width:12px; height:12px;
       background:#fff; border:2px solid #60A085;
@@ -94,13 +91,12 @@
       margin:-6px 0 0 -6px;
     }
 
-    /* only show handles when element is selected */
+    /* show only on selected */
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle {
       display: block !important;
     }
 
-    /* elements */
     .element, .shape-wrapper {
       position:absolute; user-select:none;
     }
@@ -128,7 +124,6 @@
     <div id="paper"></div>
     <div id="assets">
       <h2>Assets</h2>
-      <input type="file" id="assetUpload" multiple accept="image/*">
       <div id="assetList"></div>
     </div>
   </div>
@@ -149,65 +144,51 @@
 
   <script>
   (function(){
-    const paper       = document.getElementById('paper');
-    const toolbar     = document.getElementById('toolbar');
-    const shapeMenu   = document.getElementById('shapeMenu');
-    const assetUpload = document.getElementById('assetUpload');
-    const assetList   = document.getElementById('assetList');
+    const paper     = document.getElementById('paper');
+    const toolbar   = document.getElementById('toolbar');
+    const shapeMenu = document.getElementById('shapeMenu');
+    const assetList = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // handle asset uploads
-    assetUpload.addEventListener('change', ()=>{
-      Array.from(assetUpload.files).forEach(file=>{
-        const reader = new FileReader();
-        reader.onload = e=>{
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          img.draggable = true;
-          // drag from assets
-          img.addEventListener('dragstart', ev=>{
-            ev.dataTransfer.setData('text/plain', img.src);
-          });
-          // double-click to crop via prompt
-          img.addEventListener('dblclick', ()=>{
-            const p = prompt(
-              'Crop % x,y,width,height','0,0,100,100'
-            );
-            if(!p) return;
-            const [x,y,w,h] = p.split(',').map(n=>parseFloat(n));
-            const orig = new Image();
-            orig.onload = ()=>{
-              const cw = orig.width * (w/100),
-                    ch = orig.height* (h/100),
-                    sx = orig.width * (x/100),
-                    sy = orig.height* (y/100);
-              const c = document.createElement('canvas');
-              c.width = cw; c.height = ch;
-              c.getContext('2d')
-               .drawImage(orig, sx, sy, cw, ch, 0,0,cw,ch);
-              img.src = c.toDataURL();
-            };
-            orig.src = img.src;
-          });
-          assetList.append(img);
-        };
-        reader.readAsDataURL(file);
+    // add an asset thumbnail
+    function addAsset(src){
+      const thumb = document.createElement('img');
+      thumb.src = src;
+      thumb.draggable = true;
+      thumb.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', src);
       });
-      assetUpload.value = '';
-    });
+      // optional: crop on dblclick
+      thumb.addEventListener('dblclick', ()=>{
+        const p = prompt('Crop % x,y,width,height','0,0,100,100');
+        if(!p) return;
+        const [x,y,w,h] = p.split(',').map(n=>parseFloat(n));
+        const img = new Image();
+        img.onload = ()=>{
+          const cw=img.width*(w/100), ch=img.height*(h/100),
+                sx=img.width*(x/100), sy=img.height*(y/100);
+          const c = document.createElement('canvas');
+          c.width=cw; c.height=ch;
+          c.getContext('2d')
+           .drawImage(img,sx,sy,cw,ch,0,0,cw,ch);
+          thumb.src = c.toDataURL();
+        };
+        img.src = src;
+      });
+      assetList.append(thumb);
+    }
 
-    // PAPER click: deselect if blank, always show toolbar
+    // PAPER click: deselect blank, always show toolbar
     paper.addEventListener('click', e=>{
       if(e.target === paper) deselect();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top  = `${e.pageY - tb.height -12}px`;
+      toolbar.style.left  = `${e.pageX - tb.width/2}px`;
+      toolbar.style.top   = `${e.pageY - tb.height - 12}px`;
       toolbar.style.display = 'flex';
-      shapeMenu.style.display = 'none';
+      shapeMenu.style.display='none';
       e.stopPropagation();
     });
-
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
@@ -221,28 +202,29 @@
       txt.style.top =`${clickY}px`;
       txt.textContent='Enter text';
       paper.append(txt);
-      initElement(txt, false);
+      initElement(txt,false);
       toolbar.style.display='none';
       txt.focus();
     });
 
-    // Add Image (from toolbar)
+    // Add Image (via link)—also add to assets
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
       if(!url) return;
       const img = document.createElement('img');
       img.className='element';
-      img.src = url;
-      img.style.left   = `${clickX}px`;
-      img.style.top    = `${clickY}px`;
-      img.style.height = '100px';
+      img.src=url;
+      img.style.left   =`${clickX}px`;
+      img.style.top    =`${clickY}px`;
+      img.style.height ='100px';
       paper.append(img);
-      initElement(img, false);
+      initElement(img,false);
+      addAsset(url);
       toolbar.style.display='none';
     });
 
-    // Show Shapes menu
+    // Show shapes menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
@@ -250,12 +232,10 @@
       shapeMenu.style.top  = `${r.top}px`;
       shapeMenu.style.display='flex';
     });
-
-    // Insert shape
     shapeMenu.addEventListener('click', e=>{
-      const btn = e.target.closest('[data-shape]');
+      const btn=e.target.closest('[data-shape]');
       if(!btn) return;
-      const type = btn.dataset.shape;
+      const type=btn.dataset.shape;
       if(type==='triangle') insertTriangle();
       else insertBasic(type);
       shapeMenu.style.display='none';
@@ -263,27 +243,25 @@
     });
 
     function insertBasic(type){
-      const el = document.createElement('div');
-      el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
-      el.style.left = `${clickX}px`;
-      el.style.top  = `${clickY}px`;
+      const el=document.createElement('div');
+      el.className='element '+(type==='rect'?'shape-rect':'shape-circle');
+      el.style.left=`${clickX}px`;
+      el.style.top =`${clickY}px`;
       paper.append(el);
-      initElement(el, false);
+      initElement(el,false);
     }
-
     function insertTriangle(){
-      const wrap = document.createElement('div');
+      const wrap=document.createElement('div');
       wrap.className='shape-wrapper';
-      wrap.style.left   = `${clickX}px`;
-      wrap.style.top    = `${clickY}px`;
-      wrap.style.width  = '80px';
-      wrap.style.height = '70px';
-
+      wrap.style.left=`${clickX}px`;
+      wrap.style.top =`${clickY}px`;
+      wrap.style.width='80px';
+      wrap.style.height='70px';
       const svgNS="http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS,'svg');
+      const svg=document.createElementNS(svgNS,'svg');
       svg.setAttribute('width','100%');
       svg.setAttribute('height','100%');
-      const poly = document.createElementNS(svgNS,'polygon');
+      const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points','0,70 40,0 80,70');
       poly.setAttribute('fill','rgba(96,160,133,0.3)');
       poly.setAttribute('stroke','#60A085');
@@ -291,20 +269,19 @@
       svg.append(poly);
       wrap.append(svg);
       paper.append(wrap);
-      initElement(wrap, true, poly);
+      initElement(wrap,true,poly);
     }
 
     function initElement(el, isTri, poly){
       makeDraggable(el);
       enableDrop(el);
-      if(isTri) makeTriangleResizable(el, poly);
+      if(isTri) makeTriangleResizable(el,poly);
       else makeResizable(el);
       el.addEventListener('mousedown', e=>{
         e.stopPropagation();
         select(el);
       });
     }
-
     function select(el){
       if(selectedEl===el) return;
       deselect();
@@ -317,115 +294,109 @@
       selectedEl=null;
     }
 
-    // drag images into shapes
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
-        const src = e.dataTransfer.getData('text/plain');
+        const src=e.dataTransfer.getData('text/plain');
         if(!src) return;
-        // apply as background
-        el.style.backgroundImage = `url(${src})`;
-        el.style.backgroundSize   = 'cover';
-        el.style.backgroundPosition = 'center';
-        // if triangle: clip
+        el.style.backgroundImage=`url(${src})`;
+        el.style.backgroundSize='cover';
+        el.style.backgroundPosition='center';
         if(el.classList.contains('shape-wrapper')){
-          el.style.clipPath = 'polygon(50% 0%,0% 100%,100% 100%)';
+          el.style.clipPath='polygon(50% 0%,0% 100%,100% 100%)';
         }
       });
     }
 
-    // Draggable helper
     function makeDraggable(el){
-      let dx, dy;
+      let dx,dy;
       el.addEventListener('mousedown', e=>{
-        if(e.target.matches('.resize-handle, .vertex-handle')) return;
+        if(e.target.matches('.resize-handle,.vertex-handle')) return;
         e.preventDefault();
-        dx = e.clientX - el.offsetLeft;
-        dy = e.clientY - el.offsetTop;
-        document.addEventListener('mousemove', onmove);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
+        dx=e.clientX-el.offsetLeft;
+        dy=e.clientY-el.offsetTop;
+        document.addEventListener('mousemove',onmove);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
       });
       function onmove(e){
-        el.style.left = `${e.clientX - dx}px`;
-        el.style.top  = `${e.clientY - dy}px`;
+        el.style.left=`${e.clientX-dx}px`;
+        el.style.top =`${e.clientY-dy}px`;
       }
     }
 
-    // Rectangle/Circle resizing
     function makeResizable(el){
       ['nw','ne','sw','se'].forEach(dir=>{
-        const h = document.createElement('div');
+        const h=document.createElement('div');
         h.className='resize-handle handle-'+dir;
         el.append(h);
-        h.addEventListener('mousedown', startResize(dir,el));
+        h.addEventListener('mousedown',startResize(dir,el));
       });
     }
-    function startResize(dir, el){
+    function startResize(dir,el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
-        const rect = el.getBoundingClientRect();
-        const pRect= paper.getBoundingClientRect();
-        const start = {
-          x:e.clientX, y:e.clientY,
-          left:rect.left-pRect.left, top:rect.top-pRect.top,
-          w:rect.width, h:rect.height
+        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
+        const start={x:e.clientX,y:e.clientY,
+          left:r.left-pr.left,top:r.top-pr.top,
+          w:r.width,h:r.height
         };
-        document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), {once:true});
+        document.addEventListener('mousemove',doResize);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',doResize),{once:true});
         function doResize(ev){
-          let dx = ev.clientX - start.x, dy = ev.clientY - start.y;
-          let newL=start.left, newT=start.top, newW=start.w, newH=start.h;
-          if(dir.includes('e')) newW=start.w+dx;
-          if(dir.includes('s')) newH=start.h+dy;
-          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
-          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          el.style.width  = `${newW}px`;
-          el.style.height = `${newH}px`;
-          el.style.left   = `${newL}px`;
-          el.style.top    = `${newT}px`;
+          let dx=ev.clientX-start.x,dy=ev.clientY-start.y;
+          let L=start.left,T=start.top,W=start.w,H=start.h;
+          if(dir.includes('e')) W=start.w+dx;
+          if(dir.includes('s')) H=start.h+dy;
+          if(dir.includes('w')){
+            W=start.w-dx; L=start.left+dx;
+          }
+          if(dir.includes('n')){
+            H=start.h-dy; T=start.top+dy;
+          }
+          el.style.width=`${W}px`;
+          el.style.height=`${H}px`;
+          el.style.left=`${L}px`;
+          el.style.top=`${T}px`;
         }
       };
     }
 
-    // Triangle vertex resizing
-    function makeTriangleResizable(wrap, poly){
-      let pts = [[0,70],[40,0],[80,70]];
-      const handles = pts.map((_,i)=>{
-        const h = document.createElement('div');
-        h.className='vertex-handle';
-        wrap.append(h);
+    function makeTriangleResizable(wrap,poly){
+      let pts=[[0,70],[40,0],[80,70]];
+      const handles=pts.map((_,i)=>{
+        const h=document.createElement('div');
+        h.className='vertex-handle'; wrap.append(h);
         return h;
       });
       function update(){
         handles.forEach((h,i)=>{
           h.style.left=`${pts[i][0]}px`;
-          h.style.top =`${pts[i][1]}px`;
+          h.style.top=`${pts[i][1]}px`;
         });
-        poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+        poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
       }
       handles.forEach((h,i)=>{
-        h.addEventListener('mousedown', e=>{
+        h.addEventListener('mousedown',e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
-          const start={
-            x:e.clientX, y:e.clientY,
-            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
+          const start={x:e.clientX,y:e.clientY,
+            wrapL:wrap.offsetLeft,wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
           };
-          document.addEventListener('mousemove', onDrag);
-          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
+          document.addEventListener('mousemove',onDrag);
+          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onDrag),{once:true});
           function onDrag(ev){
-            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            const dx=ev.clientX-start.x,dy=ev.clientY-start.y;
             const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
             const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
-            const minX=Math.min(...xs), minY=Math.min(...ys);
-            const maxX=Math.max(...xs), maxY=Math.max(...ys);
+            const minX=Math.min(...xs),minY=Math.min(...ys);
+            const maxX=Math.max(...xs),maxY=Math.max(...ys);
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left   = `${start.wrapL+minX}px`;
-            wrap.style.top    = `${start.wrapT+minY}px`;
-            wrap.style.width  = `${maxX-minX}px`;
-            wrap.style.height = `${maxY-minY}px`;
+            wrap.style.left=`${start.wrapL+minX}px`;
+            wrap.style.top=`${start.wrapT+minY}px`;
+            wrap.style.width=`${maxX-minX}px`;
+            wrap.style.height=`${maxY-minY}px`;
             update();
           }
         });
