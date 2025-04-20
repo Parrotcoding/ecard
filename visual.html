@@ -32,10 +32,14 @@
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1000;
     }
-    #toolbar button { /* … unchanged … */ }
 
     /* shape menu */
-    #shapeMenu { /* … unchanged … */ }
+    #shapeMenu {
+      position:absolute; display:none;
+      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:1001;
+    }
 
     /* text toolbar */
     #textToolbar {
@@ -43,27 +47,69 @@
       background:#fff; border:1px solid #ccc; border-radius:4px;
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:2000;
+      /* ensure it expands to fit all buttons */
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      width: max-content;
     }
-    #textToolbar button { /* … unchanged … */ }
-    #textToolbar select, #textToolbar input { /* … unchanged … */ }
+    #textToolbar button {
+      border:none; background:transparent; cursor:pointer; font-size:1rem;
+    }
+    #textToolbar select,
+    #textToolbar input[type="color"],
+    #textToolbar input[type="number"] {
+      width:3rem; border:1px solid #ccc; border-radius:4px; padding:2px;
+    }
 
-    /* rotate handle */
-    .rotate-handle { /* … unchanged … */ }
+    /* handles */
+    .resize-handle, .vertex-handle, .rotate-handle { display:none; }
+    .resize-handle {
+      position:absolute; width:10px; height:10px;
+      background:#fff; border:1px solid #60A085; z-index:10;
+    }
+    .handle-nw { cursor:nwse-resize; top:-5px; left:-5px; }
+    .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
+    .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px; }
+    .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px; }
 
-    /* resize & vertex handles */
-    .resize-handle, .vertex-handle { /* … unchanged … */ }
+    .vertex-handle {
+      position:absolute; width:12px; height:12px;
+      background:#fff; border:2px solid #60A085; border-radius:50%;
+      z-index:10; cursor:move; margin:-6px 0 0 -6px;
+    }
 
-    /* show handles on selected */
+    .rotate-handle {
+      position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+      width:12px; height:12px; background:#fff;
+      border:2px solid #60A085; border-radius:50%; cursor:grab; z-index:11;
+    }
+
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle,
     .element.selected .rotate-handle {
       display:block !important;
     }
 
-    /* base element styles */
-    .element, .shape-wrapper { /* … unchanged … */ }
-    .text-element { /* … unchanged … */ }
-    .shape-rect, .shape-circle, .image-wrapper, .shape-wrapper { /* … unchanged … */ }
+    /* element styles */
+    .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
+    .text-element {
+      min-width:50px; min-height:20px; padding:.2rem;
+      background:transparent; outline:none; cursor:text;
+    }
+    .shape-rect {
+      width:100px; height:60px;
+      background:rgba(96,160,133,0.3); border:2px solid #60A085;
+    }
+    .shape-circle {
+      width:60px; height:60px;
+      background:rgba(96,160,133,0.3); border:2px solid #60A085;
+      border-radius:50%;
+    }
+    .image-wrapper {
+      width:100px; height:100px;
+      background-size:contain; background-repeat:no-repeat; background-position:center;
+    }
+    .shape-wrapper { background-color:transparent; }
   </style>
 </head>
 <body>
@@ -76,9 +122,21 @@
     </div>
   </div>
 
-  <!-- Toolbars and menus -->
-  <div id="toolbar">…</div>
-  <div id="shapeMenu">…</div>
+  <!-- Main toolbar -->
+  <div id="toolbar">
+    <button id="btnText"  title="Add Text">T</button>
+    <button id="btnImage" title="Add Image">🖼️</button>
+    <button id="btnShape" title="Add Shape">⬜</button>
+  </div>
+
+  <!-- Shape menu -->
+  <div id="shapeMenu">
+    <button data-shape="rect"     title="Rectangle">◻</button>
+    <button data-shape="circle"   title="Circle">◯</button>
+    <button data-shape="triangle" title="Triangle">△</button>
+  </div>
+
+  <!-- Text toolbar -->
   <div id="textToolbar">
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
@@ -86,8 +144,8 @@
     <button id="tbAlignLeft">≡</button>
     <button id="tbAlignCenter">≣</button>
     <button id="tbAlignRight">≡</button>
-    <input type="number" id="tbFontSize" min="8" max="72">px
-    <input type="color" id="tbColor">
+    <input type="number" id="tbFontSize" min="8" max="72" title="Font Size">px
+    <input type="color"  id="tbColor"      title="Text Color">
   </div>
 
   <script>
@@ -98,6 +156,11 @@
     const textToolbar = document.getElementById('textToolbar');
     const assetList   = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
+
+    function rgbToHex(rgb) {
+      const [r,g,b] = rgb.match(/\d+/g).map(Number);
+      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
 
     function deselect() {
       if (!selectedEl) return;
@@ -111,81 +174,159 @@
       deselect();
       selectedEl = el;
       el.classList.add('selected');
-
-      // If it's text, show textToolbar above it
       if (el.classList.contains('text-element')) {
-        textToolbar.style.display = 'flex';
-        // position relative to viewport
+        // position textToolbar above/below the element
         const rect   = el.getBoundingClientRect();
         const tbRect = textToolbar.getBoundingClientRect();
         let left = rect.left;
         let top  = rect.top - tbRect.height - 8;
-        // don't go negative
         if (top < 8) top = rect.bottom + 8;
-        textToolbar.style.left = `${left}px`;
-        textToolbar.style.top  = `${top}px`;
-
-        // initialize controls
+        textToolbar.style.left  = `${left}px`;
+        textToolbar.style.top   = `${top}px`;
+        textToolbar.style.display = 'flex';
+        // init controls
         document.getElementById('tbFontSize').value = parseInt(getComputedStyle(el).fontSize);
         document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(el).color);
       }
     }
 
-    // [ ... rest of initialization code unchanged: addAsset, enableDrop, makeDraggable, addResizeHandles, addRotateHandle, makeTriangleResizable ... ]
+    // Show main toolbar
+    paper.addEventListener('click', e=>{
+      if (e.target === paper) deselect();
+      clickX = e.offsetX; clickY = e.offsetY;
+      const tb = toolbar.getBoundingClientRect();
+      toolbar.style.left  = `${e.pageX - tb.width/2}px`;
+      toolbar.style.top   = `${e.pageY - tb.height - 12}px`;
+      toolbar.style.display = 'flex';
+      shapeMenu.style.display = 'none';
+      e.stopPropagation();
+    });
+    [toolbar, shapeMenu, textToolbar].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
+    document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
-    // Hook select into element init:
-    function initElement(el, isTri, poly) {
-      // draggable, drop, resize, rotate…
-      el.addEventListener('mousedown', e=>{
-        e.stopPropagation();
-        select(el);
-      });
-    }
+    // Add Text
+    document.getElementById('btnText').addEventListener('click', e=>{
+      e.stopPropagation();
+      const txt = document.createElement('div');
+      txt.className = 'element text-element';
+      txt.contentEditable = true;
+      txt.style.left = `${clickX}px`;
+      txt.style.top  = `${clickY}px`;
+      txt.textContent = 'Enter text';
+      paper.append(txt);
+      initElement(txt,false);
+      toolbar.style.display='none';
+      txt.focus();
+    });
 
-    // Text toolbar events
+    // Add Image
+    document.getElementById('btnImage').addEventListener('click', e=>{
+      e.stopPropagation();
+      const url = prompt('Enter image URL:');
+      if (!url) return;
+      addAsset(url);
+      const wrap = document.createElement('div');
+      wrap.className = 'element image-wrapper';
+      wrap.style.left = `${clickX}px`;
+      wrap.style.top  = `${clickY}px`;
+      wrap.style.backgroundImage = `url(${url})`;
+      paper.append(wrap);
+      initElement(wrap,false);
+      toolbar.style.display='none';
+    });
+
+    // Shape menu
+    document.getElementById('btnShape').addEventListener('click', e=>{
+      e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left  = `${r.right + 8}px`;
+      shapeMenu.style.top   = `${r.top}px`;
+      shapeMenu.style.display = 'flex';
+    });
+    shapeMenu.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-shape]');
+      if (!btn) return;
+      const type = btn.dataset.shape;
+      if (type === 'triangle') insertTriangle();
+      else insertBasic(type);
+      shapeMenu.style.display='none';
+      toolbar.style.display='none';
+    });
+
+    // Text toolbar actions
     document.getElementById('tbBold').onclick = ()=>{
       if (!selectedEl) return;
-      selectedEl.style.fontWeight = selectedEl.style.fontWeight === 'bold' ? '' : 'bold';
+      selectedEl.style.fontWeight = selectedEl.style.fontWeight==='bold'?'':'bold';
     };
     document.getElementById('tbItalic').onclick = ()=>{
       if (!selectedEl) return;
-      selectedEl.style.fontStyle = selectedEl.style.fontStyle === 'italic' ? '' : 'italic';
+      selectedEl.style.fontStyle = selectedEl.style.fontStyle==='italic'?'':'italic';
     };
     document.getElementById('tbUnderline').onclick = ()=>{
       if (!selectedEl) return;
-      selectedEl.style.textDecoration = selectedEl.style.textDecoration === 'underline' ? '' : 'underline';
+      selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline';
     };
     document.getElementById('tbAlignLeft').onclick = ()=> selectedEl && (selectedEl.style.textAlign='left');
     document.getElementById('tbAlignCenter').onclick = ()=> selectedEl && (selectedEl.style.textAlign='center');
     document.getElementById('tbAlignRight').onclick = ()=> selectedEl && (selectedEl.style.textAlign='right');
     document.getElementById('tbFontSize').oninput = e=>{
-      if (selectedEl) selectedEl.style.fontSize = e.target.value+'px';
+      if (selectedEl) selectedEl.style.fontSize = e.target.value + 'px';
     };
     document.getElementById('tbColor').oninput = e=>{
       if (selectedEl) selectedEl.style.color = e.target.value;
     };
 
-    // utility: rgb() ⇒ hex
-    function rgbToHex(rgb) {
-      const [r,g,b] = rgb.match(/\d+/g).map(Number);
-      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    function addAsset(src){
+      const thumb = document.createElement('img');
+      thumb.src = src; thumb.draggable = true;
+      thumb.addEventListener('dragstart', ev=> ev.dataTransfer.setData('text/plain', src) );
+      assetList.append(thumb);
     }
 
-    // [ Attach all the other handlers here, unchanged… ]
+    function insertBasic(type){
+      const el = document.createElement('div');
+      el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
+      el.style.left = `${clickX}px`;
+      el.style.top  = `${clickY}px`;
+      paper.append(el);
+      initElement(el,false);
+    }
 
-    // Show main toolbar on paper click
-    paper.addEventListener('click', e=>{
-      if (e.target === paper) deselect();
-      clickX = e.offsetX; clickY = e.offsetY;
-      const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top  = `${e.pageY - tb.height - 12}px`;
-      toolbar.style.display = 'flex';
-      shapeMenu.style.display = 'none';
-      e.stopPropagation();
-    });
+    function insertTriangle(){
+      const wrap = document.createElement('div');
+      wrap.className = 'shape-wrapper';
+      wrap.style.left   = `${clickX}px`;
+      wrap.style.top    = `${clickY}px`;
+      wrap.style.width  = '80px';
+      wrap.style.height = '70px';
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg   = document.createElementNS(svgNS,'svg');
+      svg.setAttribute('width','100%');
+      svg.setAttribute('height','100%');
+      const poly = document.createElementNS(svgNS,'polygon');
+      poly.setAttribute('points','0,70 40,0 80,70');
+      poly.setAttribute('fill','rgba(96,160,133,0.3)');
+      poly.setAttribute('stroke','#60A085');
+      poly.setAttribute('stroke-width','2');
+      svg.append(poly);
+      wrap.append(svg);
+      paper.append(wrap);
+      initElement(wrap,true,poly);
+    }
 
-    // …and so on for shapeMenu, asset drag/drop, rotation, resizing …
+    function initElement(el,isTri,poly){
+      makeDraggable(el);
+      enableDrop(el);
+      addResizeHandles(el);
+      addRotateHandle(el);
+      if(isTri) makeTriangleResizable(el,poly);
+      el.addEventListener('mousedown', e=>{
+        e.stopPropagation(); select(el);
+      });
+    }
+
+    // ... include the implementations of makeDraggable, enableDrop, addResizeHandles, startResize,
+    // addRotateHandle, makeTriangleResizable here, exactly as before ...
 
   })();
   </script>
