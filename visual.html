@@ -24,7 +24,7 @@
       overflow:auto;
     }
 
-    /* toolbar */
+    /* Toolbar */
     #toolbar {
       position:absolute;
       display:none;
@@ -45,9 +45,9 @@
     }
     #toolbar button:hover { background:#76C69C }
     #toolbar img { width:20px; height:20px; pointer-events:none }
-    .icon-text { color:#fff; font-size:1rem; font-weight:700; }
+    .icon-text { color:#fff; font-size:1rem; font-weight:700 }
 
-    /* shapes submenu */
+    /* Shapes submenu */
     #shapeMenu {
       position:absolute;
       display:none;
@@ -68,22 +68,27 @@
     }
     #shapeMenu button:hover { background:#76C69C }
 
-    /* resize handle */
+    /* Resize handles */
     .resize-handle {
       position:absolute;
       width:10px; height:10px;
-      background:#fff;
-      border:1px solid #60A085;
-      right:0; bottom:0;
-      cursor:se-resize;
+      background:#fff; border:1px solid #60A085;
       z-index:10;
     }
+    .handle-nw { cursor:nwse-resize; top:-5px; left:-5px }
+    .handle-ne { cursor:nesw-resize; top:-5px; right:-5px }
+    .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px }
+    .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px }
 
-    /* elements */
-    .element { position:absolute; cursor:move; }
+    /* Elements */
+    .element { position:absolute; cursor:move; user-select:none }
     .text-element {
       min-width:50px; min-height:20px;
       padding:.2rem; background:transparent; outline:none;
+      cursor:text;
+    }
+    .shape-rect, .shape-circle, .shape-triangle {
+      box-sizing:border-box;
     }
     .shape-rect {
       width:100px; height:60px;
@@ -102,7 +107,6 @@
       border-right:40px solid transparent;
       border-bottom:70px solid rgba(96,160,133,0.3);
       position:relative;
-      transform-origin:0 0;
     }
     .shape-triangle::after {
       content:'';
@@ -119,14 +123,14 @@
   <h1>Visual E‑Card Editor</h1>
   <div id="paper"></div>
 
-  <!-- toolbar -->
+  <!-- Toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- shapes submenu -->
+  <!-- Shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -138,41 +142,41 @@
     const paper     = document.getElementById('paper');
     const toolbar   = document.getElementById('toolbar');
     const shapeMenu = document.getElementById('shapeMenu');
-    let clickX=0, clickY=0, fontMenu=null;
+    let clickX=0, clickY=0;
 
-    // show toolbar above cursor
-    paper.addEventListener('click', e=>{
+    // Show toolbar above cursor
+    paper.addEventListener('click', e => {
       e.stopPropagation();
       clickX = e.offsetX; clickY = e.offsetY;
-      toolbar.style.display = 'flex';
       const tb = toolbar.getBoundingClientRect();
       toolbar.style.left = (e.pageX - tb.width/2) + 'px';
       toolbar.style.top  = (e.pageY - tb.height - 12) + 'px';
-      shapeMenu.style.display='none';
+      toolbar.style.display = 'flex';
+      shapeMenu.style.display = 'none';
     });
-
-    // prevent toolbar/shapeMenu clicks from hiding them
-    [toolbar, shapeMenu].forEach(el=>
-      el.addEventListener('click', e=>e.stopPropagation())
+    // Prevent hiding on toolbar/shapeMenu clicks
+    [toolbar, shapeMenu].forEach(el =>
+      el.addEventListener('click', e => e.stopPropagation())
     );
-    document.addEventListener('click', ()=>{
-      toolbar.style.display='none';
-      shapeMenu.style.display='none';
+    // Hide on outside click
+    document.addEventListener('click', () => {
+      toolbar.style.display = 'none';
+      shapeMenu.style.display = 'none';
     });
 
     // Add text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
-      const div = document.createElement('div');
-      div.className='element text-element';
-      div.contentEditable=true;
-      div.style.left=clickX+'px';
-      div.style.top= clickY+'px';
-      div.textContent='Enter text';
-      paper.append(div);
-      makeDraggable(div);
-      toolbar.style.display='none';
-      div.focus();
+      const txt = document.createElement('div');
+      txt.className='element text-element';
+      txt.contentEditable = true;
+      txt.style.left = clickX + 'px';
+      txt.style.top  = clickY + 'px';
+      txt.textContent = 'Enter text';
+      paper.append(txt);
+      makeDraggable(txt);
+      toolbar.style.display = 'none';
+      txt.focus();
     });
 
     // Add image
@@ -182,97 +186,135 @@
       if(!url) return;
       const img = document.createElement('img');
       img.className='element';
-      img.src=url;
-      img.style.height='100px';
-      img.style.left=clickX+'px';
-      img.style.top= clickY+'px';
+      img.src = url;
+      img.style.left = clickX + 'px';
+      img.style.top  = clickY + 'px';
+      img.style.width = 'auto'; img.style.height = '100px';
       paper.append(img);
       makeDraggable(img);
-      makeResizable(img);
-      toolbar.style.display='none';
+      makeResizable(img, false);
+      toolbar.style.display = 'none';
     });
 
-    // Show shapes submenu
+    // Show shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left = r.right + 8 + 'px';
       shapeMenu.style.top  = r.top + 'px';
-      shapeMenu.style.display='flex';
+      shapeMenu.style.display = 'flex';
     });
 
     // Insert shape
     shapeMenu.addEventListener('click', e=>{
-      const btn = e.target.closest('[data-shape]');
-      if(!btn) return;
-      const type = btn.dataset.shape;
+      const b = e.target.closest('[data-shape]');
+      if(!b) return;
+      const t = b.dataset.shape;
       let el;
-      if(type==='rect'){
-        el=document.createElement('div'); el.className='element shape-rect';
-      } else if(type==='circle'){
-        el=document.createElement('div'); el.className='element shape-circle';
+      if(t==='rect'){
+        el = document.createElement('div');
+        el.className = 'element shape-rect';
+      } else if(t==='circle'){
+        el = document.createElement('div');
+        el.className = 'element shape-circle';
       } else {
-        el=document.createElement('div'); el.className='element shape-triangle';
-        el.dataset.baseWidth=80; el.dataset.baseHeight=70;
+        el = document.createElement('div');
+        el.className = 'element shape-triangle';
       }
-      el.style.left = clickX+'px';
-      el.style.top  = clickY+'px';
+      el.style.left = clickX + 'px';
+      el.style.top  = clickY + 'px';
       paper.append(el);
       makeDraggable(el);
-      makeResizable(el);
+      makeResizable(el, t==='triangle');
       shapeMenu.style.display='none';
       toolbar.style.display='none';
     });
 
     // Draggable
     function makeDraggable(el){
-      let dx, dy;
+      let dx,dy;
       el.addEventListener('mousedown', e=>{
+        if(e.target.classList.contains('resize-handle')) return;
         e.preventDefault();
         dx = e.clientX - el.offsetLeft;
         dy = e.clientY - el.offsetTop;
-        document.addEventListener('mousemove', onDrag);
-        document.addEventListener('mouseup', ()=>{
-          document.removeEventListener('mousemove', onDrag);
+        document.addEventListener('mousemove', onmove);
+        document.addEventListener('mouseup', ()=> {
+          document.removeEventListener('mousemove', onmove);
         }, { once:true });
       });
-      function onDrag(e){
-        el.style.left = (e.clientX - dx)+'px';
-        el.style.top  = (e.clientY - dy)+'px';
+      function onmove(e){
+        el.style.left = (e.clientX - dx) + 'px';
+        el.style.top  = (e.clientY - dy) + 'px';
       }
     }
 
-    // Resizable (handles bottom-right)
-    function makeResizable(el){
-      const handle = document.createElement('div');
-      handle.className='resize-handle';
-      el.append(handle);
-      let startX, startY, startW, startH;
-      handle.addEventListener('mousedown', e=>{
-        e.stopPropagation();
-        startX = e.clientX;
-        startY = e.clientY;
-        startW = el.offsetWidth;
-        startH = el.offsetHeight;
-        document.addEventListener('mousemove', onResize);
-        document.addEventListener('mouseup', ()=>{
-          document.removeEventListener('mousemove', onResize);
-        }, { once:true });
+    // Resizable with corner handles
+    function makeResizable(el, isTriangle){
+      const handles = isTriangle
+        ? ['nw','ne','sw','se']  // treat triangle bounding-box corners
+        : ['nw','ne','sw','se'];
+      handles.forEach(dir=>{
+        const h = document.createElement('div');
+        h.className = 'resize-handle handle-' + dir;
+        h.dataset.dir = dir;
+        el.append(h);
+        h.addEventListener('mousedown', e=>{
+          e.stopPropagation(); e.preventDefault();
+          startResize(e, el, dir, isTriangle);
+        });
       });
-      function onResize(e){
-        const nw = startW + (e.clientX - startX);
-        const nh = startH + (e.clientY - startY);
-        if(el.classList.contains('shape-triangle')){
-          const bw = +el.dataset.baseWidth;
-          const bh = +el.dataset.baseHeight;
-          const sx = nw / bw, sy = nh / bh;
+    }
+
+    function startResize(e, el, dir, isTriangle){
+      const rect = el.getBoundingClientRect();
+      const parentRect = paper.getBoundingClientRect();
+      const start = {
+        x: e.clientX,
+        y: e.clientY,
+        left: rect.left - parentRect.left,
+        top: rect.top - parentRect.top,
+        width: rect.width,
+        height: rect.height
+      };
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
+
+      function doResize(ev){
+        let dx = ev.clientX - start.x;
+        let dy = ev.clientY - start.y;
+        let newLeft = start.left;
+        let newTop  = start.top;
+        let newW = start.width;
+        let newH = start.height;
+
+        if(dir.includes('e')) newW = start.width + dx;
+        if(dir.includes('s')) newH = start.height + dy;
+        if(dir.includes('w')){
+          newW = start.width - dx;
+          newLeft = start.left + dx;
+        }
+        if(dir.includes('n')){
+          newH = start.height - dy;
+          newTop = start.top + dy;
+        }
+
+        if(isTriangle){
+          // scale triangle via transform
+          const baseW = 80, baseH = 70;
+          const sx = newW / baseW, sy = newH / baseH;
           el.style.transform = `scale(${sx},${sy})`;
+          el.style.left = newLeft + 'px';
+          el.style.top  = newTop  + 'px';
         } else {
-          el.style.width  = nw+'px';
-          el.style.height = nh+'px';
+          el.style.width  = newW + 'px';
+          el.style.height = newH + 'px';
+          el.style.left   = newLeft + 'px';
+          el.style.top    = newTop  + 'px';
         }
       }
     }
+
   })();
   </script>
 </body>
