@@ -4,14 +4,10 @@
   <meta charset="UTF-8">
   <title>Seafoam E‑Card Visual Editor</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <!-- import all your fonts at once -->
-  <link href="https://fonts.googleapis.com/css2?
-    family=Poppins:wght@400;700&
-    family=Roboto:wght@400;700&
-    family=Open+Sans:wght@400;700&
-    family=Lora:wght@400;700&
-    family=Montserrat:wght@400;700&display=swap"
-    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
   <style>
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
@@ -25,28 +21,34 @@
     #assets { width:200px; background:#fafafa; border:2px solid #ddd; padding:.5rem; overflow:auto; }
     #assetList img { width:100%; margin-bottom:.5rem; cursor:grab; border:1px solid #ccc; border-radius:4px; }
 
-    /* insert toolbar */
-    #toolbar, #shapeMenu, #textToolbar { position:absolute; display:none; z-index:1000; }
+    /* toolbars */
+    #toolbar, #shapeMenu, #textToolbar, #fontWheel { position:absolute; display:none; }
     #toolbar {
       background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:1000;
     }
-    #toolbar button, #shapeMenu button {
-      display:flex; align-items:center; justify-content:center;
-      border:none; cursor:pointer; background:#A8E6CF;
+    #toolbar button {
+      width:36px; height:36px; border:none; border-radius:50%;
+      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
     }
-    #toolbar button { width:36px; height:36px; border-radius:50%; }
-    #shapeMenu button { width:32px; height:32px; border-radius:4px; }
-    #toolbar button:hover, #shapeMenu button:hover { background:#76C69C; }
-    #toolbar button img, #shapeMenu button img { width:20px; height:20px; }
+    #toolbar button:hover { background:#76C69C; }
+    #toolbar button img { width:20px; height:20px; }
 
     #shapeMenu {
-      background:rgba(255,255,255,0.95); border:1px solid #ccc;
-      border-radius:8px; padding:.25rem; display:flex; gap:.5rem;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      z-index:1001;
     }
+    #shapeMenu button {
+      width:32px; height:32px; border:none; border-radius:4px;
+      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    #shapeMenu button:hover { background:#76C69C; }
+    #shapeMenu button img { width:20px; height:20px; }
 
-    /* text toolbar */
     #textToolbar {
       background:#fff; border:1px solid #ccc; border-radius:4px;
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
@@ -58,9 +60,10 @@
 
     /* font wheel */
     #fontWheel {
-      position:absolute; width:0; height:0; pointer-events:none;
-      top:0; left:0; z-index:3000;
+      width:0; height:0; pointer-events:none; top:0; left:0; z-index:3000;
     }
+    #fontWheel.visible { display:block; }
+    #fontWheel.open .fontOption { opacity:1; }
     #fontWheel .fontOption {
       position:absolute; top:0; left:0;
       transform:translate(-50%,-50%);
@@ -70,26 +73,26 @@
       white-space:nowrap;
       transition:transform .4s ease, opacity .4s ease;
       cursor:pointer;
+      font-family:inherit;
     }
-    /* fan‑out positions */
     #fontWheel.open .fontOption:nth-child(1) {
-      transform:translate(-50%,-50%) translate(  0px,-60px); opacity:1;
+      transform:translate(-50%,-50%) translate(0,-60px);
     }
     #fontWheel.open .fontOption:nth-child(2) {
-      transform:translate(-50%,-50%) translate( 52px,-36px); opacity:1;
+      transform:translate(-50%,-50%) translate(52px,-36px);
     }
     #fontWheel.open .fontOption:nth-child(3) {
-      transform:translate(-50%,-50%) translate( 52px, 36px); opacity:1;
+      transform:translate(-50%,-50%) translate(52px,36px);
     }
     #fontWheel.open .fontOption:nth-child(4) {
-      transform:translate(-50%,-50%) translate(  0px, 60px); opacity:1;
+      transform:translate(-50%,-50%) translate(0,60px);
     }
     #fontWheel.open .fontOption:nth-child(5) {
-      transform:translate(-50%,-50%) translate(-52px,-36px); opacity:1;
+      transform:translate(-50%,-50%) translate(-52px,-36px);
     }
 
     /* handles */
-    .resize-handle,.vertex-handle,.rotate-handle { display:none; }
+    .resize-handle, .vertex-handle, .rotate-handle { display:none; }
     .resize-handle { position:absolute; width:10px; height:10px; background:#fff; border:1px solid #60A085; }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px; }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
@@ -117,11 +120,17 @@
       min-width:50px; min-height:20px; padding:.2rem;
       background:transparent; outline:none; cursor:text;
     }
-    .shape-rect { width:100px; height:60px; background:rgba(96,160,133,0.3); border:2px solid #60A085; }
-    .shape-circle { width:60px; height:60px; background:rgba(96,160,133,0.3); border:2px solid #60A085; border-radius:50%; }
+    .shape-rect {
+      width:100px; height:60px; background:rgba(96,160,133,0.3);
+      border:2px solid #60A085;
+    }
+    .shape-circle {
+      width:60px; height:60px; background:rgba(96,160,133,0.3);
+      border:2px solid #60A085; border-radius:50%;
+    }
     .image-wrapper {
-      width:100px; height:100px; background-size:contain;
-      background-repeat:no-repeat; background-position:center;
+      width:100px; height:100px;
+      background-size:contain; background-repeat:no-repeat; background-position:center;
     }
     .shape-wrapper { background-color:transparent; }
   </style>
@@ -142,7 +151,7 @@
 
   <!-- shape menu -->
   <div id="shapeMenu">
-    <button data-shape="rect"   title="Rectangle">◻</button>
+    <button data-shape="rect" title="Rectangle">◻</button>
     <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
@@ -152,13 +161,10 @@
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
     <button id="tbUnderline"><u>U</u></button>
-
-    <button id="tbAlignLeft"   title="Align left"><img src="align-left.svg"   alt="Left"></button>
-    <button id="tbAlignCenter" title="Align center"><img src="align-center.svg" alt="Center"></button>
-    <button id="tbAlignRight"  title="Align right"><img src="align-right.svg"  alt="Right"></button>
-
+    <button id="tbAlignLeft" title="Left"><img src="align-left.svg" alt=""></button>
+    <button id="tbAlignCenter" title="Center"><img src="align-center.svg" alt=""></button>
+    <button id="tbAlignRight" title="Right"><img src="align-right.svg" alt=""></button>
     <button id="tbFont" title="Choose font">Aa</button>
-
     <input type="number" id="tbFontSize" min="8" max="72" title="Font Size">px
     <input type="color"  id="tbColor"      title="Text Color">
   </div>
@@ -167,7 +173,7 @@
   <div id="fontWheel">
     <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
     <button class="fontOption" data-font="Roboto"    style="font-family:'Roboto',sans-serif">Roboto</button>
-    <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
+    <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
     <button class="fontOption" data-font="Lora"      style="font-family:'Lora',serif">Lora</button>
     <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
   </div>
@@ -214,6 +220,7 @@
       toolbar.style.display = 'none';
       shapeMenu.style.display = 'none';
       fontWheel.classList.remove('open');
+      fontWheel.style.display = 'none';
       fontWheel.style.pointerEvents = 'none';
 
       if(el.classList.contains('text-element')){
@@ -242,10 +249,11 @@
       toolbar.style.display='none'; 
       shapeMenu.style.display='none'; 
       fontWheel.classList.remove('open');
+      fontWheel.style.display = 'none';
       fontWheel.style.pointerEvents = 'none';
     });
 
-    // insert actions
+    // Insert text
     document.getElementById('btnText').onclick = e=>{
       e.stopPropagation();
       const txt=document.createElement('div');
@@ -254,6 +262,7 @@
       txt.textContent='Enter text';
       paper.append(txt); initElement(txt,false); select(txt); txt.focus();
     };
+    // Insert image
     document.getElementById('btnImage').onclick = e=>{
       e.stopPropagation();
       const url=prompt('Enter image URL:'); if(!url) return;
@@ -264,6 +273,7 @@
       wrap.style.backgroundImage=`url(${url})`;
       paper.append(wrap); initElement(wrap,false); select(wrap);
     };
+    // Insert shape
     document.getElementById('btnShape').onclick = e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
@@ -273,12 +283,12 @@
     };
     shapeMenu.addEventListener('click', e=>{
       const btn=e.target.closest('[data-shape]'); if(!btn) return;
-      const t=btn. dataset.shape;
+      const t=btn.dataset.shape;
       if(t==='triangle') insertTriangle(); else insertBasic(t);
       shapeMenu.style.display='none';
     });
 
-    // text toolbar
+    // Text toolbar actions
     document.getElementById('tbBold').onclick      = ()=> selectedEl && (selectedEl.style.fontWeight  = selectedEl.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    = ()=> selectedEl && (selectedEl.style.fontStyle   = selectedEl.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick = ()=> selectedEl && (selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline');
@@ -288,12 +298,13 @@
     document.getElementById('tbFontSize').oninput    = e=> selectedEl && (selectedEl.style.fontSize = e.target.value+'px');
     document.getElementById('tbColor').oninput       = e=> selectedEl && (selectedEl.style.color    = e.target.value);
 
-    // font wheel
+    // Font wheel toggle
     document.getElementById('tbFont').addEventListener('click', e=>{
       e.stopPropagation();
-      const br = e.currentTarget.getBoundingClientRect();
+      const br=e.currentTarget.getBoundingClientRect();
       fontWheel.style.left = `${br.left+br.width/2}px`;
       fontWheel.style.top  = `${br.top+br.height/2}px`;
+      fontWheel.style.display = 'block';
       fontWheel.style.pointerEvents = 'auto';
       fontWheel.classList.toggle('open');
     });
@@ -305,23 +316,156 @@
           selectedEl.style.fontFamily = `'${fam}',sans-serif`;
         }
         fontWheel.classList.remove('open');
+        fontWheel.style.display = 'none';
         fontWheel.style.pointerEvents = 'none';
       });
     });
 
-    // helpers...
-    function addAsset(src){ /*…*/ }
-    function insertBasic(type){ /*…*/ }
-    function insertTriangle(){ /*…*/ }
-    function initElement(el,isTri,poly){ /*…*/ }
-    function makeDraggable(el){ /*…*/ }
-    function enableDrop(el){ /*…*/ }
-    function addResizeHandles(el){ /*…*/ }
-    function startResize(dir,el){ /*…*/ }
-    function addRotateHandle(el){ /*…*/ }
-    function makeTriangleResizable(wrap,poly){ /*…*/ }
-
-    // ... (rest of your helper implementations remain exactly as before) …
+    // Helpers
+    function addAsset(src){
+      const thumb = document.createElement('img');
+      thumb.src=src; thumb.draggable=true;
+      thumb.addEventListener('dragstart',ev=>ev.dataTransfer.setData('text/plain',src));
+      assetList.append(thumb);
+    }
+    function insertBasic(type){
+      const el=document.createElement('div');
+      el.className='element '+(type==='rect'?'shape-rect':'shape-circle');
+      el.style.left=`${clickX}px`; el.style.top=`${clickY}px`;
+      paper.append(el); initElement(el,false); select(el);
+    }
+    function insertTriangle(){
+      const wrap=document.createElement('div');
+      wrap.className='shape-wrapper';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.width='80px'; wrap.style.height='70px';
+      const svgNS="http://www.w3.org/2000/svg",
+            svg=document.createElementNS(svgNS,'svg'),
+            poly=document.createElementNS(svgNS,'polygon');
+      svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+      poly.setAttribute('points','0,70 40,0 80,70');
+      poly.setAttribute('fill','rgba(96,160,133,0.3)');
+      poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
+      svg.append(poly); wrap.append(svg);
+      paper.append(wrap); initElement(wrap,true,poly); select(wrap);
+    }
+    function initElement(el,isTri,poly){
+      makeDraggable(el); enableDrop(el); addResizeHandles(el); addRotateHandle(el);
+      if(isTri) makeTriangleResizable(el,poly);
+      el.addEventListener('mousedown',e=>{e.stopPropagation(); select(el);});
+    }
+    function makeDraggable(el){
+      let dx,dy;
+      el.addEventListener('mousedown',e=>{
+        if(e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
+        e.preventDefault();
+        dx=e.clientX-el.offsetLeft; dy=e.clientY-el.offsetTop;
+        document.addEventListener('mousemove',move);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',move),{once:true});
+      });
+      function move(ev){
+        el.style.left=`${ev.clientX-dx}px`; el.style.top=`${ev.clientY-dy}px`;
+        if(selectedEl===el && el.classList.contains('text-element')) updateTextToolbarPosition(el);
+      }
+    }
+    function enableDrop(el){
+      el.addEventListener('dragover',e=>e.preventDefault());
+      el.addEventListener('drop',e=>{
+        e.preventDefault();
+        const src=e.dataTransfer.getData('text/plain'); if(!src)return;
+        el.style.backgroundImage=`url(${src})`;
+        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        if(el.classList.contains('shape-wrapper')){
+          const poly=el.querySelector('polygon');
+          poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
+          const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
+          const W=el.clientWidth,H=el.clientHeight;
+          const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
+          el.style.clipPath=`polygon(${pct})`;
+        }
+        el.style.zIndex='999';
+      });
+    }
+    function addResizeHandles(el){
+      ['nw','ne','sw','se'].forEach(dir=>{
+        const h=document.createElement('div');
+        h.className='resize-handle handle-'+dir; el.append(h);
+        h.addEventListener('mousedown', startResize(dir,el));
+      });
+    }
+    function startResize(dir,el){
+      return function(e){
+        e.stopPropagation(); e.preventDefault();
+        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
+        const start={ x:e.clientX, y:e.clientY,
+                      left:r.left-pr.left, top:r.top-pr.top,
+                      w:r.width, h:r.height, aspect:r.width/r.height };
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',doResize),{once:true});
+        function doResize(ev){
+          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
+          if(dir.includes('e')) newW=start.w+dx;
+          if(dir.includes('s')) newH=start.h+dy;
+          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
+          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
+          if(!el.classList.contains('image-wrapper') && ev.shiftKey){
+            newH=newW/start.aspect;
+            if(dir.includes('n')) newT=start.top+(start.h-newH);
+          }
+          el.style.width=`${newW}px`; el.style.height=`${newH}px`;
+          el.style.left=`${newL}px`; el.style.top=``${newT}px`;
+          if(selectedEl===el && el.classList.contains('text-element')) updateTextToolbarPosition(el);
+        }
+      };
+    }
+    function addRotateHandle(el){
+      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
+      h.addEventListener('mousedown',e=>{
+        e.stopPropagation(); e.preventDefault();
+        const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+        const startAng=Math.atan2(e.clientY-cy,e.clientX-cx);
+        let currRot=parseFloat(el.dataset.rot||0);
+        const onmove=ev=>{
+          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx), delta=ang-startAng,
+                deg=currRot+delta*180/Math.PI;
+          el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
+          if(selectedEl===el && el.classList.contains('text-element')) updateTextToolbarPosition(el);
+        };
+        document.addEventListener('mousemove',onmove);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
+      });
+    }
+    function makeTriangleResizable(wrap,poly){
+      let pts=[[0,70],[40,0],[80,70]];
+      const handles=pts.map((_,i)=>{
+        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
+      });
+      function update(){
+        handles.forEach((h,i)=>{ h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`; });
+        poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+      }
+      handles.forEach((h,i)=>{
+        h.addEventListener('mousedown',e=>{
+          e.stopPropagation(); e.preventDefault(); select(wrap);
+          const start={ x:e.clientX,y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
+          document.addEventListener('mousemove',ondrag);
+          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
+          function ondrag(ev){
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
+            const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+            const minX=Math.min(...xs), minY=Math.min(...ys);
+            const maxX=Math.max(...xs), maxY=Math.max(...ys);
+            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
+            wrap.style.left=`${start.wrapL+minX}px`; wrap.style.top=`${start.wrapT+minY}px`;
+            wrap.style.width=`${maxX-minX}px`; wrap.style.height=`${maxY-minY}px`;
+            update();
+          }
+        });
+      });
+      update();
+    }
   })();
   </script>
 </body>
