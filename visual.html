@@ -20,11 +20,23 @@
       min-height:400px; resize:vertical; overflow:auto;
     }
     #assets {
-      width:200px; background:#fafafa; border:2px solid #ddd;
-      padding:.5rem; overflow:auto;
+      width:240px; background:#fafafa; border:2px solid #ddd;
+      display:flex; flex-direction:column;
     }
-    #assets input { width:100%; margin-bottom:.5rem; padding:.25rem; }
-    #assets button {
+    #assetTabs { display:flex; }
+    #assetTabs button {
+      flex:1; padding:.5rem; border:none; cursor:pointer;
+      background:#ddd; font-weight:600;
+    }
+    #assetTabs button.active {
+      background:#fff; border-bottom:2px solid #fff;
+    }
+    .assetPanel {
+      flex:1; overflow:auto; padding:.5rem; display:none;
+    }
+    .assetPanel.active { display:block }
+    #assetsImages input { width:100%; margin-bottom:.5rem; padding:.25rem; }
+    #assetsImages button {
       width:100%; margin-bottom:1rem; padding:.5rem;
       background:#60A085; border:none; color:#fff;
       cursor:pointer; border-radius:4px;
@@ -32,6 +44,10 @@
     #assetList img {
       width:100%; margin-bottom:.5rem; cursor:grab;
       border:1px solid #ccc; border-radius:4px;
+    }
+    #assetEmojis .emojiItem {
+      font-size:1.5rem; display:inline-block;
+      padding:.25rem; margin:.25rem; cursor:grab;
     }
 
     /* toolbars */
@@ -71,10 +87,8 @@
     #shapeToolbar input[type=number] { width:3rem }
     #shapeToolbar input[type=range]  { width:5rem }
 
-    /* delete icons */
     .tb-delete {
-      font-size:1.2rem; color:#c0392b;
-      padding:0 6px; cursor:pointer;
+      font-size:1.2rem; color:#c0392b; padding:0 6px; cursor:pointer;
     }
     .tb-delete:hover { color:#e74c3c; }
 
@@ -119,8 +133,7 @@
     .text-wrapper { position:relative; }
     .text-content {
       position:absolute; top:0; left:0; right:0; bottom:0;
-      padding-top:20px; /* space under rotate knob */
-      overflow:auto; outline:none; cursor:text;
+      padding-top:20px; overflow:auto; outline:none; cursor:text;
     }
     .shape-rect {
       width:100px; height:60px; background:#60A085;
@@ -143,10 +156,27 @@
   <div id="workspace">
     <div id="paper"></div>
     <div id="assets">
-      <h2>Assets</h2>
-      <input type="text" id="assetUrlInput" placeholder="Image URL">
-      <button id="assetAddBtn">Add Image</button>
-      <div id="assetList"></div>
+      <div id="assetTabs">
+        <button id="tabImages" class="active">Images</button>
+        <button id="tabEmojis">Emojis</button>
+      </div>
+      <div id="assetsImages" class="assetPanel active">
+        <input type="text" id="assetUrlInput" placeholder="Image URL">
+        <button id="assetAddBtn">Add Image</button>
+        <div id="assetList"></div>
+      </div>
+      <div id="assetEmojis" class="assetPanel">
+        <div class="emojiItem">🎉</div>
+        <div class="emojiItem">🎂</div>
+        <div class="emojiItem">❤️</div>
+        <div class="emojiItem">😊</div>
+        <div class="emojiItem">🎁</div>
+        <div class="emojiItem">🌟</div>
+        <div class="emojiItem">🥳</div>
+        <div class="emojiItem">💌</div>
+        <div class="emojiItem">🎈</div>
+        <div class="emojiItem">✨</div>
+      </div>
     </div>
   </div>
 
@@ -155,14 +185,12 @@
     <button id="btnText" title="Add Text">T</button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
-
   <!-- shape menu -->
   <div id="shapeMenu">
     <button data-shape="rect" title="Rectangle">◻</button>
     <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
-
   <!-- text toolbar -->
   <div id="textToolbar">
     <button id="tbBold"><b>B</b></button>
@@ -174,7 +202,6 @@
     <button id="tbFont">Aa</button>
     <input type="number" id="tbFontSize" min="8" max="72">px
     <input type="color" id="tbColor">
-    <!-- delete text element -->
     <button id="tbDeleteText" class="tb-delete" title="Delete Text">×</button>
     <div id="fontMenu">
       <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
@@ -184,14 +211,12 @@
       <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
-
   <!-- shape toolbar -->
   <div id="shapeToolbar">
     <input type="color" id="shapeFill"    title="Fill Color">
     <input type="color" id="shapeStroke"  title="Stroke Color">
     <input type="number" id="shapeStrokeWidth" min="0" max="20" title="Stroke Width">px
     <input type="range"  id="shapeOpacity" min="0" max="1" step="0.05" title="Opacity">
-    <!-- delete shape -->
     <button id="tbDeleteShape" class="tb-delete" title="Delete Shape">×</button>
   </div>
 
@@ -205,6 +230,11 @@
           assetUrlIn    = document.getElementById('assetUrlInput'),
           assetAddBtn   = document.getElementById('assetAddBtn'),
           assetList     = document.getElementById('assetList'),
+          tabImages     = document.getElementById('tabImages'),
+          tabEmojis     = document.getElementById('tabEmojis'),
+          panelImages   = document.getElementById('assetsImages'),
+          panelEmojis   = document.getElementById('assetEmojis'),
+          emojiItems    = document.querySelectorAll('.emojiItem'),
           tbFont        = document.getElementById('tbFont'),
           fontMenu      = document.getElementById('fontMenu'),
           fontOpts      = fontMenu.querySelectorAll('.fontOption'),
@@ -215,70 +245,77 @@
           tbDeleteText  = document.getElementById('tbDeleteText'),
           tbDeleteShape = document.getElementById('tbDeleteShape');
 
-    let clickX=0, clickY=0,
-        selectedWrapper=null,
-        selectedContent=null,
-        selectedPoly=null;
+    let clickX=0, clickY=0, selectedWrapper=null, selectedContent=null, selectedPoly=null;
 
-    // rgb→hex
+    // Tab switching
+    tabImages.addEventListener('click', ()=>{
+      tabImages.classList.add('active');
+      tabEmojis.classList.remove('active');
+      panelImages.classList.add('active');
+      panelEmojis.classList.remove('active');
+    });
+    tabEmojis.addEventListener('click', ()=>{
+      tabEmojis.classList.add('active');
+      tabImages.classList.remove('active');
+      panelEmojis.classList.add('active');
+      panelImages.classList.remove('active');
+    });
+
+    // Emoji drag
+    emojiItems.forEach(em=>{
+      em.draggable = true;
+      em.addEventListener('dragstart', ev=>{
+        ev.dataTransfer.setData('text/plain', em.textContent);
+      });
+    });
+
+    // Helper functions
     function rgbToHex(rgb){
-      const [r,g,b]=rgb.match(/\d+/g).map(Number);
-      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+      const [r,g,b] = rgb.match(/\d+/g).map(Number);
+      return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
-
     function updateTextToolbarPosition(w){
-      const r = w.getBoundingClientRect(), tb = textToolbar.getBoundingClientRect();
-      const left = r.left+scrollX;
-      const topC = scrollY + r.top - tb.height -8;
-      const top  = topC<scrollY+8 ? scrollY + r.bottom + 8 : topC;
-      textToolbar.style.left = left+'px';
-      textToolbar.style.top  = top +'px';
+      const r=w.getBoundingClientRect(), tb=textToolbar.getBoundingClientRect();
+      const left=r.left+scrollX;
+      const topC=scrollY + r.top - tb.height -8;
+      const top=topC<scrollY+8 ? scrollY + r.bottom +8 : topC;
+      textToolbar.style.left=left+'px';
+      textToolbar.style.top=top+'px';
     }
-
     function updateShapeToolbarPosition(w){
-      const r = w.getBoundingClientRect(), st = shapeToolbar.getBoundingClientRect();
-      const left = r.left+scrollX;
-      const topC = scrollY + r.top - st.height -8;
-      const top  = topC<scrollY+8 ? scrollY + r.bottom + 8 : topC;
-      shapeToolbar.style.left = left+'px';
-      shapeToolbar.style.top  = top +'px';
+      const r=w.getBoundingClientRect(), st=shapeToolbar.getBoundingClientRect();
+      const left=r.left+scrollX;
+      const topC=scrollY + r.top - st.height -8;
+      const top=topC<scrollY+8 ? scrollY + r.bottom +8 : topC;
+      shapeToolbar.style.left=left+'px';
+      shapeToolbar.style.top=top+'px';
     }
-
     function deselect(){
       if(!selectedWrapper) return;
       selectedWrapper.classList.remove('selected');
-      selectedWrapper=null;
-      selectedContent=null;
-      selectedPoly=null;
-      textToolbar.style.display  ='none';
-      shapeToolbar.style.display ='none';
+      selectedWrapper=null; selectedContent=null; selectedPoly=null;
+      textToolbar.style.display='none';
+      shapeToolbar.style.display='none';
     }
-
     function select(wrapper, content=null, poly=null){
       if(selectedWrapper===wrapper) return;
       deselect();
-      selectedWrapper = wrapper;
-      selectedContent = content;
-      selectedPoly     = poly;
+      selectedWrapper=wrapper; selectedContent=content; selectedPoly=poly;
       wrapper.classList.add('selected');
-
-      toolbar.style.display   ='none';
-      shapeMenu.style.display ='none';
-      fontMenu.style.display  ='none';
-
+      toolbar.style.display='none';
+      shapeMenu.style.display='none';
+      fontMenu.style.display='none';
       if(content){
-        textToolbar.style.display = 'flex';
-        updateTextToolbarPosition(wrapper);
-        document.getElementById('tbFontSize').value = parseInt(getComputedStyle(content).fontSize);
-        document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(content).color);
+        textToolbar.style.display='flex'; updateTextToolbarPosition(wrapper);
+        document.getElementById('tbFontSize').value=parseInt(getComputedStyle(content).fontSize);
+        document.getElementById('tbColor').value=rgbToHex(getComputedStyle(content).color);
       } else {
-        shapeToolbar.style.display = 'flex';
-        updateShapeToolbarPosition(wrapper);
-        const cs = getComputedStyle(wrapper);
-        shapeFill.value   = rgbToHex(cs.backgroundColor);
-        shapeStroke.value = rgbToHex(cs.borderColor);
-        shapeStW.value    = parseInt(cs.borderWidth);
-        shapeOp.value     = cs.opacity;
+        shapeToolbar.style.display='flex'; updateShapeToolbarPosition(wrapper);
+        const cs=getComputedStyle(wrapper);
+        shapeFill.value=rgbToHex(cs.backgroundColor);
+        shapeStroke.value=rgbToHex(cs.borderColor);
+        shapeStW.value=parseInt(cs.borderWidth);
+        shapeOp.value=cs.opacity;
       }
     }
 
@@ -288,12 +325,11 @@
       addResizeHandles(wrapper);
       addRotateHandle(wrapper);
       if(isTri) makeTriangleResizable(wrapper,poly);
-
       wrapper.addEventListener('mousedown', e=>{
         e.stopPropagation();
         select(wrapper, wrapper.querySelector('.text-content'), poly);
       });
-      const content = wrapper.querySelector('.text-content');
+      const content=wrapper.querySelector('.text-content');
       if(content){
         content.addEventListener('dblclick', e=>{
           e.stopPropagation();
@@ -306,25 +342,23 @@
     function addAsset(src){
       const thumb=document.createElement('img');
       thumb.src=src; thumb.draggable=true;
-      thumb.addEventListener('dragstart', ev=> ev.dataTransfer.setData('text/plain',src));
+      thumb.addEventListener('dragstart', ev=>ev.dataTransfer.setData('text/plain',src));
       assetList.append(thumb);
     }
     assetAddBtn.addEventListener('click', ()=>{
-      const url=assetUrlIn.value.trim();
-      if(!url) return;
-      addAsset(url);
-      assetUrlIn.value='';
+      const url=assetUrlIn.value.trim(); if(!url) return;
+      addAsset(url); assetUrlIn.value='';
     });
 
-    document.getElementById('btnText').onclick = e=>{
+    // Insert text
+    document.getElementById('btnText').onclick=e=>{
       e.stopPropagation();
       const wrap=document.createElement('div');
       wrap.className='element text-wrapper';
       wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
       wrap.style.width='150px'; wrap.style.height='100px';
       const txt=document.createElement('div');
-      txt.className='text-content';
-      txt.contentEditable=true;
+      txt.className='text-content'; txt.contentEditable=true;
       txt.innerText='Enter text';
       wrap.append(txt);
       paper.append(wrap);
@@ -333,20 +367,19 @@
       txt.focus();
     };
 
-    document.getElementById('btnShape').onclick = e=>{
+    // Insert shape
+    document.getElementById('btnShape').onclick=e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left    = r.right+8+'px';
-      shapeMenu.style.top     = r.top+'px';
-      shapeMenu.style.display ='flex';
+      shapeMenu.style.left=r.right+8+'px';
+      shapeMenu.style.top =r.top+'px';
+      shapeMenu.style.display='flex';
     };
     shapeMenu.addEventListener('click', e=>{
-      const btn=e.target.closest('[data-shape]');
-      if(!btn) return;
+      const btn=e.target.closest('[data-shape]'); if(!btn) return;
       btn.dataset.shape==='triangle'? insertTriangle(): insertBasic(btn.dataset.shape);
       shapeMenu.style.display='none';
     });
-
     function insertBasic(type){
       const wrap=document.createElement('div');
       wrap.className='element '+(type==='rect'?'shape-rect':'shape-circle');
@@ -373,23 +406,34 @@
       select(wrap,null,poly);
     }
 
-    // drag→image
+    // Drop handling
     paper.addEventListener('dragover', e=>e.preventDefault());
     paper.addEventListener('drop', e=>{
       e.preventDefault();
       if(e.target!==paper) return;
-      const url=e.dataTransfer.getData('text/plain');
-      if(!url) return;
+      const data=e.dataTransfer.getData('text/plain');
       clickX=e.offsetX; clickY=e.offsetY;
-      const wrap=document.createElement('div');
-      wrap.className='element image-wrapper';
-      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
-      wrap.style.backgroundImage=`url(${url})`;
-      paper.append(wrap);
-      initElement(wrap,false,null);
-      select(wrap);
+      if(data.startsWith('http')){
+        const wrap=document.createElement('div');
+        wrap.className='element image-wrapper';
+        wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
+        wrap.style.backgroundImage=`url(${data})`;
+        paper.append(wrap);
+        initElement(wrap,false,null);
+        select(wrap,null);
+      } else {
+        const wrap=document.createElement('div');
+        wrap.className='element emoji-wrapper';
+        wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
+        wrap.style.fontSize='40px';
+        wrap.textContent=data;
+        paper.append(wrap);
+        initElement(wrap,false,null);
+        select(wrap,null);
+      }
     });
 
+    // Make draggable
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
@@ -401,22 +445,21 @@
       });
       function move(ev){
         el.style.left=ev.clientX-dx+'px';
-        el.style.top=ev.clientY-dy+'px';
+        el.style.top =ev.clientY-dy+'px';
         if(selectedWrapper===el){
-          if(selectedContent) updateTextToolbarPosition(el);
-          else updateShapeToolbarPosition(el);
+          selectedContent ? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
         }
       }
     }
 
+    // Enable drop
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
-        const url=e.dataTransfer.getData('text/plain');
-        if(!url) return;
+        const url=e.dataTransfer.getData('text/plain'); if(!url) return;
         el.style.backgroundImage=`url(${url})`;
-        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.style.zIndex='999';
         if(el.classList.contains('shape-wrapper')){
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
@@ -425,10 +468,10 @@
           const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
           el.style.clipPath=`polygon(${pct})`;
         }
-        el.style.zIndex='999';
       });
     }
 
+    // Resize handles
     function addResizeHandles(el){
       ['nw','ne','sw','se'].forEach(dir=>{
         const h=document.createElement('div');
@@ -436,7 +479,6 @@
         h.addEventListener('mousedown', startResize(dir,el));
       });
     }
-
     function startResize(dir,el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
@@ -453,23 +495,20 @@
           if(dir.includes('s')) newH=start.h+dy;
           if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
           if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          // images always preserve ratio; shapes with shift
           if(el.classList.contains('image-wrapper')||ev.shiftKey){
             newH=newW/start.aspect;
             if(dir.includes('n')) newT=start.top+(start.h-newH);
           }
-          el.style.width=newW+'px';
-          el.style.height=newH+'px';
-          el.style.left=newL+'px';
-          el.style.top=newT+'px';
+          el.style.width=newW+'px'; el.style.height=newH+'px';
+          el.style.left=newL+'px'; el.style.top=newT+'px';
           if(selectedWrapper===el){
-            if(selectedContent) updateTextToolbarPosition(el);
-            else updateShapeToolbarPosition(el);
+            selectedContent ? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
           }
         }
       };
     }
 
+    // Rotate handle
     function addRotateHandle(el){
       const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
@@ -484,8 +523,7 @@
                 deg=currRot+delta*180/Math.PI;
           el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
           if(selectedWrapper===el){
-            if(selectedContent) updateTextToolbarPosition(el);
-            else updateShapeToolbarPosition(el);
+            selectedContent ? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
           }
         };
         document.addEventListener('mousemove',onmove);
@@ -493,6 +531,7 @@
       });
     }
 
+    // Triangle handles
     function makeTriangleResizable(wrap,poly){
       let pts=[[0,70],[40,0],[80,70]];
       const handles=pts.map((_,i)=>{
@@ -517,7 +556,7 @@
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
             wrap.style.left=start.wrapL+minX+'px';
             wrap.style.top =start.wrapT+minY+'px';
-            wrap.style.width =maxX-minX+'px';
+            wrap.style.width=maxX-minX+'px';
             wrap.style.height=maxY-minY+'px';
             update();
           }
@@ -526,7 +565,7 @@
       update();
     }
 
-    // show insert toolbar
+    // Show insert toolbar
     paper.addEventListener('mousedown', e=>{
       if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper)
         return;
@@ -536,33 +575,33 @@
       toolbar.style.left=(e.pageX-tb.width/2)+'px';
       toolbar.style.top =(e.pageY-tb.height-12)+'px';
       toolbar.style.display='flex';
-      shapeMenu.style.display    ='none';
-      textToolbar.style.display  ='none';
-      shapeToolbar.style.display ='none';
-      fontMenu.style.display     ='none';
+      shapeMenu.style.display='none';
+      textToolbar.style.display='none';
+      shapeToolbar.style.display='none';
+      fontMenu.style.display='none';
       e.stopPropagation();
     });
 
-    // hide toolbars on outside click
+    // Hide toolbars on outside click
     ['mousedown','touchstart'].forEach(evt=>{
       document.addEventListener(evt,e=>{
         if(e.target===paper) return;
         if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')) return;
-        toolbar.style.display    ='none';
-        shapeMenu.style.display  ='none';
+        toolbar.style.display='none';
+        shapeMenu.style.display='none';
         textToolbar.style.display='none';
         shapeToolbar.style.display='none';
-        fontMenu.style.display   ='none';
+        fontMenu.style.display='none';
       });
     });
 
-    // prevent hiding when interacting in toolbars
+    // Prevent hiding when interacting
     [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
       el.addEventListener('mousedown',e=>e.stopPropagation());
       el.addEventListener('touchstart',e=>e.stopPropagation());
     });
 
-    // TEXT TOOLBAR ACTIONS
+    // Text toolbar actions
     document.getElementById('tbBold').onclick      =()=> selectedContent&&(selectedContent.style.fontWeight  = selectedContent.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    =()=> selectedContent&&(selectedContent.style.fontStyle   = selectedContent.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick =()=> selectedContent&&(selectedContent.style.textDecoration = selectedContent.style.textDecoration==='underline'?'':'underline');
@@ -572,27 +611,22 @@
     document.getElementById('tbFontSize').addEventListener('input',e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
     document.getElementById('tbColor').addEventListener('input',e=> selectedContent&&(selectedContent.style.color=e.target.value));
 
-    // DELETE TEXT BUTTON
+    // Delete text
     tbDeleteText.addEventListener('click', ()=>{
-      if(selectedWrapper){
-        selectedWrapper.remove();
-        deselect();
-      }
+      if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
 
-    // FONT MENU
+    // Font menu
     tbFont.addEventListener('click', e=>{
-      e.stopPropagation();
-      fontMenu.style.display=fontMenu.style.display==='block'?'none':'block';
+      e.stopPropagation(); fontMenu.style.display=fontMenu.style.display==='block'?'none':'block';
     });
-    fontOpts.forEach(btn=>btn.addEventListener('click', e=>{
+    fontOpts.forEach(btn=>btn.addEventListener('click',e=>{
       e.stopPropagation();
-      const f=btn.dataset.font;
-      if(selectedContent) selectedContent.style.fontFamily=`'${f}',sans-serif`;
+      if(selectedContent) selectedContent.style.fontFamily=`'${btn.dataset.font}',sans-serif`;
       fontMenu.style.display='none';
     }));
 
-    // SHAPE TOOLBAR ACTIONS
+    // Shape toolbar actions
     shapeFill.addEventListener('input',e=>{
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('fill',e.target.value);
@@ -616,19 +650,15 @@
       if(selectedWrapper) selectedWrapper.style.opacity=e.target.value;
     });
 
-    // DELETE SHAPE BUTTON
+    // Delete shape
     tbDeleteShape.addEventListener('click', ()=>{
-      if(selectedWrapper){
-        selectedWrapper.remove();
-        deselect();
-      }
+      if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
 
-    // DELETE KEY SUPPORT
+    // Delete key
     document.addEventListener('keydown', e=>{
       if(e.key==='Delete' && selectedWrapper){
-        selectedWrapper.remove();
-        deselect();
+        selectedWrapper.remove(); deselect();
       }
     });
 
