@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seafoam E‑Card Visual Editor</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: #f0f0f0;
+      font-family: 'Poppins', sans-serif;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    /* The "paper" area, resizable vertically */
+    #paper {
+      position: relative;
+      margin: auto;
+      width: 60vw;
+      min-height: 300px;
+      background: #fff8e7;
+      border: 2px solid #82C9A1;
+      resize: vertical;
+      overflow: auto;
+    }
+    /* Toolbar that pops up */
+    #toolbar {
+      position: absolute;
+      display: none;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 0.25rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 1000;
+    }
+    #toolbar button {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #A8E6CF;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #toolbar button:hover {
+      background: #76C69C;
+    }
+    #toolbar img, #toolbar .icon-text {
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+    }
+    #toolbar .icon-text {
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+    }
+    /* Shapes sub-menu */
+    #shapeMenu {
+      position: absolute;
+      display: none;
+      flex-direction: row;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 0.25rem;
+      z-index: 1001;
+    }
+    #shapeMenu button {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #A8E6CF;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #shapeMenu button:hover {
+      background: #76C69C;
+    }
+    /* Element styles */
+    .element {
+      position: absolute;
+      cursor: move;
+    }
+    .text-element {
+      min-width: 50px;
+      min-height: 20px;
+      padding: 0.2rem;
+      background: transparent;
+      outline: none;
+    }
+    /* Shape styles */
+    .shape-rect {
+      width: 100px;
+      height: 60px;
+      background: rgba(96,160,133,0.3);
+      border: 2px solid #60A085;
+    }
+    .shape-circle {
+      width: 60px;
+      height: 60px;
+      background: rgba(96,160,133,0.3);
+      border: 2px solid #60A085;
+      border-radius: 50%;
+    }
+    .shape-triangle {
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 70px solid rgba(96,160,133,0.3);
+      position: relative;
+    }
+    .shape-triangle::after {
+      content: '';
+      position: absolute;
+      top: -70px; left: -40px;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 70px solid transparent;
+      border-bottom-color: #60A085;
+      border-bottom-width: 2px;
+      border-left-width: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Visual E‑Card Editor</h1>
+
+  <div id="paper"></div>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button id="btnText" title="Add Text"><span class="icon-text">T</span></button>
+    <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
+    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
+  </div>
+
+  <!-- Shapes submenu -->
+  <div id="shapeMenu">
+    <button data-shape="rect" title="Rectangle">◻</button>
+    <button data-shape="circle" title="Circle">◯</button>
+    <button data-shape="triangle" title="△</button>
+  </div>
+
+  <script>
+  (function(){
+    const paper    = document.getElementById('paper');
+    const toolbar  = document.getElementById('toolbar');
+    const shapeMenu = document.getElementById('shapeMenu');
+    let clickX = 0, clickY = 0;
+
+    // Show toolbar at click
+    paper.addEventListener('click', e => {
+      clickX = e.offsetX;
+      clickY = e.offsetY;
+      toolbar.style.left = e.pageX + 'px';
+      toolbar.style.top  = e.pageY + 'px';
+      toolbar.style.display = 'flex';
+      shapeMenu.style.display = 'none';
+    });
+
+    // Hide toolbar if clicking outside
+    document.addEventListener('click', e => {
+      if (!paper.contains(e.target) 
+          && !toolbar.contains(e.target)
+          && !shapeMenu.contains(e.target)) {
+        toolbar.style.display = 'none';
+        shapeMenu.style.display = 'none';
+      }
+    });
+
+    // Add text element
+    document.getElementById('btnText').addEventListener('click', () => {
+      const div = document.createElement('div');
+      div.className = 'element text-element';
+      div.contentEditable = true;
+      div.style.left = clickX + 'px';
+      div.style.top  = clickY + 'px';
+      div.textContent = 'Enter text';
+      paper.append(div);
+      toolbar.style.display = 'none';
+      div.focus();
+      makeDraggable(div);
+    });
+
+    // Add image element
+    document.getElementById('btnImage').addEventListener('click', () => {
+      const url = prompt('Enter image URL:');
+      if (!url) return;
+      const img = document.createElement('img');
+      img.className = 'element';
+      img.src = url;
+      img.style.left = clickX + 'px';
+      img.style.top  = clickY + 'px';
+      img.style.height = '100px';
+      paper.append(img);
+      toolbar.style.display = 'none';
+      makeDraggable(img);
+    });
+
+    // Show shapes submenu
+    document.getElementById('btnShape').addEventListener('click', e => {
+      e.stopPropagation();
+      shapeMenu.style.left = toolbar.getBoundingClientRect().right + 8 + 'px';
+      shapeMenu.style.top  = toolbar.getBoundingClientRect().top + 'px';
+      shapeMenu.style.display = 'flex';
+    });
+
+    // Handle shape selection
+    shapeMenu.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-shape]');
+      if (!btn) return;
+      const shape = btn.dataset.shape;
+      let el;
+      if (shape === 'rect') {
+        el = document.createElement('div'); el.className='element shape-rect';
+      } else if (shape === 'circle') {
+        el = document.createElement('div'); el.className='element shape-circle';
+      } else if (shape === 'triangle') {
+        el = document.createElement('div'); el.className='element shape-triangle';
+      }
+      el.style.left = clickX + 'px';
+      el.style.top  = clickY + 'px';
+      paper.append(el);
+      shapeMenu.style.display = 'none';
+      toolbar.style.display   = 'none';
+      makeDraggable(el);
+    });
+
+    // Make inserted elements draggable
+    function makeDraggable(el) {
+      let dx, dy;
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        dx = e.clientX - el.offsetLeft;
+        dy = e.clientY - el.offsetTop;
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', () => {
+          document.removeEventListener('mousemove', onDrag);
+        }, { once: true });
+      });
+      function onDrag(e) {
+        el.style.left = (e.clientX - dx) + 'px';
+        el.style.top  = (e.clientY - dy) + 'px';
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
