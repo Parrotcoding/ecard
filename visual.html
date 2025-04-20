@@ -61,7 +61,7 @@
 
     /* text toolbar */
     #textToolbar {
-      position:relative;
+      position:absolute;
       background:#fff; border:1px solid #ccc; border-radius:4px;
       padding:.25rem; display:flex; gap:.5rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
@@ -161,12 +161,12 @@
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
     <button id="tbUnderline"><u>U</u></button>
-    <button id="tbAlignLeft" title="Left"><img src="align-left.svg" alt=""></button>
-    <button id="tbAlignCenter" title="Center"><img src="align-center.svg" alt=""></button>
-    <button id="tbAlignRight" title="Right"><img src="align-right.svg" alt=""></button>
+    <button id="tbAlignLeft" title="Left"><img src="align-left.svg" alt="Left"></button>
+    <button id="tbAlignCenter" title="Center"><img src="align-center.svg" alt="Center"></button>
+    <button id="tbAlignRight" title="Right"><img src="align-right.svg" alt="Right"></button>
     <button id="tbFont" title="Font">Aa</button>
     <input type="number" id="tbFontSize" min="8" max="72" title="Size">px
-    <input type="color"  id="tbColor" title="Color">
+    <input type="color"  id="tbColor"      title="Color">
 
     <!-- scrollable font menu -->
     <div id="fontMenu">
@@ -180,7 +180,6 @@
 
   <script>
   ;(function(){
-    // ---- state & elements ----
     const paper       = document.getElementById('paper'),
           toolbar     = document.getElementById('toolbar'),
           shapeMenu   = document.getElementById('shapeMenu'),
@@ -191,19 +190,18 @@
           fontOpts    = fontMenu.querySelectorAll('.fontOption');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // ---- utilities ----
     function rgbToHex(rgb){
       const [r,g,b] = rgb.match(/\d+/g).map(Number);
       return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
 
     function updateTextToolbarPosition(el){
-      const rect   = el.getBoundingClientRect(),
+      const rect = el.getBoundingClientRect(),
             tbRect = textToolbar.getBoundingClientRect(),
-            scrollY=window.scrollY,
-            left   = rect.left + window.scrollX,
-            topCand= scrollY + rect.top - tbRect.height - 8,
-            top    = topCand < scrollY+8 ? scrollY+rect.bottom+8 : topCand;
+            scrollY = window.scrollY,
+            left = rect.left + window.scrollX,
+            topCand = scrollY + rect.top - tbRect.height - 8,
+            top = topCand < scrollY+8 ? scrollY+rect.bottom+8 : topCand;
       textToolbar.style.left = `${left}px`;
       textToolbar.style.top  = `${top}px`;
     }
@@ -231,7 +229,6 @@
       }
     }
 
-    // ---- initElement & helpers ----
     function initElement(el,isTri,poly){
       makeDraggable(el);
       enableDrop(el);
@@ -312,12 +309,10 @@
         el.style.backgroundSize='cover';
         el.style.backgroundPosition='center';
         if(el.classList.contains('shape-wrapper')){
-          // convert to clip-path
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none');
           poly.style.pointerEvents='none';
-          const pts=poly.getAttribute('points').split(' ')
-                     .map(p=>p.split(',').map(Number));
+          const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
           const W=el.clientWidth, H=el.clientHeight;
           const pct=pts.map(([x,y])=>
             `${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`
@@ -354,10 +349,7 @@
           if(dir.includes('s')) newH=start.h+dy;
           if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
           if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          if(!el.classList.contains('image-wrapper') && ev.shiftKey){
-            newH=newW/start.aspect;
-            if(dir.includes('n')) newT=start.top+(start.h-newH);
-          }
+          // free‐form: no aspect lock
           el.style.width  = `${newW}px`;
           el.style.height = `${newH}px`;
           el.style.left   = `${newL}px`;
@@ -369,8 +361,7 @@
     }
 
     function addRotateHandle(el){
-      const h=document.createElement('div');
-      h.className='rotate-handle'; el.append(h);
+      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
         e.stopPropagation(); e.preventDefault();
         const rect=el.getBoundingClientRect(),
@@ -417,11 +408,10 @@
           document.addEventListener('mousemove', ondrag);
           document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',ondrag), { once:true });
           function ondrag(ev){
-            const dx=ev.clientX-start.x,
-                  dy=ev.clientY-start.y;
-            const abs=start.pts.map((p,j)=>{
-              return j===i? [p[0]+dx,p[1]+dy]: p;
-            });
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            const abs=start.pts.map((p,j)=>
+              j===i? [p[0]+dx,p[1]+dy]: p
+            );
             const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
             const minX=Math.min(...xs), minY=Math.min(...ys);
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
@@ -437,9 +427,7 @@
       update();
     }
 
-    // ---- event wiring ----
-
-    // paper click for insert toolbar
+    // ---- events ----
     paper.addEventListener('click', e=>{
       if(e.target!==paper) return;
       deselect();
@@ -456,13 +444,12 @@
     [toolbar, shapeMenu, textToolbar, fontMenu].forEach(el=>
       el.addEventListener('click', e=>e.stopPropagation())
     );
-    document.addEventListener('click', ()=>{ 
+    document.addEventListener('click', ()=>{
       toolbar.style.display='none';
       shapeMenu.style.display='none';
       fontMenu.style.display='none';
     });
 
-    // insert actions
     document.getElementById('btnText').onclick = e=>{
       e.stopPropagation();
       const txt=document.createElement('div');
@@ -503,7 +490,6 @@
       shapeMenu.style.display='none';
     });
 
-    // text toolbar
     document.getElementById('tbBold').onclick      = ()=> selectedEl && (selectedEl.style.fontWeight  = selectedEl.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    = ()=> selectedEl && (selectedEl.style.fontStyle   = selectedEl.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick = ()=> selectedEl && (selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline');
@@ -513,10 +499,9 @@
     document.getElementById('tbFontSize').addEventListener('input', e=> selectedEl && (selectedEl.style.fontSize = e.target.value+'px'));
     document.getElementById('tbColor').addEventListener('input', e=> selectedEl && (selectedEl.style.color    = e.target.value));
 
-    // font menu toggle
     tbFont.addEventListener('click', e=>{
       e.stopPropagation();
-      fontMenu.style.display = fontMenu.style.display==='block'?'none':'block';
+      fontMenu.style.display = fontMenu.style.display==='block' ? 'none' : 'block';
     });
     fontOpts.forEach(btn=>{
       btn.addEventListener('click', e=>{
