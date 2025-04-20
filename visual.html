@@ -19,8 +19,16 @@
       background:#fff8e7; border:2px solid #82C9A1;
       min-height:400px; resize:vertical; overflow:auto;
     }
-    #assets { width:200px; background:#fafafa; border:2px solid #ddd; padding:.5rem; overflow:auto; }
-    #assetList img { width:100%; margin-bottom:.5rem; cursor:grab; border:1px solid #ccc; border-radius:4px; }
+    #assets {
+      width:200px; background:#fafafa; border:2px solid #ddd;
+      padding:.5rem; overflow:auto;
+    }
+    #assets input { width:100%; margin-bottom:.5rem; padding:.25rem; }
+    #assets button { width:100%; margin-bottom:1rem; padding:.5rem; background:#60A085; border:none; color:#fff; cursor:pointer; border-radius:4px; }
+    #assetList img {
+      width:100%; margin-bottom:.5rem; cursor:grab;
+      border:1px solid #ccc; border-radius:4px;
+    }
 
     /* toolbars */
     #toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu {
@@ -45,9 +53,7 @@
     #shapeToolbar input[type=number] { width:3rem }
     #shapeToolbar input[type=range]  { width:5rem }
 
-    #fontMenu {
-      top:100%; left:0; max-height:200px; width:150px; overflow-y:auto;
-    }
+    #fontMenu { top:100%; left:0; max-height:200px; width:150px; overflow-y:auto; }
     #fontMenu .fontOption {
       display:block; width:100%; padding:6px 8px; text-align:left;
       background:transparent; border:none; cursor:pointer; font-size:.95rem;
@@ -80,7 +86,6 @@
       min-width:50px; min-height:20px; padding:.2rem;
       background:transparent; outline:none; cursor:text;
     }
-    /* fully opaque by default now */
     .shape-rect {
       width:100px; height:60px; background:#60A085;
       border:2px solid #60A085;
@@ -100,20 +105,28 @@
   <h1>Visual E‑Card Editor</h1>
   <div id="workspace">
     <div id="paper"></div>
-    <div id="assets"><h2>Assets</h2><div id="assetList"></div></div>
+    <div id="assets">
+      <h2>Assets</h2>
+      <input type="text" id="assetUrlInput" placeholder="Image URL">
+      <button id="assetAddBtn">Add Image</button>
+      <div id="assetList"></div>
+    </div>
   </div>
 
-  <!-- toolbars -->
+  <!-- insert toolbar -->
   <div id="toolbar">
     <button id="btnText" title="Add Text">T</button>
-    <button id="btnImage" title="Add Image"><img src="image.svg" alt=""></button>
-    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt=""></button>
+    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
+
+  <!-- shape menu -->
   <div id="shapeMenu">
     <button data-shape="rect" title="Rectangle">◻</button>
     <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
+
+  <!-- text toolbar -->
   <div id="textToolbar">
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
@@ -132,6 +145,8 @@
       <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
+
+  <!-- shape toolbar -->
   <div id="shapeToolbar">
     <input type="color" id="shapeFill"    title="Fill Color">
     <input type="color" id="shapeStroke"  title="Stroke Color">
@@ -146,6 +161,8 @@
           shapeMenu    = document.getElementById('shapeMenu'),
           textToolbar  = document.getElementById('textToolbar'),
           shapeToolbar = document.getElementById('shapeToolbar'),
+          assetUrlIn   = document.getElementById('assetUrlInput'),
+          assetAddBtn  = document.getElementById('assetAddBtn'),
           assetList    = document.getElementById('assetList'),
           tbFont       = document.getElementById('tbFont'),
           fontMenu     = document.getElementById('fontMenu'),
@@ -156,30 +173,30 @@
           shapeOp      = document.getElementById('shapeOpacity');
     let clickX=0, clickY=0, selectedEl=null, selectedPoly=null;
 
-    // Helper: convert rgb(...) to hex
+    // Helper: rgb(...) → hex
     function rgbToHex(rgb){
       const [r,g,b] = rgb.match(/\d+/g).map(Number);
       return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
 
     function updateTextToolbarPosition(el){
-      const rect = el.getBoundingClientRect(),
-            tb   = textToolbar.getBoundingClientRect(),
-            left = rect.left + window.scrollX,
-            topC = window.scrollY + rect.top - tb.height - 8,
-            top  = topC < window.scrollY+8 ? window.scrollY+rect.bottom+8 : topC;
-      textToolbar.style.left = `${left}px`;
-      textToolbar.style.top  = `${top}px`;
+      const r = el.getBoundingClientRect(),
+            tb= textToolbar.getBoundingClientRect(),
+            left = r.left + scrollX,
+            topC = scrollY + r.top - tb.height - 8,
+            top  = topC < scrollY+8 ? scrollY + r.bottom + 8 : topC;
+      textToolbar.style.left = left+'px';
+      textToolbar.style.top  = top +'px';
     }
 
     function updateShapeToolbarPosition(el){
-      const rect = el.getBoundingClientRect(),
-            st   = shapeToolbar.getBoundingClientRect(),
-            left = rect.left + window.scrollX,
-            topC = window.scrollY + rect.top - st.height - 8,
-            top  = topC < window.scrollY+8 ? window.scrollY+rect.bottom+8 : topC;
-      shapeToolbar.style.left = `${left}px`;
-      shapeToolbar.style.top  = `${top}px`;
+      const r = el.getBoundingClientRect(),
+            st= shapeToolbar.getBoundingClientRect(),
+            left = r.left + scrollX,
+            topC = scrollY + r.top - st.height - 8,
+            top  = topC < scrollY+8 ? scrollY + r.bottom + 8 : topC;
+      shapeToolbar.style.left = left+'px';
+      shapeToolbar.style.top  = top +'px';
     }
 
     function deselect(){
@@ -200,7 +217,6 @@
       toolbar.style.display   = 'none';
       shapeMenu.style.display = 'none';
       fontMenu.style.display  = 'none';
-
       if(el.classList.contains('text-element')){
         textToolbar.style.display = 'flex';
         updateTextToolbarPosition(el);
@@ -226,42 +242,117 @@
       addResizeHandles(el);
       addRotateHandle(el);
       if(isTri) makeTriangleResizable(el,poly);
-      el.addEventListener('mousedown', e=>{ e.stopPropagation(); select(el,poly); });
+      el.addEventListener('mousedown', e=>{
+        e.stopPropagation();
+        select(el,poly);
+      });
+      if(el.classList.contains('text-element')){
+        el.addEventListener('dblclick', e=>{
+          e.stopPropagation();
+          select(el);
+          el.focus();
+        });
+      }
     }
 
     function addAsset(src){
       const thumb = document.createElement('img');
-      thumb.src = src; thumb.draggable = true;
-      thumb.addEventListener('dragstart', ev => ev.dataTransfer.setData('text/plain', src));
+      thumb.src = src;
+      thumb.draggable = true;
+      thumb.addEventListener('dragstart', ev=>{
+        ev.dataTransfer.setData('text/plain', src);
+      });
       assetList.append(thumb);
     }
 
+    // add via assets input
+    assetAddBtn.addEventListener('click', ()=>{
+      const url = assetUrlIn.value.trim();
+      if(!url) return;
+      addAsset(url);
+      assetUrlIn.value = '';
+    });
+
+    // insert text or shape
+    document.getElementById('btnText').onclick = e=>{
+      e.stopPropagation();
+      const txt = document.createElement('div');
+      txt.className='element text-element';
+      txt.contentEditable = true;
+      txt.style.left = clickX+'px';
+      txt.style.top  = clickY+'px';
+      txt.textContent = 'Enter text';
+      paper.append(txt);
+      initElement(txt,false);
+      select(txt);
+      txt.focus();
+    };
+    document.getElementById('btnShape').onclick = e=>{
+      e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left    = r.right + 8 + 'px';
+      shapeMenu.style.top     = r.top   + 'px';
+      shapeMenu.style.display = 'flex';
+    };
+    shapeMenu.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-shape]');
+      if(!btn) return;
+      const t = btn.dataset.shape;
+      t==='triangle' ? insertTriangle() : insertBasic(t);
+      shapeMenu.style.display = 'none';
+    });
+
     function insertBasic(type){
       const el = document.createElement('div');
-      el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
-      el.style.left = `${clickX}px`; el.style.top = `${clickY}px`;
+      el.className = 'element '+(type==='rect'?'shape-rect':'shape-circle');
+      el.style.left= clickX+'px';
+      el.style.top = clickY+'px';
       paper.append(el);
       initElement(el,false);
-      select(el,null);
+      select(el);
     }
 
     function insertTriangle(){
       const wrap = document.createElement('div');
       wrap.className = 'shape-wrapper';
-      wrap.style.left = `${clickX}px`; wrap.style.top = `${clickY}px`;
-      wrap.style.width='80px'; wrap.style.height='70px';
+      wrap.style.left= clickX+'px';
+      wrap.style.top = clickY+'px';
+      wrap.style.width='80px';
+      wrap.style.height='70px';
       const svgNS="http://www.w3.org/2000/svg",
             svg=document.createElementNS(svgNS,'svg'),
             poly=document.createElementNS(svgNS,'polygon');
-      svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+      svg.setAttribute('width','100%');
+      svg.setAttribute('height','100%');
       poly.setAttribute('points','0,70 40,0 80,70');
       poly.setAttribute('fill','#60A085');
-      poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
-      svg.append(poly); wrap.append(svg);
+      poly.setAttribute('stroke','#60A085');
+      poly.setAttribute('stroke-width','2');
+      svg.append(poly);
+      wrap.append(svg);
       paper.append(wrap);
       initElement(wrap,true,poly);
       select(wrap,poly);
     }
+
+    // drag from assets → blank paper: create image
+    paper.addEventListener('dragover', e=>e.preventDefault());
+    paper.addEventListener('drop', e=>{
+      e.preventDefault();
+      if(e.target!==paper) return;
+      const url = e.dataTransfer.getData('text/plain');
+      if(!url) return;
+      clickX = e.offsetX;
+      clickY = e.offsetY;
+      const wrap = document.createElement('div');
+      wrap.className = 'element image-wrapper';
+      wrap.style.left = clickX+'px';
+      wrap.style.top  = clickY+'px';
+      wrap.style.backgroundImage = `url(${url})`;
+      paper.append(wrap);
+      initElement(wrap,false);
+      select(wrap);
+    });
 
     function makeDraggable(el){
       let dx,dy;
@@ -274,12 +365,11 @@
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',move),{once:true});
       });
       function move(ev){
-        el.style.left = `${ev.clientX - dx}px`;
-        el.style.top  = `${ev.clientY - dy}px`;
+        el.style.left = ev.clientX - dx + 'px';
+        el.style.top  = ev.clientY - dy + 'px';
         if(selectedEl===el){
           if(el.classList.contains('text-element')) updateTextToolbarPosition(el);
-          if(el.classList.contains('shape-rect')||el.classList.contains('shape-circle')||el.classList.contains('shape-wrapper'))
-            updateShapeToolbarPosition(el);
+          else updateShapeToolbarPosition(el);
         }
       }
     }
@@ -288,19 +378,21 @@
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
-        const src = e.dataTransfer.getData('text/plain');
-        if(!src) return;
-        el.style.backgroundImage=`url(${src})`;
-        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        const url = e.dataTransfer.getData('text/plain');
+        if(!url) return;
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
         if(el.classList.contains('shape-wrapper')){
           const poly = el.querySelector('polygon');
-          poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
+          poly.setAttribute('fill','none');
+          poly.style.pointerEvents = 'none';
           const pts = poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
           const W=el.clientWidth, H=el.clientHeight;
           const pct = pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
-          el.style.clipPath=`polygon(${pct})`;
+          el.style.clipPath = `polygon(${pct})`;
         }
-        el.style.zIndex='999';
+        el.style.zIndex = '999';
       });
     }
 
@@ -316,11 +408,13 @@
     function startResize(dir,el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
-        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={
+        const r = el.getBoundingClientRect(),
+              pr= paper.getBoundingClientRect();
+        const start = {
           x:e.clientX, y:e.clientY,
           left:r.left-pr.left, top:r.top-pr.top,
-          w:r.width, h:r.height, aspect:r.width/r.height
+          w:r.width, h:r.height,
+          aspect:r.width/r.height
         };
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',doResize),{once:true});
@@ -331,18 +425,18 @@
           if(dir.includes('s')) newH=start.h+dy;
           if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
           if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          if(ev.shiftKey){
-            newH=newW/start.aspect;
-            if(dir.includes('n')) newT=start.top+(start.h-newH);
+          // preserve ratio always for images, shift-only for shapes
+          if(el.classList.contains('image-wrapper') || ev.shiftKey){
+            newH = newW / start.aspect;
+            if(dir.includes('n')) newT = start.top + (start.h - newH);
           }
-          el.style.width  = `${newW}px`;
-          el.style.height = `${newH}px`;
-          el.style.left   = `${newL}px`;
-          el.style.top    = `${newT}px`;
+          el.style.width  = newW + 'px';
+          el.style.height = newH + 'px';
+          el.style.left   = newL + 'px';
+          el.style.top    = newT + 'px';
           if(selectedEl===el){
             if(el.classList.contains('text-element')) updateTextToolbarPosition(el);
-            if(el.classList.contains('shape-rect')||el.classList.contains('shape-circle')||el.classList.contains('shape-wrapper'))
-              updateShapeToolbarPosition(el);
+            else updateShapeToolbarPosition(el);
           }
         }
       };
@@ -353,19 +447,18 @@
       h.addEventListener('mousedown', e=>{
         e.stopPropagation(); e.preventDefault();
         const rect=el.getBoundingClientRect(),
-              cx=rect.left+rect.width/2,
-              cy=rect.top +rect.height/2;
+              cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
         const startAng = Math.atan2(e.clientY-cy,e.clientX-cx);
         let currRot = parseFloat(el.dataset.rot||0);
         const onmove = ev=>{
           const ang = Math.atan2(ev.clientY-cy,ev.clientX-cx),
                 delta = ang - startAng,
                 deg = currRot + delta*180/Math.PI;
-          el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
+          el.style.transform = `rotate(${deg}deg)`;
+          el.dataset.rot = deg;
           if(selectedEl===el){
             if(el.classList.contains('text-element')) updateTextToolbarPosition(el);
-            if(el.classList.contains('shape-rect')||el.classList.contains('shape-circle')||el.classList.contains('shape-wrapper'))
-              updateShapeToolbarPosition(el);
+            else updateShapeToolbarPosition(el);
           }
         };
         document.addEventListener('mousemove',onmove);
@@ -375,150 +468,127 @@
 
     function makeTriangleResizable(wrap,poly){
       let pts=[[0,70],[40,0],[80,70]];
-      const handles=pts.map((_,i)=>{
-        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
+      const handles = pts.map((_,i)=>{
+        const h = document.createElement('div');
+        h.className='vertex-handle'; wrap.append(h);
+        return h;
       });
       function update(){
-        handles.forEach((h,i)=>{ h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`; });
+        handles.forEach((h,i)=>{
+          h.style.left=pts[i][0]+'px';
+          h.style.top =pts[i][1]+'px';
+        });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
-      handles.forEach((h,i)=>{ h.addEventListener('mousedown', e=>{
-        e.stopPropagation(); e.preventDefault(); select(wrap,poly);
-        const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
-        document.addEventListener('mousemove', ondrag);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
-        function ondrag(ev){
-          const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-          const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
-          const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
-          const minX=Math.min(...xs), minY=Math.min(...ys),
-                maxX=Math.max(...xs), maxY=Math.max(...ys);
-          pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-          wrap.style.left   = `${start.wrapL+minX}px`;
-          wrap.style.top    = `${start.wrapT+minY}px`;
-          wrap.style.width  = `${maxX-minX}px`;
-          wrap.style.height = `${maxY-minY}px`;
-          update();
-        }
-      })});
+      handles.forEach((h,i)=>{
+        h.addEventListener('mousedown', e=>{
+          e.stopPropagation(); e.preventDefault(); select(wrap,poly);
+          const start = {
+            x:e.clientX, y:e.clientY,
+            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
+            pts:pts.map(p=>p.slice())
+          };
+          document.addEventListener('mousemove', ondrag);
+          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
+          function ondrag(ev){
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            const abs = start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
+            const xs = abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+            const minX=Math.min(...xs), minY=Math.min(...ys),
+                  maxX=Math.max(...xs), maxY=Math.max(...ys);
+            pts = abs.map(p=>[p[0]-minX,p[1]-minY]);
+            wrap.style.left   = start.wrapL+minX+'px';
+            wrap.style.top    = start.wrapT+minY+'px';
+            wrap.style.width  = maxX-minX+'px';
+            wrap.style.height = maxY-minY+'px';
+            update();
+          }
+        });
+      });
       update();
     }
 
-    // — SHOW insert toolbar on blank paper —
-    paper.addEventListener('mousedown', e => {
-      if (
-        e.target.closest('#toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu') ||
-        e.target !== paper
-      ) return;
+    // show insert toolbar on paper click
+    paper.addEventListener('mousedown', e=>{
+      if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper)
+        return;
       deselect();
-      clickX = e.offsetX; clickY = e.offsetY;
+      clickX=e.offsetX; clickY=e.offsetY;
       const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left    = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top     = `${e.pageY - tb.height - 12}px`;
+      toolbar.style.left    = (e.pageX - tb.width/2)+'px';
+      toolbar.style.top     = (e.pageY - tb.height -12)+'px';
       toolbar.style.display = 'flex';
-      shapeMenu.style.display    = 'none';
-      textToolbar.style.display  = 'none';
-      shapeToolbar.style.display = 'none';
-      fontMenu.style.display     = 'none';
+      shapeMenu.style.display    ='none';
+      textToolbar.style.display  ='none';
+      shapeToolbar.style.display ='none';
+      fontMenu.style.display     ='none';
       e.stopPropagation();
     });
 
-    // — HIDE toolbars when clicking/touching outside —
+    // hide toolbars when clicking outside
     ['mousedown','touchstart'].forEach(evt=>{
-      document.addEventListener(evt, e=>{
-        if (e.target === paper) return;
-        if (e.target.closest('#toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu')) return;
-        toolbar.style.display    = 'none';
-        shapeMenu.style.display  = 'none';
-        textToolbar.style.display= 'none';
+      document.addEventListener(evt,e=>{
+        if(e.target===paper) return;
+        if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')) return;
+        toolbar.style.display    ='none';
+        shapeMenu.style.display  ='none';
+        textToolbar.style.display='none';
         shapeToolbar.style.display='none';
-        fontMenu.style.display   = 'none';
+        fontMenu.style.display   ='none';
       });
     });
 
-    // — PREVENT hide-listener from catching interactions inside toolbars —
-    [toolbar, shapeMenu, textToolbar, shapeToolbar, fontMenu].forEach(el=>{
-      el.addEventListener('mousedown', e=>e.stopPropagation());
-      el.addEventListener('touchstart', e=>e.stopPropagation());
+    // prevent hide when interacting in toolbars
+    [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
+      el.addEventListener('mousedown',e=>e.stopPropagation());
+      el.addEventListener('touchstart',e=>e.stopPropagation());
     });
 
-    // — INSERT ACTIONS —
-    document.getElementById('btnText').onclick = e=>{
-      e.stopPropagation();
-      const txt=document.createElement('div');
-      txt.className='element text-element'; txt.contentEditable=true;
-      txt.style.left=`${clickX}px`; txt.style.top=`${clickY}px`;
-      txt.textContent='Enter text';
-      paper.append(txt); initElement(txt,false); select(txt,null); txt.focus();
-    };
-    document.getElementById('btnImage').onclick = e=>{
-      e.stopPropagation();
-      const url=prompt('Image URL:'); if(!url) return;
-      addAsset(url);
-      const wrap=document.createElement('div');
-      wrap.className='element image-wrapper';
-      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
-      wrap.style.backgroundImage=`url(${url})`;
-      paper.append(wrap); initElement(wrap,false); select(wrap,null);
-    };
-    document.getElementById('btnShape').onclick = e=>{
-      e.stopPropagation();
-      const r=e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left  = `${r.right+8}px`;
-      shapeMenu.style.top   = `${r.top}px`;
-      shapeMenu.style.display='flex';
-    };
-    shapeMenu.addEventListener('click', e=>{
-      const btn=e.target.closest('[data-shape]'); if(!btn) return;
-      btn.dataset.shape==='triangle'? insertTriangle(): insertBasic(btn.dataset.shape);
-      shapeMenu.style.display='none';
-    });
-
-    // — TEXT TOOLBAR —
+    // text toolbar
     document.getElementById('tbBold').onclick      = ()=> selectedEl && (selectedEl.style.fontWeight  = selectedEl.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    = ()=> selectedEl && (selectedEl.style.fontStyle   = selectedEl.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick = ()=> selectedEl && (selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline');
     document.getElementById('tbAlignLeft').onclick   = ()=> selectedEl && (selectedEl.style.textAlign='left');
     document.getElementById('tbAlignCenter').onclick = ()=> selectedEl && (selectedEl.style.textAlign='center');
     document.getElementById('tbAlignRight').onclick  = ()=> selectedEl && (selectedEl.style.textAlign='right');
-    document.getElementById('tbFontSize').addEventListener('input', e=> selectedEl && (selectedEl.style.fontSize = e.target.value+'px'));
-    document.getElementById('tbColor').addEventListener('input', e=> selectedEl && (selectedEl.style.color    = e.target.value));
+    document.getElementById('tbFontSize').addEventListener('input',e=> selectedEl && (selectedEl.style.fontSize=e.target.value+'px'));
+    document.getElementById('tbColor').addEventListener('input',e=> selectedEl && (selectedEl.style.color=e.target.value));
 
-    // — FONT MENU —
-    tbFont.addEventListener('click', e=>{
+    // font menu
+    tbFont.addEventListener('click',e=>{
       e.stopPropagation();
       fontMenu.style.display = fontMenu.style.display==='block'?'none':'block';
     });
-    fontOpts.forEach(btn=> btn.addEventListener('click', e=>{
+    fontOpts.forEach(btn=>btn.addEventListener('click',e=>{
       e.stopPropagation();
-      const fam=btn.dataset.font;
-      if(selectedEl && selectedEl.classList.contains('text-element'))
-        selectedEl.style.fontFamily = `'${fam}', sans-serif`;
+      const f=btn.dataset.font;
+      if(selectedEl&&selectedEl.classList.contains('text-element'))
+        selectedEl.style.fontFamily=`'${f}',sans-serif`;
       fontMenu.style.display='none';
     }));
 
-    // — SHAPE TOOLBAR —
-    shapeFill.addEventListener('input', e=>{
+    // shape toolbar
+    shapeFill.addEventListener('input',e=>{
       if(selectedEl){
-        if(selectedPoly) selectedPoly.setAttribute('fill', e.target.value);
-        else selectedEl.style.backgroundColor = e.target.value;
+        if(selectedPoly) selectedPoly.setAttribute('fill',e.target.value);
+        else selectedEl.style.backgroundColor=e.target.value;
       }
     });
-    shapeStroke.addEventListener('input', e=>{
+    shapeStroke.addEventListener('input',e=>{
       if(selectedEl){
-        if(selectedPoly) selectedPoly.setAttribute('stroke', e.target.value);
-        else selectedEl.style.borderColor = e.target.value;
+        if(selectedPoly) selectedPoly.setAttribute('stroke',e.target.value);
+        else selectedEl.style.borderColor=e.target.value;
       }
     });
-    shapeStW.addEventListener('input', e=>{
+    shapeStW.addEventListener('input',e=>{
       const v=e.target.value;
       if(selectedEl){
-        if(selectedPoly) selectedPoly.setAttribute('stroke-width', v);
-        else selectedEl.style.borderWidth = v+'px';
+        if(selectedPoly) selectedPoly.setAttribute('stroke-width',v);
+        else selectedEl.style.borderWidth=v+'px';
       }
     });
-    shapeOp.addEventListener('input', e=>{
-      if(selectedEl) selectedEl.style.opacity = e.target.value;
+    shapeOp.addEventListener('input',e=>{
+      if(selectedEl) selectedEl.style.opacity=e.target.value;
     });
 
   })();
