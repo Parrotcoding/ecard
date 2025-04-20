@@ -32,6 +32,15 @@
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1000;
     }
+    #toolbar button {
+      width:36px; height:36px; border:none; border-radius:50%;
+      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    #toolbar button:hover { background:#76C69C; }
+    #toolbar svg {
+      width:20px; height:20px; color:#fff;
+    }
 
     /* shape menu */
     #shapeMenu {
@@ -40,6 +49,12 @@
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1001;
     }
+    #shapeMenu button {
+      width:32px; height:32px; border:none; border-radius:4px;
+      background:#A8E6CF; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    #shapeMenu button:hover { background:#76C69C; }
 
     /* text toolbar */
     #textToolbar {
@@ -47,7 +62,6 @@
       background:#fff; border:1px solid #ccc; border-radius:4px;
       padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:2000;
-      /* ensure it expands to fit all buttons */
       flex-wrap: nowrap;
       white-space: nowrap;
       width: max-content;
@@ -124,9 +138,21 @@
 
   <!-- Main toolbar -->
   <div id="toolbar">
-    <button id="btnText"  title="Add Text">T</button>
-    <button id="btnImage" title="Add Image">🖼️</button>
-    <button id="btnShape" title="Add Shape">⬜</button>
+    <button id="btnText" title="Add Text">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+        <path stroke="currentColor" stroke-width="2" d="M6 4h12M6 20h12M6 12h12" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button id="btnImage" title="Add Image">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+        <path stroke="currentColor" stroke-width="2" d="M21 15V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9m0 4l4-4 3 3 5-5 5 5m-2 0h2a2 2 0 0 0 2-2v-4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button id="btnShape" title="Add Shape">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </button>
   </div>
 
   <!-- Shape menu -->
@@ -159,7 +185,7 @@
 
     function rgbToHex(rgb) {
       const [r,g,b] = rgb.match(/\d+/g).map(Number);
-      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+      return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
 
     function deselect() {
@@ -175,7 +201,6 @@
       selectedEl = el;
       el.classList.add('selected');
       if (el.classList.contains('text-element')) {
-        // position textToolbar above/below the element
         const rect   = el.getBoundingClientRect();
         const tbRect = textToolbar.getBoundingClientRect();
         let left = rect.left;
@@ -184,19 +209,17 @@
         textToolbar.style.left  = `${left}px`;
         textToolbar.style.top   = `${top}px`;
         textToolbar.style.display = 'flex';
-        // init controls
         document.getElementById('tbFontSize').value = parseInt(getComputedStyle(el).fontSize);
         document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(el).color);
       }
     }
 
-    // Show main toolbar
     paper.addEventListener('click', e=>{
       if (e.target === paper) deselect();
       clickX = e.offsetX; clickY = e.offsetY;
-      const tb = toolbar.getBoundingClientRect();
-      toolbar.style.left  = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top   = `${e.pageY - tb.height - 12}px`;
+      const tbRect = toolbar.getBoundingClientRect();
+      toolbar.style.left  = `${e.pageX - tbRect.width/2}px`;
+      toolbar.style.top   = `${e.pageY - tbRect.height - 12}px`;
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
       e.stopPropagation();
@@ -204,7 +227,6 @@
     [toolbar, shapeMenu, textToolbar].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
-    // Add Text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
@@ -219,7 +241,6 @@
       txt.focus();
     });
 
-    // Add Image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
@@ -235,7 +256,6 @@
       toolbar.style.display='none';
     });
 
-    // Shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r = e.currentTarget.getBoundingClientRect();
@@ -253,7 +273,6 @@
       toolbar.style.display='none';
     });
 
-    // Text toolbar actions
     document.getElementById('tbBold').onclick = ()=>{
       if (!selectedEl) return;
       selectedEl.style.fontWeight = selectedEl.style.fontWeight==='bold'?'':'bold';
@@ -266,15 +285,11 @@
       if (!selectedEl) return;
       selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline';
     };
-    document.getElementById('tbAlignLeft').onclick = ()=> selectedEl && (selectedEl.style.textAlign='left');
+    document.getElementById('tbAlignLeft').onclick   = ()=> selectedEl && (selectedEl.style.textAlign='left');
     document.getElementById('tbAlignCenter').onclick = ()=> selectedEl && (selectedEl.style.textAlign='center');
-    document.getElementById('tbAlignRight').onclick = ()=> selectedEl && (selectedEl.style.textAlign='right');
-    document.getElementById('tbFontSize').oninput = e=>{
-      if (selectedEl) selectedEl.style.fontSize = e.target.value + 'px';
-    };
-    document.getElementById('tbColor').oninput = e=>{
-      if (selectedEl) selectedEl.style.color = e.target.value;
-    };
+    document.getElementById('tbAlignRight').onclick  = ()=> selectedEl && (selectedEl.style.textAlign='right');
+    document.getElementById('tbFontSize').oninput    = e=> selectedEl && (selectedEl.style.fontSize = e.target.value+'px');
+    document.getElementById('tbColor').oninput       = e=> selectedEl && (selectedEl.style.color = e.target.value);
 
     function addAsset(src){
       const thumb = document.createElement('img');
@@ -325,8 +340,157 @@
       });
     }
 
-    // ... include the implementations of makeDraggable, enableDrop, addResizeHandles, startResize,
-    // addRotateHandle, makeTriangleResizable here, exactly as before ...
+    // Draggable
+    function makeDraggable(el){
+      let dx,dy;
+      el.addEventListener('mousedown', e=>{
+        if (e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
+        e.preventDefault();
+        dx = e.clientX - el.offsetLeft;
+        dy = e.clientY - el.offsetTop;
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', move), { once:true });
+      });
+      function move(ev){
+        el.style.left = `${ev.clientX - dx}px`;
+        el.style.top  = `${ev.clientY - dy}px`;
+      }
+    }
+
+    // Drop assets
+    function enableDrop(el){
+      el.addEventListener('dragover', e=>e.preventDefault());
+      el.addEventListener('drop', e=>{
+        e.preventDefault();
+        const src = e.dataTransfer.getData('text/plain');
+        if (!src) return;
+        el.style.backgroundImage = `url(${src})`;
+        el.style.backgroundSize  = 'cover';
+        el.style.backgroundPosition = 'center';
+        if (el.classList.contains('shape-wrapper')){
+          const poly = el.querySelector('polygon');
+          poly.setAttribute('fill','none');
+          poly.style.pointerEvents='none';
+          const pts = poly.getAttribute('points').split(' ')
+                         .map(p=>p.split(',').map(Number));
+          const W = el.clientWidth, H = el.clientHeight;
+          const pct = pts.map(([x,y])=>
+            `${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`
+          ).join(', ');
+          el.style.clipPath = `polygon(${pct})`;
+        }
+        el.style.zIndex = '999';
+      });
+    }
+
+    // Resize handles
+    function addResizeHandles(el){
+      ['nw','ne','sw','se'].forEach(dir=>{
+        const h = document.createElement('div');
+        h.className = 'resize-handle handle-'+dir;
+        el.append(h);
+        h.addEventListener('mousedown', startResize(dir,el));
+      });
+    }
+    function startResize(dir,el){
+      return function(e){
+        e.stopPropagation(); e.preventDefault();
+        const r = el.getBoundingClientRect(),
+              pr = paper.getBoundingClientRect();
+        const start = {
+          x: e.clientX, y: e.clientY,
+          left: r.left-pr.left, top: r.top-pr.top,
+          w: r.width, h: r.height,
+          aspect: r.width/r.height
+        };
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
+        function doResize(ev){
+          let dx=ev.clientX-start.x, dy=ev.clientY-start.y,
+              newW=start.w, newH=start.h,
+              newL=start.left, newT=start.top;
+          if(dir.includes('e')) newW=start.w+dx;
+          if(dir.includes('s')) newH=start.h+dy;
+          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
+          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
+          if(!el.classList.contains('image-wrapper') && ev.shiftKey){
+            newH = newW/start.aspect;
+            if(dir.includes('n')) newT = start.top + (start.h-newH);
+          }
+          el.style.width=`${newW}px`;
+          el.style.height=`${newH}px`;
+          el.style.left=`${newL}px`;
+          el.style.top=`${newT}px`;
+        }
+      };
+    }
+
+    // Rotation handle
+    function addRotateHandle(el){
+      const h = document.createElement('div');
+      h.className = 'rotate-handle';
+      el.append(h);
+      h.addEventListener('mousedown', e=>{
+        e.stopPropagation(); e.preventDefault();
+        const rect = el.getBoundingClientRect(),
+              cx = rect.left+rect.width/2,
+              cy = rect.top+rect.height/2,
+              startAng = Math.atan2(e.clientY-cy,e.clientX-cx);
+        let currRot = parseFloat(el.dataset.rot||0);
+        const onmove = ev=>{
+          const ang = Math.atan2(ev.clientY-cy,ev.clientX-cx),
+                delta = ang - startAng,
+                deg = currRot + delta*180/Math.PI;
+          el.style.transform = `rotate(${deg}deg)`;
+          el.dataset.rot = deg;
+        };
+        document.addEventListener('mousemove', onmove);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
+      });
+    }
+
+    // Triangle resizing
+    function makeTriangleResizable(wrap,poly){
+      let pts=[[0,70],[40,0],[80,70]];
+      const handles = pts.map((_,i)=>{
+        const h = document.createElement('div');
+        h.className='vertex-handle'; wrap.append(h); return h;
+      });
+      function update(){
+        handles.forEach((h,i)=>{
+          h.style.left=`${pts[i][0]}px`;
+          h.style.top =`${pts[i][1]}px`;
+        });
+        poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+      }
+      handles.forEach((h,i)=>{
+        h.addEventListener('mousedown', e=>{
+          e.stopPropagation(); e.preventDefault();
+          select(wrap);
+          const start={
+            x:e.clientX, y:e.clientY,
+            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
+            pts:pts.map(p=>p.slice())
+          };
+          document.addEventListener('mousemove', ondrag);
+          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', ondrag), { once:true });
+          function ondrag(ev){
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            const abs = start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
+            const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+            const minX=Math.min(...xs), minY=Math.min(...ys);
+            const maxX=Math.max(...xs), maxY=Math.max(...ys);
+            pts = abs.map(p=>[p[0]-minX,p[1]-minY]);
+            wrap.style.left   = `${start.wrapL+minX}px`;
+            wrap.style.top    = `${start.wrapT+minY}px`;
+            wrap.style.width  = `${maxX-minX}px`;
+            wrap.style.height = `${maxY-minY}px`;
+            update();
+          }
+        });
+      });
+      update();
+    }
 
   })();
   </script>
