@@ -13,12 +13,25 @@
     }
     h1 { text-align:center; margin-bottom:1rem }
 
+    /* workspace: paper + assets sidebar */
+    #workspace {
+      display:flex; gap:1rem;
+    }
     #paper {
-      position:relative;
-      margin:auto;
-      width:60vw; min-height:300px;
+      position:relative; flex:1;
       background:#fff8e7; border:2px solid #82C9A1;
-      resize:vertical; overflow:auto;
+      min-height:400px; resize:vertical; overflow:auto;
+    }
+    #assets {
+      width:200px;
+      background:#fafafa; border:2px solid #ddd;
+      padding:.5rem; overflow:auto;
+    }
+    #assets h2 { margin:0 0 .5rem; font-size:1rem }
+    #assetUpload { width:100%; margin-bottom:.5rem }
+    #assetList img {
+      width:100%; margin-bottom:.5rem; cursor:grab;
+      border:1px solid #ccc; border-radius:4px;
     }
 
     /* toolbar */
@@ -111,7 +124,14 @@
 </head>
 <body>
   <h1>Visual E‑Card Editor</h1>
-  <div id="paper"></div>
+  <div id="workspace">
+    <div id="paper"></div>
+    <div id="assets">
+      <h2>Assets</h2>
+      <input type="file" id="assetUpload" multiple accept="image/*">
+      <div id="assetList"></div>
+    </div>
+  </div>
 
   <!-- Toolbar -->
   <div id="toolbar">
@@ -129,84 +149,117 @@
 
   <script>
   (function(){
-    const paper     = document.getElementById('paper');
-    const toolbar   = document.getElementById('toolbar');
-    const shapeMenu = document.getElementById('shapeMenu');
+    const paper       = document.getElementById('paper');
+    const toolbar     = document.getElementById('toolbar');
+    const shapeMenu   = document.getElementById('shapeMenu');
+    const assetUpload = document.getElementById('assetUpload');
+    const assetList   = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // Click on PAPER background: deselect
+    // handle asset uploads
+    assetUpload.addEventListener('change', ()=>{
+      Array.from(assetUpload.files).forEach(file=>{
+        const reader = new FileReader();
+        reader.onload = e=>{
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.draggable = true;
+          // drag from assets
+          img.addEventListener('dragstart', ev=>{
+            ev.dataTransfer.setData('text/plain', img.src);
+          });
+          // double-click to crop via prompt
+          img.addEventListener('dblclick', ()=>{
+            const p = prompt(
+              'Crop % x,y,width,height','0,0,100,100'
+            );
+            if(!p) return;
+            const [x,y,w,h] = p.split(',').map(n=>parseFloat(n));
+            const orig = new Image();
+            orig.onload = ()=>{
+              const cw = orig.width * (w/100),
+                    ch = orig.height* (h/100),
+                    sx = orig.width * (x/100),
+                    sy = orig.height* (y/100);
+              const c = document.createElement('canvas');
+              c.width = cw; c.height = ch;
+              c.getContext('2d')
+               .drawImage(orig, sx, sy, cw, ch, 0,0,cw,ch);
+              img.src = c.toDataURL();
+            };
+            orig.src = img.src;
+          });
+          assetList.append(img);
+        };
+        reader.readAsDataURL(file);
+      });
+      assetUpload.value = '';
+    });
+
+    // PAPER click: deselect if blank, always show toolbar
     paper.addEventListener('click', e=>{
-      if (e.target === paper) {
-        deselect();
-      }
-      // Always show toolbar on paper click
+      if(e.target === paper) deselect();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
       toolbar.style.left = `${e.pageX - tb.width/2}px`;
-      toolbar.style.top  = `${e.pageY - tb.height - 12}px`;
+      toolbar.style.top  = `${e.pageY - tb.height -12}px`;
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
       e.stopPropagation();
     });
 
-    // Prevent toolbar/shapeMenu clicks from propagating
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
-
-    // Click anywhere else: hide toolbar/menu but keep selection
-    document.addEventListener('click', ()=>{
-      toolbar.style.display = 'none';
-      shapeMenu.style.display = 'none';
-    });
+    document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
     // Add Text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
-      txt.className = 'element text-element';
-      txt.contentEditable = true;
-      txt.style.left = `${clickX}px`;
-      txt.style.top  = `${clickY}px`;
-      txt.textContent = 'Enter text';
+      txt.className='element text-element';
+      txt.contentEditable=true;
+      txt.style.left=`${clickX}px`;
+      txt.style.top =`${clickY}px`;
+      txt.textContent='Enter text';
       paper.append(txt);
       initElement(txt, false);
-      toolbar.style.display = 'none';
+      toolbar.style.display='none';
       txt.focus();
     });
 
-    // Add Image
+    // Add Image (from toolbar)
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
-      if (!url) return;
+      if(!url) return;
       const img = document.createElement('img');
-      img.className = 'element';
+      img.className='element';
       img.src = url;
       img.style.left   = `${clickX}px`;
       img.style.top    = `${clickY}px`;
       img.style.height = '100px';
       paper.append(img);
       initElement(img, false);
-      toolbar.style.display = 'none';
+      toolbar.style.display='none';
     });
 
-    // Show Shapes Menu
+    // Show Shapes menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
-      const r = e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left = `${r.right + 8}px`;
+      const r=e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left = `${r.right+8}px`;
       shapeMenu.style.top  = `${r.top}px`;
-      shapeMenu.style.display = 'flex';
+      shapeMenu.style.display='flex';
     });
 
-    // Insert Shape
+    // Insert shape
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
-      if (!btn) return;
+      if(!btn) return;
       const type = btn.dataset.shape;
-      if (type === 'triangle') insertTriangle();
+      if(type==='triangle') insertTriangle();
       else insertBasic(type);
-      shapeMenu.style.display = 'none';
-      toolbar.style.display = 'none';
+      shapeMenu.style.display='none';
+      toolbar.style.display='none';
     });
 
     function insertBasic(type){
@@ -220,13 +273,13 @@
 
     function insertTriangle(){
       const wrap = document.createElement('div');
-      wrap.className = 'shape-wrapper';
+      wrap.className='shape-wrapper';
       wrap.style.left   = `${clickX}px`;
       wrap.style.top    = `${clickY}px`;
       wrap.style.width  = '80px';
       wrap.style.height = '70px';
 
-      const svgNS = "http://www.w3.org/2000/svg";
+      const svgNS="http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS,'svg');
       svg.setAttribute('width','100%');
       svg.setAttribute('height','100%');
@@ -238,13 +291,13 @@
       svg.append(poly);
       wrap.append(svg);
       paper.append(wrap);
-
       initElement(wrap, true, poly);
     }
 
     function initElement(el, isTri, poly){
       makeDraggable(el);
-      if (isTri) makeTriangleResizable(el, poly);
+      enableDrop(el);
+      if(isTri) makeTriangleResizable(el, poly);
       else makeResizable(el);
       el.addEventListener('mousedown', e=>{
         e.stopPropagation();
@@ -253,22 +306,40 @@
     }
 
     function select(el){
-      if (selectedEl === el) return;
+      if(selectedEl===el) return;
       deselect();
-      selectedEl = el;
+      selectedEl=el;
       el.classList.add('selected');
     }
     function deselect(){
-      if (!selectedEl) return;
+      if(!selectedEl) return;
       selectedEl.classList.remove('selected');
-      selectedEl = null;
+      selectedEl=null;
     }
 
-    // Draggable
+    // drag images into shapes
+    function enableDrop(el){
+      el.addEventListener('dragover', e=>e.preventDefault());
+      el.addEventListener('drop', e=>{
+        e.preventDefault();
+        const src = e.dataTransfer.getData('text/plain');
+        if(!src) return;
+        // apply as background
+        el.style.backgroundImage = `url(${src})`;
+        el.style.backgroundSize   = 'cover';
+        el.style.backgroundPosition = 'center';
+        // if triangle: clip
+        if(el.classList.contains('shape-wrapper')){
+          el.style.clipPath = 'polygon(50% 0%,0% 100%,100% 100%)';
+        }
+      });
+    }
+
+    // Draggable helper
     function makeDraggable(el){
       let dx, dy;
       el.addEventListener('mousedown', e=>{
-        if (e.target.matches('.resize-handle, .vertex-handle')) return;
+        if(e.target.matches('.resize-handle, .vertex-handle')) return;
         e.preventDefault();
         dx = e.clientX - el.offsetLeft;
         dy = e.clientY - el.offsetTop;
@@ -281,13 +352,13 @@
       }
     }
 
-    // Resize rect/circle
+    // Rectangle/Circle resizing
     function makeResizable(el){
       ['nw','ne','sw','se'].forEach(dir=>{
         const h = document.createElement('div');
-        h.className = 'resize-handle handle-'+dir;
+        h.className='resize-handle handle-'+dir;
         el.append(h);
-        h.addEventListener('mousedown', startResize(dir, el));
+        h.addEventListener('mousedown', startResize(dir,el));
       });
     }
     function startResize(dir, el){
@@ -305,16 +376,10 @@
         function doResize(ev){
           let dx = ev.clientX - start.x, dy = ev.clientY - start.y;
           let newL=start.left, newT=start.top, newW=start.w, newH=start.h;
-          if(dir.includes('e')) newW = start.w + dx;
-          if(dir.includes('s')) newH = start.h + dy;
-          if(dir.includes('w')){
-            newW = start.w - dx;
-            newL = start.left + dx;
-          }
-          if(dir.includes('n')){
-            newH = start.h - dy;
-            newT = start.top + dy;
-          }
+          if(dir.includes('e')) newW=start.w+dx;
+          if(dir.includes('s')) newH=start.h+dy;
+          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
+          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
           el.style.width  = `${newW}px`;
           el.style.height = `${newH}px`;
           el.style.left   = `${newL}px`;
@@ -323,19 +388,19 @@
       };
     }
 
-    // Triangle resizing via vertices
+    // Triangle vertex resizing
     function makeTriangleResizable(wrap, poly){
       let pts = [[0,70],[40,0],[80,70]];
       const handles = pts.map((_,i)=>{
         const h = document.createElement('div');
-        h.className = 'vertex-handle';
+        h.className='vertex-handle';
         wrap.append(h);
         return h;
       });
       function update(){
         handles.forEach((h,i)=>{
-          h.style.left = `${pts[i][0]}px`;
-          h.style.top  = `${pts[i][1]}px`;
+          h.style.left=`${pts[i][0]}px`;
+          h.style.top =`${pts[i][1]}px`;
         });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
@@ -343,7 +408,7 @@
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
-          const start = {
+          const start={
             x:e.clientX, y:e.clientY,
             wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
@@ -351,16 +416,16 @@
           document.addEventListener('mousemove', onDrag);
           document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
           function onDrag(ev){
-            const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
-            const abs = start.pts.map((p,j)=> j===i ? [p[0]+dx, p[1]+dy] : p);
-            const xs = abs.map(p=>p[0]), ys = abs.map(p=>p[1]);
-            const minX = Math.min(...xs), minY = Math.min(...ys);
-            const maxX = Math.max(...xs), maxY = Math.max(...ys);
-            pts = abs.map(p=>[p[0]-minX, p[1]-minY]);
-            wrap.style.left   = `${start.wrapL + minX}px`;
-            wrap.style.top    = `${start.wrapT + minY}px`;
-            wrap.style.width  = `${maxX - minX}px`;
-            wrap.style.height = `${maxY - minY}px`;
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
+            const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+            const minX=Math.min(...xs), minY=Math.min(...ys);
+            const maxX=Math.max(...xs), maxY=Math.max(...ys);
+            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
+            wrap.style.left   = `${start.wrapL+minX}px`;
+            wrap.style.top    = `${start.wrapT+minY}px`;
+            wrap.style.width  = `${maxX-minX}px`;
+            wrap.style.height = `${maxY-minY}px`;
             update();
           }
         });
