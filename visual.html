@@ -134,10 +134,10 @@
     const shapeMenu = document.getElementById('shapeMenu');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // Click on blank paper: deselect + show toolbar
+    // Click directly on PAPER: deselect & show toolbar
     paper.addEventListener('click', e=>{
+      if (e.target !== paper) return;
       deselect();
-      e.stopPropagation();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
       toolbar.style.left = `${e.pageX - tb.width/2}px`;
@@ -146,16 +146,16 @@
       shapeMenu.style.display = 'none';
     });
 
-    // Prevent toolbar/shapeMenu clicks from deselecting
-    [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
+    // Prevent toolbar/shapeMenu clicks from affecting selection
+    [toolbar, shapeMenu].forEach(el=> el.addEventListener('click', e=> e.stopPropagation()));
 
-    // Global click: just hide toolbar/menu, don’t deselect
+    // Global click: hide toolbar/menu but do NOT deselect
     document.addEventListener('click', ()=>{
       toolbar.style.display = 'none';
       shapeMenu.style.display = 'none';
     });
 
-    // Add text
+    // Add Text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
@@ -170,11 +170,11 @@
       txt.focus();
     });
 
-    // Add image
+    // Add Image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
-      if(!url) return;
+      if (!url) return;
       const img = document.createElement('img');
       img.className = 'element';
       img.src = url;
@@ -186,7 +186,7 @@
       toolbar.style.display = 'none';
     });
 
-    // Show shape menu
+    // Show Shapes Menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r = e.currentTarget.getBoundingClientRect();
@@ -195,18 +195,17 @@
       shapeMenu.style.display = 'flex';
     });
 
-    // Insert shape
+    // Insert Shape
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
-      if(!btn) return;
+      if (!btn) return;
       const type = btn.dataset.shape;
-      if(type === 'triangle') insertTriangle();
+      if (type === 'triangle') insertTriangle();
       else insertBasic(type);
       shapeMenu.style.display = 'none';
       toolbar.style.display = 'none';
     });
 
-    // Helpers
     function insertBasic(type){
       const el = document.createElement('div');
       el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
@@ -242,7 +241,7 @@
 
     function initElement(el, isTri, poly){
       makeDraggable(el);
-      if(isTri) makeTriangleResizable(el, poly);
+      if (isTri) makeTriangleResizable(el, poly);
       else makeResizable(el);
       el.addEventListener('mousedown', e=>{
         e.stopPropagation();
@@ -251,14 +250,13 @@
     }
 
     function select(el){
-      if(selectedEl === el) return;
+      if (selectedEl === el) return;
       deselect();
       selectedEl = el;
       el.classList.add('selected');
     }
-
     function deselect(){
-      if(!selectedEl) return;
+      if (!selectedEl) return;
       selectedEl.classList.remove('selected');
       selectedEl = null;
     }
@@ -267,7 +265,7 @@
     function makeDraggable(el){
       let dx, dy;
       el.addEventListener('mousedown', e=>{
-        if(e.target.matches('.resize-handle, .vertex-handle')) return;
+        if (e.target.matches('.resize-handle, .vertex-handle')) return;
         e.preventDefault();
         dx = e.clientX - el.offsetLeft;
         dy = e.clientY - el.offsetTop;
@@ -280,7 +278,7 @@
       }
     }
 
-    // Rectangle/Circle resizing
+    // Resize rect/circle
     function makeResizable(el){
       ['nw','ne','sw','se'].forEach(dir=>{
         const h = document.createElement('div');
@@ -322,7 +320,7 @@
       };
     }
 
-    // Triangle resizing via vertex handles
+    // Triangle resizing via vertices
     function makeTriangleResizable(wrap, poly){
       let pts = [[0,70],[40,0],[80,70]];
       const handles = pts.map((_,i)=>{
