@@ -134,7 +134,7 @@
     const shapeMenu = document.getElementById('shapeMenu');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // click on canvas: deselect, show toolbar
+    // Click on blank paper: deselect + show toolbar
     paper.addEventListener('click', e=>{
       deselect();
       e.stopPropagation();
@@ -146,14 +146,13 @@
       shapeMenu.style.display = 'none';
     });
 
-    // prevent closing when clicking toolbar or shape menu
+    // Prevent toolbar/shapeMenu clicks from deselecting
     [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
 
-    // click outside: hide toolbar/menu and deselect
+    // Global click: just hide toolbar/menu, don’t deselect
     document.addEventListener('click', ()=>{
       toolbar.style.display = 'none';
       shapeMenu.style.display = 'none';
-      deselect();
     });
 
     // Add text
@@ -196,7 +195,7 @@
       shapeMenu.style.display = 'flex';
     });
 
-    // Insert shape types
+    // Insert shape
     shapeMenu.addEventListener('click', e=>{
       const btn = e.target.closest('[data-shape]');
       if(!btn) return;
