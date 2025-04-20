@@ -134,22 +134,25 @@
     const shapeMenu = document.getElementById('shapeMenu');
     let clickX=0, clickY=0, selectedEl=null;
 
-    // Click directly on PAPER: deselect & show toolbar
+    // Click on PAPER background: deselect
     paper.addEventListener('click', e=>{
-      if (e.target !== paper) return;
-      deselect();
+      if (e.target === paper) {
+        deselect();
+      }
+      // Always show toolbar on paper click
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
       toolbar.style.left = `${e.pageX - tb.width/2}px`;
       toolbar.style.top  = `${e.pageY - tb.height - 12}px`;
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
+      e.stopPropagation();
     });
 
-    // Prevent toolbar/shapeMenu clicks from affecting selection
-    [toolbar, shapeMenu].forEach(el=> el.addEventListener('click', e=> e.stopPropagation()));
+    // Prevent toolbar/shapeMenu clicks from propagating
+    [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
 
-    // Global click: hide toolbar/menu but do NOT deselect
+    // Click anywhere else: hide toolbar/menu but keep selection
     document.addEventListener('click', ()=>{
       toolbar.style.display = 'none';
       shapeMenu.style.display = 'none';
