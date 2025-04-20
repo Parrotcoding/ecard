@@ -9,7 +9,6 @@
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
 
-    /* workspace */
     #workspace { display:flex; gap:1rem; }
     #paper {
       position:relative; flex:1;
@@ -25,11 +24,13 @@
       border:1px solid #ccc; border-radius:4px;
     }
 
-    /* main toolbar */
+    /* Main toolbar */
     #toolbar {
       position:absolute; display:none;
-      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
-      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95);
+      border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1000;
     }
     #toolbar button {
@@ -40,11 +41,13 @@
     #toolbar button:hover { background:#76C69C; }
     #toolbar button img { width:20px; height:20px; }
 
-    /* shape menu */
+    /* Shape menu */
     #shapeMenu {
       position:absolute; display:none;
-      background:rgba(255,255,255,0.95); border:1px solid #ccc; border-radius:8px;
-      padding:.25rem; display:flex; gap:.5rem; box-shadow:0 2px 6px rgba(0,0,0,.1);
+      background:rgba(255,255,255,0.95);
+      border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem;
+      box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1001;
     }
     #shapeMenu button {
@@ -54,14 +57,14 @@
     }
     #shapeMenu button:hover { background:#76C69C; }
 
-    /* text toolbar */
+    /* Text toolbar */
     #textToolbar {
       position:absolute; display:none;
       background:#fff; border:1px solid #ccc; border-radius:4px;
       padding:.25rem; display:flex; gap:.5rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:2000;
-      flex-wrap: nowrap; white-space: nowrap; width: max-content;
+      flex-wrap:nowrap; white-space:nowrap; width:max-content;
     }
     #textToolbar button {
       border:none; background:transparent; cursor:pointer; font-size:1rem;
@@ -72,7 +75,7 @@
       width:3rem; border:1px solid #ccc; border-radius:4px; padding:2px;
     }
 
-    /* handles */
+    /* Handles */
     .resize-handle, .vertex-handle, .rotate-handle { display:none; }
     .resize-handle {
       position:absolute; width:10px; height:10px;
@@ -82,26 +85,23 @@
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px; }
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px; }
-
     .vertex-handle {
       position:absolute; width:12px; height:12px;
       background:#fff; border:2px solid #60A085; border-radius:50%;
       z-index:10; cursor:move; margin:-6px 0 0 -6px;
     }
-
     .rotate-handle {
       position:absolute; top:-20px; left:50%; transform:translateX(-50%);
       width:12px; height:12px; background:#fff;
       border:2px solid #60A085; border-radius:50%; cursor:grab; z-index:11;
     }
-
     .element.selected .resize-handle,
     .shape-wrapper.selected .vertex-handle,
     .element.selected .rotate-handle {
       display:block !important;
     }
 
-    /* element styles */
+    /* Elements */
     .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
     .text-element {
       min-width:50px; min-height:20px; padding:.2rem;
@@ -136,12 +136,8 @@
   <!-- Main toolbar -->
   <div id="toolbar">
     <button id="btnText" title="Add Text">T</button>
-    <button id="btnImage" title="Add Image">
-      <img src="image.svg" alt="Image">
-    </button>
-    <button id="btnShape" title="Add Shape">
-      <img src="shapes.svg" alt="Shapes">
-    </button>
+    <button id="btnImage" title="Add Image"><img src="image.svg" alt="Image"></button>
+    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
   <!-- Shape menu -->
@@ -189,12 +185,16 @@
       deselect();
       selectedEl = el;
       el.classList.add('selected');
+      // hide insert toolbar on element select
+      toolbar.style.display = 'none';
+      shapeMenu.style.display = 'none';
       if (el.classList.contains('text-element')) {
+        // position above text, with gap
         const rect   = el.getBoundingClientRect();
         const tbRect = textToolbar.getBoundingClientRect();
         let left = rect.left;
-        let top  = rect.top - tbRect.height - 8;
-        if (top < 8) top = rect.bottom + 8;
+        let top  = rect.top - tbRect.height - 12;
+        if (top < 12) top = rect.bottom + 12;
         textToolbar.style.left  = `${left}px`;
         textToolbar.style.top   = `${top}px`;
         textToolbar.style.display = 'flex';
@@ -203,6 +203,7 @@
       }
     }
 
+    // show insert toolbar on paper click
     paper.addEventListener('click', e=>{
       if (e.target === paper) deselect();
       clickX = e.offsetX; clickY = e.offsetY;
@@ -216,6 +217,7 @@
     [toolbar, shapeMenu, textToolbar].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
+    // Insert text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
@@ -230,6 +232,7 @@
       txt.focus();
     });
 
+    // Insert image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
@@ -237,13 +240,15 @@
       addAsset(url);
       const wrap = document.createElement('div');
       wrap.className = 'element image-wrapper';
-      wrap.style.left = `${clickX}px`; wrap.style.top = `${clickY}px`;
+      wrap.style.left = `${clickX}px`;
+      wrap.style.top  = `${clickY}px`;
       wrap.style.backgroundImage = `url(${url})`;
       paper.append(wrap);
       initElement(wrap,false);
       toolbar.style.display='none';
     });
 
+    // Insert shape
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r = e.currentTarget.getBoundingClientRect();
@@ -252,15 +257,15 @@
       shapeMenu.style.display = 'flex';
     });
     shapeMenu.addEventListener('click', e=>{
-      const btn = e.target.closest('[data-shape]');
-      if (!btn) return;
+      const btn = e.target.closest('[data-shape]'); if(!btn) return;
       const type = btn.dataset.shape;
-      if (type === 'triangle') insertTriangle();
+      if (type==='triangle') insertTriangle();
       else insertBasic(type);
       shapeMenu.style.display='none';
       toolbar.style.display='none';
     });
 
+    // Text toolbar actions
     document.getElementById('tbBold').onclick      = ()=> selectedEl && (selectedEl.style.fontWeight  = selectedEl.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    = ()=> selectedEl && (selectedEl.style.fontStyle   = selectedEl.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick = ()=> selectedEl && (selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline');
@@ -268,41 +273,36 @@
     document.getElementById('tbAlignCenter').onclick = ()=> selectedEl && (selectedEl.style.textAlign='center');
     document.getElementById('tbAlignRight').onclick  = ()=> selectedEl && (selectedEl.style.textAlign='right');
     document.getElementById('tbFontSize').oninput    = e=> selectedEl && (selectedEl.style.fontSize = e.target.value+'px');
-    document.getElementById('tbColor').oninput       = e=> selectedEl && (selectedEl.style.color = e.target.value);
+    document.getElementById('tbColor').oninput       = e=> selectedEl && (selectedEl.style.color    = e.target.value);
 
     function addAsset(src){
-      const thumb = document.createElement('img');
-      thumb.src = src; thumb.draggable = true;
-      thumb.addEventListener('dragstart', ev=> ev.dataTransfer.setData('text/plain', src) );
+      const thumb=document.createElement('img');
+      thumb.src=src; thumb.draggable=true;
+      thumb.addEventListener('dragstart', ev=>ev.dataTransfer.setData('text/plain',src));
       assetList.append(thumb);
     }
 
     function insertBasic(type){
-      const el = document.createElement('div');
-      el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
-      el.style.left = `${clickX}px`; el.style.top  = `${clickY}px`;
-      paper.append(el);
-      initElement(el,false);
+      const el=document.createElement('div');
+      el.className='element '+(type==='rect'?'shape-rect':'shape-circle');
+      el.style.left=`${clickX}px`; el.style.top=`${clickY}px`;
+      paper.append(el); initElement(el,false);
     }
 
     function insertTriangle(){
-      const wrap = document.createElement('div');
-      wrap.className = 'shape-wrapper';
-      wrap.style.left   = `${clickX}px`;
-      wrap.style.top    = `${clickY}px`;
-      wrap.style.width  = '80px';
-      wrap.style.height = '70px';
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg   = document.createElementNS(svgNS,'svg');
+      const wrap=document.createElement('div');
+      wrap.className='shape-wrapper';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.width='80px'; wrap.style.height='70px';
+      const svgNS="http://www.w3.org/2000/svg";
+      const svg=document.createElementNS(svgNS,'svg');
       svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
-      const poly = document.createElementNS(svgNS,'polygon');
+      const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points','0,70 40,0 80,70');
       poly.setAttribute('fill','rgba(96,160,133,0.3)');
       poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
-      svg.append(poly);
-      wrap.append(svg);
-      paper.append(wrap);
-      initElement(wrap,true,poly);
+      svg.append(poly); wrap.append(svg);
+      paper.append(wrap); initElement(wrap,true,poly);
     }
 
     function initElement(el,isTri,poly){
@@ -311,57 +311,50 @@
       addResizeHandles(el);
       addRotateHandle(el);
       if(isTri) makeTriangleResizable(el,poly);
-      el.addEventListener('mousedown', e=>{
-        e.stopPropagation(); select(el);
-      });
+      el.addEventListener('mousedown', e=>{ e.stopPropagation(); select(el); });
     }
 
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
-        if (e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
+        if(e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
         e.preventDefault();
-        dx = e.clientX - el.offsetLeft;
-        dy = e.clientY - el.offsetTop;
+        dx=e.clientX-el.offsetLeft; dy=e.clientY-el.offsetTop;
         document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', move), { once:true });
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',move),{once:true});
       });
       function move(ev){
-        el.style.left = `${ev.clientX - dx}px`;
-        el.style.top  = `${ev.clientY - dy}px`;
+        el.style.left=`${ev.clientX-dx}px`;
+        el.style.top =`${ev.clientY-dy}px`;
       }
     }
 
     function enableDrop(el){
-      el.addEventListener('dragover', e=>e.preventDefault());
-      el.addEventListener('drop', e=>{
+      el.addEventListener('dragover',e=>e.preventDefault());
+      el.addEventListener('drop',e=>{
         e.preventDefault();
-        const src = e.dataTransfer.getData('text/plain');
-        if (!src) return;
-        el.style.backgroundImage = `url(${src})`;
-        el.style.backgroundSize  = 'cover';
-        el.style.backgroundPosition = 'center';
-        if (el.classList.contains('shape-wrapper')){
-          const poly = el.querySelector('polygon');
-          poly.setAttribute('fill','none');
-          poly.style.pointerEvents='none';
-          const pts = poly.getAttribute('points').split(' ')
-                         .map(p=>p.split(',').map(Number));
-          const W = el.clientWidth, H = el.clientHeight;
-          const pct = pts.map(([x,y])=>
+        const src=e.dataTransfer.getData('text/plain'); if(!src)return;
+        el.style.backgroundImage=`url(${src})`;
+        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        if(el.classList.contains('shape-wrapper')){
+          const poly=el.querySelector('polygon');
+          poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
+          const pts=poly.getAttribute('points').split(' ')
+                     .map(p=>p.split(',').map(Number));
+          const W=el.clientWidth,H=el.clientHeight;
+          const pct=pts.map(([x,y])=>
             `${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`
           ).join(', ');
-          el.style.clipPath = `polygon(${pct})`;
+          el.style.clipPath=`polygon(${pct})`;
         }
-        el.style.zIndex = '999';
+        el.style.zIndex='999';
       });
     }
 
     function addResizeHandles(el){
       ['nw','ne','sw','se'].forEach(dir=>{
-        const h = document.createElement('div');
-        h.className = 'resize-handle handle-'+dir;
-        el.append(h);
+        const h=document.createElement('div');
+        h.className='resize-handle handle-'+dir; el.append(h);
         h.addEventListener('mousedown', startResize(dir,el));
       });
     }
@@ -369,67 +362,63 @@
     function startResize(dir,el){
       return function(e){
         e.stopPropagation(); e.preventDefault();
-        const r = el.getBoundingClientRect(), pr = paper.getBoundingClientRect();
-        const start = {
-          x: e.clientX, y: e.clientY,
-          left: r.left-pr.left, top: r.top-pr.top,
-          w: r.width, h: r.height,
-          aspect: r.width/r.height
+        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
+        const start={ x:e.clientX,y:e.clientY,
+          left:r.left-pr.left, top:r.top-pr.top,
+          w:r.width, h:r.height, aspect:r.width/r.height
         };
         document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',doResize),{once:true});
         function doResize(ev){
-          let dx=ev.clientX-start.x, dy=ev.clientY-start.y,
-              newW=start.w, newH=start.h,
-              newL=start.left, newT=start.top;
+          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
           if(dir.includes('e')) newW=start.w+dx;
           if(dir.includes('s')) newH=start.h+dy;
           if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
           if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
           if(!el.classList.contains('image-wrapper') && ev.shiftKey){
-            newH = newW/start.aspect;
-            if(dir.includes('n')) newT = start.top + (start.h-newH);
+            newH=newW/start.aspect;
+            if(dir.includes('n')) newT=start.top+(start.h-newH);
           }
-          el.style.width  = `${newW}px`;
-          el.style.height = `${newH}px`;
-          el.style.left   = `${newL}px`;
-          el.style.top    = `${newT}px`;
+          el.style.width=`${newW}px`;
+          el.style.height=`${newH}px`;
+          el.style.left=`${newL}px`;
+          el.style.top=`${newT}px`;
         }
       };
     }
 
     function addRotateHandle(el){
-      const h = document.createElement('div');
-      h.className = 'rotate-handle';
-      el.append(h);
+      const h=document.createElement('div');
+      h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
         e.stopPropagation(); e.preventDefault();
-        const rect = el.getBoundingClientRect(),
-              cx = rect.left + rect.width/2,
-              cy = rect.top  + rect.height/2,
-              startAng = Math.atan2(e.clientY-cy, e.clientX-cx);
-        let currRot = parseFloat(el.dataset.rot||0);
-        const onmove = ev=>{
-          const ang = Math.atan2(ev.clientY-cy, ev.clientX-cx),
-                delta = ang - startAng,
-                deg = currRot + delta*180/Math.PI;
-          el.style.transform = `rotate(${deg}deg)`;
-          el.dataset.rot = deg;
+        const rect=el.getBoundingClientRect(),
+              cx=rect.left+rect.width/2, cy=rect.top+rect.height/2,
+              startAng=Math.atan2(e.clientY-cy,e.clientX-cx);
+        let currRot=parseFloat(el.dataset.rot||0);
+        const onmove=ev=>{
+          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx),
+                delta=ang-startAng,
+                deg=currRot+delta*180/Math.PI;
+          el.style.transform=`rotate(${deg}deg)`;
+          el.dataset.rot=deg;
         };
-        document.addEventListener('mousemove', onmove);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
+        document.addEventListener('mousemove',onmove);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
       });
     }
 
     function makeTriangleResizable(wrap,poly){
       let pts=[[0,70],[40,0],[80,70]];
-      const handles = pts.map((_,i)=>{
-        const h = document.createElement('div');
-        h.className = 'vertex-handle'; wrap.append(h); return h;
+      const handles=pts.map((_,i)=>{
+        const h=document.createElement('div');
+        h.className='vertex-handle'; wrap.append(h); return h;
       });
       function update(){
         handles.forEach((h,i)=>{
-          h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`;
+          h.style.left=`${pts[i][0]}px`;
+          h.style.top =`${pts[i][1]}px`;
         });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
@@ -437,24 +426,23 @@
         h.addEventListener('mousedown', e=>{
           e.stopPropagation(); e.preventDefault();
           select(wrap);
-          const start={
-            x:e.clientX, y:e.clientY,
+          const start={ x:e.clientX,y:e.clientY,
             wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
             pts:pts.map(p=>p.slice())
           };
           document.addEventListener('mousemove', ondrag);
-          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', ondrag), { once:true });
+          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',ondrag),{once:true});
           function ondrag(ev){
             const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-            const abs = start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
+            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p);
             const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
             const minX=Math.min(...xs), minY=Math.min(...ys);
             const maxX=Math.max(...xs), maxY=Math.max(...ys);
-            pts = abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left   = `${start.wrapL+minX}px`;
-            wrap.style.top    = `${start.wrapT+minY}px`;
-            wrap.style.width  = `${maxX-minX}px`;
-            wrap.style.height = `${maxY-minY}px`;
+            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
+            wrap.style.left=`${start.wrapL+minX}px`;
+            wrap.style.top =`${start.wrapT+minY}px`;
+            wrap.style.width=`${maxX-minX}px`;
+            wrap.style.height=`${maxY-minY}px`;
             update();
           }
         });
