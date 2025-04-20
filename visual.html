@@ -47,6 +47,7 @@
       z-index:2000; flex-wrap:nowrap; white-space:nowrap; width:max-content;
     }
     #textToolbar button { border:none; background:transparent; cursor:pointer; font-size:1rem; }
+    #textToolbar button img { width:20px; height:20px; }
     #textToolbar select, #textToolbar input[type="color"], #textToolbar input[type="number"] {
       width:3rem; border:1px solid #ccc; border-radius:4px; padding:2px;
     }
@@ -60,7 +61,11 @@
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px; }
     .vertex-handle { position:absolute; width:12px; height:12px; background:#fff; border:2px solid #60A085; border-radius:50%; z-index:10; cursor:move; margin:-6px 0 0 -6px; }
     .rotate-handle { position:absolute; top:-24px; left:50%; transform:translateX(-50%); width:12px; height:12px; background:#fff; border:2px solid #60A085; border-radius:50%; cursor:grab; z-index:11; }
-    .element.selected .resize-handle, .shape-wrapper.selected .vertex-handle, .element.selected .rotate-handle { display:block !important; }
+    .element.selected .resize-handle,
+    .shape-wrapper.selected .vertex-handle,
+    .element.selected .rotate-handle {
+      display:block !important;
+    }
 
     /* Elements */
     .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
@@ -78,27 +83,38 @@
     <div id="assets"><h2>Assets</h2><div id="assetList"></div></div>
   </div>
 
+  <!-- Insert toolbar -->
   <div id="toolbar">
     <button id="btnText" title="Add Text">T</button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Image"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
+  <!-- Shape menu -->
   <div id="shapeMenu">
     <button data-shape="rect" title="Rectangle">◻</button>
     <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
 
+  <!-- Text toolbar -->
   <div id="textToolbar">
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
     <button id="tbUnderline"><u>U</u></button>
-    <button id="tbAlignLeft">≡</button>
-    <button id="tbAlignCenter">≣</button>
-    <button id="tbAlignRight">≡</button>
+
+    <button id="tbAlignLeft" title="Align left">
+      <img src="align-left.svg" alt="Align left">
+    </button>
+    <button id="tbAlignCenter" title="Align center">
+      <img src="align-center.svg" alt="Align center">
+    </button>
+    <button id="tbAlignRight" title="Align right">
+      <img src="align-right.svg" alt="Align right">
+    </button>
+
     <input type="number" id="tbFontSize" min="8" max="72" title="Font Size">px
-    <input type="color"  id="tbColor" title="Text Color">
+    <input type="color"  id="tbColor"      title="Text Color">
   </div>
 
   <script>
@@ -112,7 +128,7 @@
 
     function rgbToHex(rgb){
       const [r,g,b] = rgb.match(/\d+/g).map(Number);
-      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+      return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
 
     function updateTextToolbarPosition(el){
@@ -285,7 +301,8 @@
       el.addEventListener('drop', e=>{
         e.preventDefault();
         const src=e.dataTransfer.getData('text/plain'); if(!src)return;
-        el.style.backgroundImage=`url(${src})`; el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        el.style.backgroundImage=`url(${src})`;
+        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
         if(el.classList.contains('shape-wrapper')){
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
@@ -336,8 +353,7 @@
     }
 
     function addRotateHandle(el){
-      const h=document.createElement('div');
-      h.className='rotate-handle'; el.append(h);
+      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
         e.stopPropagation(); e.preventDefault();
         const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
@@ -381,7 +397,6 @@
             wrap.style.left=`${start.wrapL+minX}px`; wrap.style.top=`${start.wrapT+minY}px`;
             wrap.style.width=`${maxX-minX}px`; wrap.style.height=`${maxY-minY}px`;
             update();
-            if(selectedEl===wrap) updateTextToolbarPosition(wrap);
           }
         });
       });
