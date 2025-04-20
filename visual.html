@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Seafoam E‑Card Visual Editor</title>
+  <title>Seafoam E‑Card Visual Editor</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -24,15 +24,12 @@
       overflow:auto;
     }
 
-    /* Toolbar */
+    /* toolbar */
     #toolbar {
-      position:absolute;
-      display:none;
+      position:absolute; display:none;
       background:rgba(255,255,255,0.95);
-      border:1px solid #ccc;
-      border-radius:8px;
-      padding:.25rem;
-      display:flex; gap:.5rem;
+      border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1000;
     }
@@ -44,18 +41,15 @@
       cursor:pointer;
     }
     #toolbar button:hover { background:#76C69C }
-    #toolbar img { width:20px; height:20px; pointer-events:none }
+    #toolbar img { width:20px; height:20px }
     .icon-text { color:#fff; font-size:1rem; font-weight:700 }
 
-    /* Shapes submenu */
+    /* shapes submenu */
     #shapeMenu {
-      position:absolute;
-      display:none;
+      position:absolute; display:none;
       background:rgba(255,255,255,0.95);
-      border:1px solid #ccc;
-      border-radius:8px;
-      padding:.25rem;
-      display:flex; gap:.5rem;
+      border:1px solid #ccc; border-radius:8px;
+      padding:.25rem; display:flex; gap:.5rem;
       box-shadow:0 2px 6px rgba(0,0,0,.1);
       z-index:1001;
     }
@@ -63,15 +57,14 @@
       width:32px; height:32px;
       border:none; border-radius:4px;
       background:#A8E6CF;
-      cursor:pointer;
       display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
     }
     #shapeMenu button:hover { background:#76C69C }
 
-    /* Resize handles */
+    /* resize handles */
     .resize-handle {
-      position:absolute;
-      width:10px; height:10px;
+      position:absolute; width:10px; height:10px;
       background:#fff; border:1px solid #60A085;
       z-index:10;
     }
@@ -80,15 +73,23 @@
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px }
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px }
 
-    /* Elements */
-    .element { position:absolute; cursor:move; user-select:none }
+    /* vertex handles for triangle */
+    .vertex-handle {
+      position:absolute; width:12px; height:12px;
+      background:#fff; border:2px solid #60A085;
+      border-radius:50%;
+      z-index:10; cursor:move;
+      margin:-6px 0 0 -6px; /* center on point */
+    }
+
+    /* elements */
+    .element, .shape-wrapper {
+      position:absolute; user-select:none;
+    }
     .text-element {
       min-width:50px; min-height:20px;
       padding:.2rem; background:transparent; outline:none;
       cursor:text;
-    }
-    .shape-rect, .shape-circle, .shape-triangle {
-      box-sizing:border-box;
     }
     .shape-rect {
       width:100px; height:60px;
@@ -101,36 +102,21 @@
       border:2px solid #60A085;
       border-radius:50%;
     }
-    .shape-triangle {
-      width:0; height:0;
-      border-left:40px solid transparent;
-      border-right:40px solid transparent;
-      border-bottom:70px solid rgba(96,160,133,0.3);
-      position:relative;
-    }
-    .shape-triangle::after {
-      content:'';
-      position:absolute; top:-70px; left:-40px;
-      border-left:40px solid transparent;
-      border-right:40px solid transparent;
-      border-bottom:70px solid transparent;
-      border-bottom-color:#60A085;
-      border-bottom-width:2px;
-    }
+    /* triangle is done via SVG */
   </style>
 </head>
 <body>
-  <h1>Visual E‑Card Editor</h1>
+  <h1>Visual E‑Card Editor</h1>
   <div id="paper"></div>
 
-  <!-- Toolbar -->
+  <!-- toolbar -->
   <div id="toolbar">
     <button id="btnText"  title="Add Text"><span class="icon-text">T</span></button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Img"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- Shapes submenu -->
+  <!-- shapes submenu -->
   <div id="shapeMenu">
     <button data-shape="rect"     title="Rectangle">◻</button>
     <button data-shape="circle"   title="Circle">◯</button>
@@ -144,8 +130,8 @@
     const shapeMenu = document.getElementById('shapeMenu');
     let clickX=0, clickY=0;
 
-    // Show toolbar above cursor
-    paper.addEventListener('click', e => {
+    // show toolbar above cursor
+    paper.addEventListener('click', e=>{
       e.stopPropagation();
       clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
@@ -154,17 +140,13 @@
       toolbar.style.display = 'flex';
       shapeMenu.style.display = 'none';
     });
-    // Prevent hiding on toolbar/shapeMenu clicks
-    [toolbar, shapeMenu].forEach(el =>
-      el.addEventListener('click', e => e.stopPropagation())
-    );
-    // Hide on outside click
-    document.addEventListener('click', () => {
-      toolbar.style.display = 'none';
-      shapeMenu.style.display = 'none';
+    [toolbar, shapeMenu].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
+    document.addEventListener('click', ()=>{
+      toolbar.style.display='none';
+      shapeMenu.style.display='none';
     });
 
-    // Add text
+    // add text
     document.getElementById('btnText').addEventListener('click', e=>{
       e.stopPropagation();
       const txt = document.createElement('div');
@@ -175,73 +157,93 @@
       txt.textContent = 'Enter text';
       paper.append(txt);
       makeDraggable(txt);
-      toolbar.style.display = 'none';
+      toolbar.style.display='none';
       txt.focus();
     });
 
-    // Add image
+    // add image
     document.getElementById('btnImage').addEventListener('click', e=>{
       e.stopPropagation();
       const url = prompt('Enter image URL:');
       if(!url) return;
       const img = document.createElement('img');
       img.className='element';
-      img.src = url;
-      img.style.left = clickX + 'px';
-      img.style.top  = clickY + 'px';
-      img.style.width = 'auto'; img.style.height = '100px';
+      img.src=url;
+      img.style.left  = clickX + 'px';
+      img.style.top   = clickY + 'px';
+      img.style.height= '100px';
       paper.append(img);
       makeDraggable(img);
       makeResizable(img, false);
-      toolbar.style.display = 'none';
+      toolbar.style.display='none';
     });
 
-    // Show shape menu
+    // show shape menu
     document.getElementById('btnShape').addEventListener('click', e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left = r.right + 8 + 'px';
       shapeMenu.style.top  = r.top + 'px';
-      shapeMenu.style.display = 'flex';
+      shapeMenu.style.display='flex';
     });
 
-    // Insert shape
+    // insert shape
     shapeMenu.addEventListener('click', e=>{
-      const b = e.target.closest('[data-shape]');
-      if(!b) return;
-      const t = b.dataset.shape;
-      let el;
-      if(t==='rect'){
-        el = document.createElement('div');
-        el.className = 'element shape-rect';
-      } else if(t==='circle'){
-        el = document.createElement('div');
-        el.className = 'element shape-circle';
-      } else {
-        el = document.createElement('div');
-        el.className = 'element shape-triangle';
-      }
-      el.style.left = clickX + 'px';
-      el.style.top  = clickY + 'px';
-      paper.append(el);
-      makeDraggable(el);
-      makeResizable(el, t==='triangle');
+      const btn = e.target.closest('[data-shape]');
+      if(!btn) return;
+      const type = btn.dataset.shape;
+      if(type==='triangle') insertTriangle();
+      else insertBasic(type);
       shapeMenu.style.display='none';
       toolbar.style.display='none';
     });
 
-    // Draggable
+    function insertBasic(type){
+      const el = document.createElement('div');
+      el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
+      el.style.left = clickX + 'px';
+      el.style.top  = clickY + 'px';
+      paper.append(el);
+      makeDraggable(el);
+      makeResizable(el, false);
+    }
+
+    function insertTriangle(){
+      // wrapper for SVG + handles
+      const wrap = document.createElement('div');
+      wrap.className = 'shape-wrapper';
+      wrap.style.left = clickX + 'px';
+      wrap.style.top  = clickY + 'px';
+      wrap.style.width  = '80px';
+      wrap.style.height = '70px';
+      // create SVG
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS,'svg');
+      svg.setAttribute('width','100%');
+      svg.setAttribute('height','100%');
+      const poly = document.createElementNS(svgNS,'polygon');
+      poly.setAttribute('points','0,70 40,0 80,70');
+      poly.setAttribute('fill','rgba(96,160,133,0.3)');
+      poly.setAttribute('stroke','#60A085');
+      poly.setAttribute('stroke-width','2');
+      svg.append(poly);
+      wrap.append(svg);
+      paper.append(wrap);
+      makeDraggable(wrap);
+      makeTriangleResizable(wrap, poly);
+    }
+
+    // draggable
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
-        if(e.target.classList.contains('resize-handle')) return;
+        if(e.target.classList.contains('resize-handle')
+         || e.target.classList.contains('vertex-handle')) return;
         e.preventDefault();
         dx = e.clientX - el.offsetLeft;
         dy = e.clientY - el.offsetTop;
         document.addEventListener('mousemove', onmove);
-        document.addEventListener('mouseup', ()=> {
-          document.removeEventListener('mousemove', onmove);
-        }, { once:true });
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
       });
       function onmove(e){
         el.style.left = (e.clientX - dx) + 'px';
@@ -249,72 +251,86 @@
       }
     }
 
-    // Resizable with corner handles
+    // basic rectangle/circle resizing
     function makeResizable(el, isTriangle){
-      const handles = isTriangle
-        ? ['nw','ne','sw','se']  // treat triangle bounding-box corners
-        : ['nw','ne','sw','se'];
-      handles.forEach(dir=>{
+      if(isTriangle) return;
+      ['nw','ne','sw','se'].forEach(dir=>{
         const h = document.createElement('div');
-        h.className = 'resize-handle handle-' + dir;
-        h.dataset.dir = dir;
+        h.className = 'resize-handle handle-'+dir;
         el.append(h);
-        h.addEventListener('mousedown', e=>{
-          e.stopPropagation(); e.preventDefault();
-          startResize(e, el, dir, isTriangle);
-        });
+        h.addEventListener('mousedown', startResize(dir, el, false));
       });
     }
-
-    function startResize(e, el, dir, isTriangle){
-      const rect = el.getBoundingClientRect();
-      const parentRect = paper.getBoundingClientRect();
-      const start = {
-        x: e.clientX,
-        y: e.clientY,
-        left: rect.left - parentRect.left,
-        top: rect.top - parentRect.top,
-        width: rect.width,
-        height: rect.height
-      };
-      document.addEventListener('mousemove', doResize);
-      document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
-
-      function doResize(ev){
-        let dx = ev.clientX - start.x;
-        let dy = ev.clientY - start.y;
-        let newLeft = start.left;
-        let newTop  = start.top;
-        let newW = start.width;
-        let newH = start.height;
-
-        if(dir.includes('e')) newW = start.width + dx;
-        if(dir.includes('s')) newH = start.height + dy;
-        if(dir.includes('w')){
-          newW = start.width - dx;
-          newLeft = start.left + dx;
-        }
-        if(dir.includes('n')){
-          newH = start.height - dy;
-          newTop = start.top + dy;
-        }
-
-        if(isTriangle){
-          // scale triangle via transform
-          const baseW = 80, baseH = 70;
-          const sx = newW / baseW, sy = newH / baseH;
-          el.style.transform = `scale(${sx},${sy})`;
-          el.style.left = newLeft + 'px';
-          el.style.top  = newTop  + 'px';
-        } else {
+    function startResize(dir, el, isTri){
+      return function(e){
+        e.stopPropagation(); e.preventDefault();
+        const rect = el.getBoundingClientRect();
+        const parentRect = paper.getBoundingClientRect();
+        const start = {
+          x: e.clientX,
+          y: e.clientY,
+          left: rect.left - parentRect.left,
+          top:  rect.top  - parentRect.top,
+          w: rect.width,
+          h: rect.height
+        };
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
+        function doResize(ev){
+          let dx = ev.clientX - start.x;
+          let dy = ev.clientY - start.y;
+          let newL = start.left, newT = start.top, newW = start.w, newH = start.h;
+          if(dir.includes('e')) newW = start.w + dx;
+          if(dir.includes('s')) newH = start.h + dy;
+          if(dir.includes('w')){
+            newW = start.w - dx;
+            newL = start.left + dx;
+          }
+          if(dir.includes('n')){
+            newH = start.h - dy;
+            newT = start.top + dy;
+          }
           el.style.width  = newW + 'px';
           el.style.height = newH + 'px';
-          el.style.left   = newLeft + 'px';
-          el.style.top    = newTop  + 'px';
+          el.style.left   = newL + 'px';
+          el.style.top    = newT + 'px';
         }
       }
     }
 
+    // triangle vertex resizing
+    function makeTriangleResizable(wrap, poly){
+      // initial points
+      let pts = [[0,70],[40,0],[80,70]];
+      const updateHandles = handles => {
+        handles.forEach((h,i)=>{
+          h.style.left = pts[i][0] + 'px';
+          h.style.top  = pts[i][1] + 'px';
+        });
+        poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+      };
+      // create 3 handles
+      const handles = pts.map((p,i)=>{
+        const h = document.createElement('div');
+        h.className = 'vertex-handle';
+        wrap.append(h);
+        let start;
+        h.addEventListener('mousedown', e=>{
+          e.stopPropagation(); e.preventDefault();
+          start = { x:e.clientX, y:e.clientY, idx:i, pts: pts.map(p=>p.slice()) };
+          document.addEventListener('mousemove', onDrag);
+          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onDrag), { once:true });
+        });
+        function onDrag(ev){
+          const dx = ev.clientX - start.x;
+          const dy = ev.clientY - start.y;
+          pts = start.pts.map((p,j)=> j===start.idx ? [p[0]+dx, p[1]+dy] : p );
+          updateHandles(handles);
+        }
+        return h;
+      });
+      updateHandles(handles);
+    }
   })();
   </script>
 </body>
