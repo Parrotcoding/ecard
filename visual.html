@@ -53,27 +53,14 @@
 
     /* Handles */
     .resize-handle, .vertex-handle, .rotate-handle { display:none; }
-    .resize-handle {
-      position:absolute; width:10px; height:10px; background:#fff; border:1px solid #60A085; z-index:10;
-    }
+    .resize-handle { position:absolute; width:10px; height:10px; background:#fff; border:1px solid #60A085; z-index:10; }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px; }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px; }
     .handle-sw { cursor:nesw-resize; bottom:-5px; left:-5px; }
     .handle-se { cursor:nwse-resize; bottom:-5px; right:-5px; }
-    .vertex-handle {
-      position:absolute; width:12px; height:12px; background:#fff; border:2px solid #60A085;
-      border-radius:50%; z-index:10; cursor:move; margin:-6px 0 0 -6px;
-    }
-    .rotate-handle {
-      position:absolute; top:-24px; left:50%; transform:translateX(-50%);
-      width:12px; height:12px; background:#fff; border:2px solid #60A085;
-      border-radius:50%; cursor:grab; z-index:11;
-    }
-    .element.selected .resize-handle,
-    .shape-wrapper.selected .vertex-handle,
-    .element.selected .rotate-handle {
-      display:block !important;
-    }
+    .vertex-handle { position:absolute; width:12px; height:12px; background:#fff; border:2px solid #60A085; border-radius:50%; z-index:10; cursor:move; margin:-6px 0 0 -6px; }
+    .rotate-handle { position:absolute; top:-24px; left:50%; transform:translateX(-50%); width:12px; height:12px; background:#fff; border:2px solid #60A085; border-radius:50%; cursor:grab; z-index:11; }
+    .element.selected .resize-handle, .shape-wrapper.selected .vertex-handle, .element.selected .rotate-handle { display:block !important; }
 
     /* Elements */
     .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
@@ -88,27 +75,21 @@
   <h1>Visual E‑Card Editor</h1>
   <div id="workspace">
     <div id="paper"></div>
-    <div id="assets">
-      <h2>Assets</h2>
-      <div id="assetList"></div>
-    </div>
+    <div id="assets"><h2>Assets</h2><div id="assetList"></div></div>
   </div>
 
-  <!-- Insert toolbar -->
   <div id="toolbar">
     <button id="btnText" title="Add Text">T</button>
     <button id="btnImage" title="Add Image"><img src="image.svg" alt="Image"></button>
     <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
   </div>
 
-  <!-- Shape menu -->
   <div id="shapeMenu">
-    <button data-shape="rect"     title="Rectangle">◻</button>
-    <button data-shape="circle"   title="Circle">◯</button>
+    <button data-shape="rect" title="Rectangle">◻</button>
+    <button data-shape="circle" title="Circle">◯</button>
     <button data-shape="triangle" title="Triangle">△</button>
   </div>
 
-  <!-- Text toolbar -->
   <div id="textToolbar">
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
@@ -117,112 +98,119 @@
     <button id="tbAlignCenter">≣</button>
     <button id="tbAlignRight">≡</button>
     <input type="number" id="tbFontSize" min="8" max="72" title="Font Size">px
-    <input type="color"  id="tbColor"      title="Text Color">
+    <input type="color"  id="tbColor" title="Text Color">
   </div>
 
   <script>
   (function(){
-    const paper = document.getElementById('paper');
-    const toolbar = document.getElementById('toolbar');
-    const shapeMenu = document.getElementById('shapeMenu');
-    const textToolbar = document.getElementById('textToolbar');
-    const assetList = document.getElementById('assetList');
+    const paper = document.getElementById('paper'),
+          toolbar = document.getElementById('toolbar'),
+          shapeMenu = document.getElementById('shapeMenu'),
+          textToolbar = document.getElementById('textToolbar'),
+          assetList = document.getElementById('assetList');
     let clickX=0, clickY=0, selectedEl=null;
 
     function rgbToHex(rgb){
-      const [r,g,b]=rgb.match(/\d+/g).map(Number);
+      const [r,g,b] = rgb.match(/\d+/g).map(Number);
       return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
+
+    function updateTextToolbarPosition(el){
+      const rect = el.getBoundingClientRect(),
+            tbRect = textToolbar.getBoundingClientRect(),
+            scrollY = window.scrollY,
+            left = rect.left + window.scrollX,
+            topCandidate = scrollY + rect.top - tbRect.height - 8,
+            top = topCandidate < scrollY + 8
+                  ? scrollY + rect.bottom + 8
+                  : topCandidate;
+      textToolbar.style.left = `${left}px`;
+      textToolbar.style.top  = `${top}px`;
     }
 
     function deselect(){
       if(!selectedEl) return;
       selectedEl.classList.remove('selected');
-      selectedEl=null;
-      textToolbar.style.display='none';
+      selectedEl = null;
+      textToolbar.style.display = 'none';
     }
 
     function select(el){
-      if(selectedEl===el) return;
+      if(selectedEl === el) return;
       deselect();
-      selectedEl=el;
+      selectedEl = el;
       el.classList.add('selected');
-      // hide insert toolbar
-      toolbar.style.display='none';
-      shapeMenu.style.display='none';
+      toolbar.style.display = 'none';
+      shapeMenu.style.display = 'none';
+
       if(el.classList.contains('text-element')){
-        // measure after making visible
-        textToolbar.style.visibility='hidden';
-        textToolbar.style.display='flex';
-        const rect=el.getBoundingClientRect();
-        const tbRect=textToolbar.getBoundingClientRect();
-        const scrollY=window.scrollY;
-        let left=rect.left+window.scrollX;
-        let top=scrollY+rect.top - tbRect.height - 8;
-        if(top < scrollY+8){
-          top = scrollY+rect.bottom+8;
-        }
-        textToolbar.style.left=`${left}px`;
-        textToolbar.style.top=`${top}px`;
-        textToolbar.style.visibility='visible';
-        document.getElementById('tbFontSize').value=parseInt(getComputedStyle(el).fontSize);
-        document.getElementById('tbColor').value=rgbToHex(getComputedStyle(el).color);
+        textToolbar.style.display = 'flex';
+        updateTextToolbarPosition(el);
+        document.getElementById('tbFontSize').value = parseInt(getComputedStyle(el).fontSize);
+        document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(el).color);
       }
     }
 
     paper.addEventListener('click', e=>{
-      if(e.target===paper) deselect();
-      clickX=e.offsetX; clickY=e.offsetY;
-      const tbRect=toolbar.getBoundingClientRect();
-      toolbar.style.left=`${e.pageX - tbRect.width/2}px`;
-      toolbar.style.top=`${e.pageY - tbRect.height -12}px`;
-      toolbar.style.display='flex';
-      shapeMenu.style.display='none';
+      if(e.target === paper) deselect();
+      clickX = e.offsetX; clickY = e.offsetY;
+      const tbRect = toolbar.getBoundingClientRect();
+      toolbar.style.left  = `${e.pageX - tbRect.width/2}px`;
+      toolbar.style.top   = `${e.pageY - tbRect.height - 12}px`;
+      toolbar.style.display = 'flex';
+      shapeMenu.style.display = 'none';
       e.stopPropagation();
     });
     [toolbar, shapeMenu, textToolbar].forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
     document.addEventListener('click', ()=>{ toolbar.style.display='none'; shapeMenu.style.display='none'; });
 
-    // Insert text
-    document.getElementById('btnText').addEventListener('click', e=>{
+    document.getElementById('btnText').onclick = e=>{
       e.stopPropagation();
-      const txt=document.createElement('div');
-      txt.className='element text-element'; txt.contentEditable=true;
-      txt.style.left=`${clickX}px`; txt.style.top=`${clickY}px`;
-      txt.textContent='Enter text';
-      paper.append(txt); initElement(txt,false);
-      toolbar.style.display='none'; txt.focus();
-    });
+      const txt = document.createElement('div');
+      txt.className = 'element text-element';
+      txt.contentEditable = true;
+      txt.style.left = `${clickX}px`;
+      txt.style.top  = `${clickY}px`;
+      txt.textContent = 'Enter text';
+      paper.append(txt);
+      initElement(txt,false);
+      toolbar.style.display='none';
+      select(txt);
+      txt.focus();
+    };
 
-    // Insert image
-    document.getElementById('btnImage').addEventListener('click', e=>{
+    document.getElementById('btnImage').onclick = e=>{
       e.stopPropagation();
-      const url=prompt('Enter image URL:'); if(!url) return;
+      const url = prompt('Enter image URL:'); if(!url) return;
       addAsset(url);
-      const wrap=document.createElement('div');
-      wrap.className='element image-wrapper';
-      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
-      wrap.style.backgroundImage=`url(${url})`;
-      paper.append(wrap); initElement(wrap,false);
+      const wrap = document.createElement('div');
+      wrap.className = 'element image-wrapper';
+      wrap.style.left = `${clickX}px`;
+      wrap.style.top  = `${clickY}px`;
+      wrap.style.backgroundImage = `url(${url})`;
+      paper.append(wrap);
+      initElement(wrap,false);
+      toolbar.style.display='none';
+      select(wrap);
+    };
+
+    document.getElementById('btnShape').onclick = e=>{
+      e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left  = `${r.right+8}px`;
+      shapeMenu.style.top   = `${r.top}px`;
+      shapeMenu.style.display='flex';
+    };
+    shapeMenu.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-shape]'); if(!btn) return;
+      const type = btn.dataset.shape;
+      if(type==='triangle') insertTriangle();
+      else insertBasic(type);
+      shapeMenu.style.display='none';
       toolbar.style.display='none';
     });
 
-    // Insert shape
-    document.getElementById('btnShape').addEventListener('click', e=>{
-      e.stopPropagation();
-      const r=e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left=`${r.right+8}px`;
-      shapeMenu.style.top=`${r.top}px`;
-      shapeMenu.style.display='flex';
-    });
-    shapeMenu.addEventListener('click', e=>{
-      const btn=e.target.closest('[data-shape]'); if(!btn) return;
-      const type=btn.dataset.shape;
-      if(type==='triangle') insertTriangle();
-      else insertBasic(type);
-      shapeMenu.style.display='none'; toolbar.style.display='none';
-    });
-
-    // Text toolbar actions
+    // text toolbar actions
     document.getElementById('tbBold').onclick      = ()=> selectedEl && (selectedEl.style.fontWeight  = selectedEl.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    = ()=> selectedEl && (selectedEl.style.fontStyle   = selectedEl.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick = ()=> selectedEl && (selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline');
@@ -233,37 +221,42 @@
     document.getElementById('tbColor').oninput       = e=> selectedEl && (selectedEl.style.color    = e.target.value);
 
     function addAsset(src){
-      const thumb=document.createElement('img');
-      thumb.src=src; thumb.draggable=true;
+      const thumb = document.createElement('img');
+      thumb.src = src; thumb.draggable = true;
       thumb.addEventListener('dragstart', ev=>ev.dataTransfer.setData('text/plain',src));
       assetList.append(thumb);
     }
 
     function insertBasic(type){
-      const el=document.createElement('div');
-      el.className='element '+(type==='rect'?'shape-rect':'shape-circle');
-      el.style.left=`${clickX}px`; el.style.top=`${clickY}px`;
+      const el = document.createElement('div');
+      el.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
+      el.style.left = `${clickX}px`; el.style.top = `${clickY}px`;
       paper.append(el); initElement(el,false);
+      select(el);
     }
 
     function insertTriangle(){
-      const wrap=document.createElement('div');
-      wrap.className='shape-wrapper';
-      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      const wrap = document.createElement('div');
+      wrap.className = 'shape-wrapper';
+      wrap.style.left = `${clickX}px`; wrap.style.top = `${clickY}px`;
       wrap.style.width='80px'; wrap.style.height='70px';
-      const svgNS="http://www.w3.org/2000/svg";
-      const svg=document.createElementNS(svgNS,'svg');
+      const svgNS="http://www.w3.org/2000/svg",
+            svg=document.createElementNS(svgNS,'svg'),
+            poly=document.createElementNS(svgNS,'polygon');
       svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
-      const poly=document.createElementNS(svgNS,'polygon');
       poly.setAttribute('points','0,70 40,0 80,70');
       poly.setAttribute('fill','rgba(96,160,133,0.3)');
       poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
       svg.append(poly); wrap.append(svg);
       paper.append(wrap); initElement(wrap,true,poly);
+      select(wrap);
     }
 
     function initElement(el,isTri,poly){
-      makeDraggable(el); enableDrop(el); addResizeHandles(el); addRotateHandle(el);
+      makeDraggable(el);
+      enableDrop(el);
+      addResizeHandles(el);
+      addRotateHandle(el);
       if(isTri) makeTriangleResizable(el,poly);
       el.addEventListener('mousedown', e=>{ e.stopPropagation(); select(el); });
     }
@@ -273,28 +266,31 @@
       el.addEventListener('mousedown', e=>{
         if(e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
         e.preventDefault();
-        dx=e.clientX-el.offsetLeft; dy=e.clientY-el.offsetTop;
+        dx = e.clientX - el.offsetLeft;
+        dy = e.clientY - el.offsetTop;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',move),{once:true});
       });
       function move(ev){
-        el.style.left=`${ev.clientX-dx}px`;
-        el.style.top =`${ev.clientY-dy}px`;
+        el.style.left = `${ev.clientX - dx}px`;
+        el.style.top  = `${ev.clientY - dy}px`;
+        if(selectedEl===el && el.classList.contains('text-element')){
+          updateTextToolbarPosition(el);
+        }
       }
     }
 
     function enableDrop(el){
-      el.addEventListener('dragover',e=>e.preventDefault());
-      el.addEventListener('drop',e=>{
+      el.addEventListener('dragover', e=>e.preventDefault());
+      el.addEventListener('drop', e=>{
         e.preventDefault();
         const src=e.dataTransfer.getData('text/plain'); if(!src)return;
-        el.style.backgroundImage=`url(${src})`;
-        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        el.style.backgroundImage=`url(${src})`; el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
         if(el.classList.contains('shape-wrapper')){
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
           const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
-          const W=el.clientWidth,H=el.clientHeight;
+          const W=el.clientWidth, H=el.clientHeight;
           const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
           el.style.clipPath=`polygon(${pct})`;
         }
@@ -314,9 +310,7 @@
       return function(e){
         e.stopPropagation(); e.preventDefault();
         const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={ x:e.clientX,y:e.clientY,
-          left:r.left-pr.left, top:r.top-pr.top, w:r.width, h:r.height, aspect:r.width/r.height
-        };
+        const start={ x:e.clientX, y:e.clientY, left:r.left-pr.left, top:r.top-pr.top, w:r.width, h:r.height, aspect:r.width/r.height };
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',doResize),{once:true});
         function doResize(ev){
@@ -330,16 +324,20 @@
             newH=newW/start.aspect;
             if(dir.includes('n')) newT=start.top+(start.h-newH);
           }
-          el.style.width=`${newW}px`;
-          el.style.height=`${newH}px`;
-          el.style.left=`${newL}px`;
-          el.style.top =`${newT}px`;
+          el.style.width  = `${newW}px`;
+          el.style.height = `${newH}px`;
+          el.style.left   = `${newL}px`;
+          el.style.top    = `${newT}px`;
+          if(selectedEl===el && el.classList.contains('text-element')){
+            updateTextToolbarPosition(el);
+          }
         }
       };
     }
 
     function addRotateHandle(el){
-      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
+      const h=document.createElement('div');
+      h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
         e.stopPropagation(); e.preventDefault();
         const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
@@ -349,6 +347,9 @@
           const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx), delta=ang-startAng,
                 deg=currRot+delta*180/Math.PI;
           el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
+          if(selectedEl===el && el.classList.contains('text-element')){
+            updateTextToolbarPosition(el);
+          }
         };
         document.addEventListener('mousemove',onmove);
         document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
@@ -380,6 +381,7 @@
             wrap.style.left=`${start.wrapL+minX}px`; wrap.style.top=`${start.wrapT+minY}px`;
             wrap.style.width=`${maxX-minX}px`; wrap.style.height=`${maxY-minY}px`;
             update();
+            if(selectedEl===wrap) updateTextToolbarPosition(wrap);
           }
         });
       });
