@@ -4,10 +4,7 @@
   <meta charset="UTF-8">
   <title>Seafoam E‑Card Visual Editor</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
@@ -111,6 +108,7 @@
 </head>
 <body>
   <h1>Visual E‑Card Editor</h1>
+
   <div id="workspace">
     <div id="paper"></div>
     <div id="assets"><h2>Assets</h2><div id="assetList"></div></div>
@@ -137,13 +135,13 @@
     <button id="tbAlignRight"><img src="align-right.svg" alt=""></button>
     <button id="tbFont">Aa</button>
     <input type="number" id="tbFontSize" min="8" max="72">px
-    <input type="color"  id="tbColor">
+    <input type="color" id="tbColor">
     <div id="fontMenu">
-      <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
-      <button class="fontOption" data-font="Roboto"    style="font-family:'Roboto',sans-serif">Roboto</button>
+      <button class="fontOption" data-font="Poppins" style="font-family:'Poppins',sans-serif">Poppins</button>
+      <button class="fontOption" data-font="Roboto" style="font-family:'Roboto',sans-serif">Roboto</button>
       <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
-      <button class="fontOption" data-font="Lora"      style="font-family:'Lora',serif">Lora</button>
-      <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
+      <button class="fontOption" data-font="Lora" style="font-family:'Lora',serif">Lora</button>
+      <button class="fontOption" data-font="Montserrat" style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
 
@@ -171,21 +169,221 @@
           shapeOp     = document.getElementById('shapeOpacity');
     let clickX=0, clickY=0, selectedEl=null, selectedPoly=null;
 
-    /* Utility and helper functions (rgbToHex, updateTextToolbarPosition,
-       updateShapeToolbarPosition, deselect, select, initElement,
-       addAsset, insertBasic, insertTriangle, makeDraggable,
-       enableDrop, addResizeHandles, startResize, addRotateHandle,
-       makeTriangleResizable) are exactly as in the previous full code. */
+    // --- helper functions ---
+    function rgbToHex(rgb){
+      const [r,g,b] = rgb.match(/\d+/g).map(Number);
+      return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
+    function updateTextToolbarPosition(el){
+      const rect = el.getBoundingClientRect(),
+            tb   = textToolbar.getBoundingClientRect(),
+            left = rect.left + window.scrollX,
+            topC = window.scrollY + rect.top - tb.height - 8,
+            top  = topC < window.scrollY+8 ? window.scrollY+rect.bottom+8 : topC;
+      textToolbar.style.left = `${left}px`;
+      textToolbar.style.top  = `${top}px`;
+    }
+    function updateShapeToolbarPosition(el){
+      const rect = el.getBoundingClientRect(),
+            st   = shapeToolbar.getBoundingClientRect(),
+            left = rect.left + window.scrollX,
+            topC = window.scrollY + rect.top - st.height - 8,
+            top  = topC < window.scrollY+8 ? window.scrollY+rect.bottom+8 : topC;
+      shapeToolbar.style.left = `${left}px`;
+      shapeToolbar.style.top  = `${top}px`;
+    }
+    function deselect(){
+      if(!selectedEl) return;
+      selectedEl.classList.remove('selected');
+      selectedEl = null;
+      selectedPoly= null;
+      textToolbar.style.display  = 'none';
+      shapeToolbar.style.display = 'none';
+    }
+    function select(el, poly=null){
+      if(selectedEl===el) return;
+      deselect();
+      selectedEl = el;
+      selectedPoly=poly;
+      el.classList.add('selected');
+      toolbar.style.display   = 'none';
+      shapeMenu.style.display = 'none';
+      fontMenu.style.display  = 'none';
+      if(el.classList.contains('text-element')){
+        textToolbar.style.display = 'flex';
+        updateTextToolbarPosition(el);
+        document.getElementById('tbFontSize').value = parseInt(getComputedStyle(el).fontSize);
+        document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(el).color);
+      }
+      else if(/shape-rect|shape-circle|shape-wrapper/.test(el.className)){
+        shapeToolbar.style.display = 'flex';
+        updateShapeToolbarPosition(el);
+        const cs = getComputedStyle(el);
+        shapeFill.value   = rgbToHex(cs.backgroundColor);
+        shapeStroke.value = rgbToHex(cs.borderColor);
+        shapeStW.value    = parseInt(cs.borderWidth);
+        shapeOp.value     = cs.opacity;
+      }
+    }
+    function initElement(el,isTri,poly){
+      makeDraggable(el); enableDrop(el);
+      addResizeHandles(el); addRotateHandle(el);
+      if(isTri) makeTriangleResizable(el,poly);
+      el.addEventListener('mousedown', e=>{ e.stopPropagation(); select(el,poly); });
+    }
+    function addAsset(src){
+      const thumb=document.createElement('img');
+      thumb.src=src; thumb.draggable=true;
+      thumb.addEventListener('dragstart', ev=>ev.dataTransfer.setData('text/plain',src));
+      assetList.append(thumb);
+    }
+    function insertBasic(type){
+      const el=document.createElement('div');
+      el.className='element '+(type==='rect'?'shape-rect':'shape-circle');
+      el.style.left=`${clickX}px`; el.style.top=`${clickY}px`;
+      paper.append(el); initElement(el,false); select(el,null);
+    }
+    function insertTriangle(){
+      const wrap=document.createElement('div');
+      wrap.className='shape-wrapper';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.width='80px'; wrap.style.height='70px';
+      const svgNS="http://www.w3.org/2000/svg",
+            svg=document.createElementNS(svgNS,'svg'),
+            poly=document.createElementNS(svgNS,'polygon');
+      svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+      poly.setAttribute('points','0,70 40,0 80,70');
+      poly.setAttribute('fill','rgba(96,160,133,0.3)');
+      poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
+      svg.append(poly); wrap.append(svg);
+      paper.append(wrap); initElement(wrap,true,poly); select(wrap,poly);
+    }
+    function makeDraggable(el){
+      let dx,dy;
+      el.addEventListener('mousedown', e=>{
+        if(e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
+        e.preventDefault();
+        dx=e.clientX-el.offsetLeft; dy=e.clientY-el.offsetTop;
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',move),{once:true});
+      });
+      function move(ev){
+        el.style.left=`${ev.clientX-dx}px`;
+        el.style.top =`${ev.clientY-dy}px`;
+        if(selectedEl===el && el.classList.contains('text-element')) updateTextToolbarPosition(el);
+        if(selectedEl===el && /shape-rect|shape-circle|shape-wrapper/.test(el.className)) updateShapeToolbarPosition(el);
+      }
+    }
+    function enableDrop(el){
+      el.addEventListener('dragover', e=>e.preventDefault());
+      el.addEventListener('drop', e=>{
+        e.preventDefault();
+        const src=e.dataTransfer.getData('text/plain'); if(!src) return;
+        el.style.backgroundImage=`url(${src})`;
+        el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        if(el.classList.contains('shape-wrapper')){
+          const poly=el.querySelector('polygon');
+          poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
+          const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
+          const W=el.clientWidth, H=el.clientHeight;
+          const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
+          el.style.clipPath=`polygon(${pct})`;
+        }
+        el.style.zIndex='999';
+      });
+    }
+    function addResizeHandles(el){
+      ['nw','ne','sw','se'].forEach(dir=>{
+        const h=document.createElement('div'); h.className='resize-handle handle-'+dir; el.append(h);
+        h.addEventListener('mousedown', startResize(dir,el));
+      });
+    }
+    function startResize(dir,el){
+      return function(e){
+        e.stopPropagation(); e.preventDefault();
+        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
+        const start={ x:e.clientX, y:e.clientY,
+                      left:r.left-pr.left, top:r.top-pr.top,
+                      w:r.width, h:r.height, aspect:r.width/r.height };
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',doResize),{once:true});
+        function doResize(ev){
+          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
+          if(dir.includes('e')) newW=start.w+dx;
+          if(dir.includes('s')) newH=start.h+dy;
+          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
+          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
+          if(ev.shiftKey){
+            newH=newW/start.aspect;
+            if(dir.includes('n')) newT=start.top+(start.h-newH);
+          }
+          el.style.width  = `${newW}px`;
+          el.style.height = `${newH}px`;
+          el.style.left   = `${newL}px`;
+          el.style.top    = `${newT}px`;
+          if(selectedEl===el && el.classList.contains('text-element')) updateTextToolbarPosition(el);
+          if(selectedEl===el && /shape-rect|shape-circle|shape-wrapper/.test(el.className)) updateShapeToolbarPosition(el);
+        }
+      };
+    }
+    function addRotateHandle(el){
+      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
+      h.addEventListener('mousedown', e=>{
+        e.stopPropagation(); e.preventDefault();
+        const rect=el.getBoundingClientRect(), cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+        const startAng=Math.atan2(e.clientY-cy,e.clientX-cx);
+        let currRot=parseFloat(el.dataset.rot||0);
+        const onmove=ev=>{
+          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx), delta=ang-startAng,
+                deg=currRot+delta*180/Math.PI;
+          el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
+          if(selectedEl===el && el.classList.contains('text-element')) updateTextToolbarPosition(el);
+          if(selectedEl===el && /shape-rect|shape-circle|shape-wrapper/.test(el.className)) updateShapeToolbarPosition(el);
+        };
+        document.addEventListener('mousemove',onmove);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
+      });
+    }
+    function makeTriangleResizable(wrap,poly){
+      let pts=[[0,70],[40,0],[80,70]];
+      const handles=pts.map((_,i)=>{
+        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
+      });
+      function update(){
+        handles.forEach((h,i)=>{ h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`; });
+        poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
+      }
+      handles.forEach((h,i)=>{ h.addEventListener('mousedown', e=>{
+        e.stopPropagation(); e.preventDefault(); select(wrap,poly);
+        const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
+        document.addEventListener('mousemove', ondrag);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
+        function ondrag(ev){
+          const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+          const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
+          const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+          const minX=Math.min(...xs), minY=Math.min(...ys),
+                maxX=Math.max(...xs), maxY=Math.max(...ys);
+          pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
+          wrap.style.left   = `${start.wrapL+minX}px`;
+          wrap.style.top    = `${start.wrapT+minY}px`;
+          wrap.style.width  = `${maxX-minX}px`;
+          wrap.style.height = `${maxY-minY}px`;
+          update();
+        }
+      })});
+      update();
+    }
 
-    // ----- Show insert toolbar on blank paper -----
+    // Show insert toolbar on blank paper
     paper.addEventListener('mousedown', e => {
       if (
         e.target.closest('#toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu') ||
         e.target !== paper
       ) return;
       deselect();
-      clickX = e.offsetX;
-      clickY = e.offsetY;
+      clickX = e.offsetX; clickY = e.offsetY;
       const tb = toolbar.getBoundingClientRect();
       toolbar.style.left    = `${e.pageX - tb.width/2}px`;
       toolbar.style.top     = `${e.pageY - tb.height - 12}px`;
@@ -197,16 +395,13 @@
       e.stopPropagation();
     });
 
-    // ----- Hide on click anywhere except paper or toolbars -----
+    // Hide toolbars on outside click
     [toolbar, shapeMenu, textToolbar, shapeToolbar, fontMenu].forEach(el=>
       el.addEventListener('click', e=>e.stopPropagation())
     );
     document.addEventListener('click', e => {
-      // don't hide if clicking paper (so initial click won't immediately hide)
       if (e.target === paper) return;
-      // don't hide if clicking inside any toolbar
-      if (e.target.closest('#toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu'))
-        return;
+      if (e.target.closest('#toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu')) return;
       toolbar.style.display    = 'none';
       shapeMenu.style.display  = 'none';
       textToolbar.style.display= 'none';
@@ -214,9 +409,65 @@
       fontMenu.style.display   = 'none';
     });
 
-    // Remaining event wiring for insert actions, text toolbar,
-    // font menu, shape toolbar, etc. — unchanged from previous code.
-    // ...
+    // Insert actions
+    document.getElementById('btnText').onclick = e=>{
+      e.stopPropagation();
+      const txt=document.createElement('div');
+      txt.className='element text-element'; txt.contentEditable=true;
+      txt.style.left=`${clickX}px`; txt.style.top=`${clickY}px`;
+      txt.textContent='Enter text';
+      paper.append(txt); initElement(txt,false); select(txt,null); txt.focus();
+    };
+    document.getElementById('btnImage').onclick = e=>{
+      e.stopPropagation();
+      const url=prompt('Image URL:'); if(!url) return;
+      addAsset(url);
+      const wrap=document.createElement('div');
+      wrap.className='element image-wrapper';
+      wrap.style.left=`${clickX}px`; wrap.style.top=`${clickY}px`;
+      wrap.style.backgroundImage=`url(${url})`;
+      paper.append(wrap); initElement(wrap,false); select(wrap,null);
+    };
+    document.getElementById('btnShape').onclick = e=>{
+      e.stopPropagation();
+      const r=e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left  = `${r.right+8}px`;
+      shapeMenu.style.top   = `${r.top}px`;
+      shapeMenu.style.display='flex';
+    };
+    shapeMenu.addEventListener('click', e=>{
+      const btn=e.target.closest('[data-shape]'); if(!btn) return;
+      const t=btn.dataset.shape; t==='triangle'? insertTriangle(): insertBasic(t);
+      shapeMenu.style.display='none';
+    });
+
+    // Text toolbar
+    document.getElementById('tbBold').onclick      = ()=> selectedEl && (selectedEl.style.fontWeight  = selectedEl.style.fontWeight==='bold'?'':'bold');
+    document.getElementById('tbItalic').onclick    = ()=> selectedEl && (selectedEl.style.fontStyle   = selectedEl.style.fontStyle==='italic'?'':'italic');
+    document.getElementById('tbUnderline').onclick = ()=> selectedEl && (selectedEl.style.textDecoration = selectedEl.style.textDecoration==='underline'?'':'underline');
+    document.getElementById('tbAlignLeft').onclick   = ()=> selectedEl && (selectedEl.style.textAlign='left');
+    document.getElementById('tbAlignCenter').onclick = ()=> selectedEl && (selectedEl.style.textAlign='center');
+    document.getElementById('tbAlignRight').onclick  = ()=> selectedEl && (selectedEl.style.textAlign='right');
+    document.getElementById('tbFontSize').addEventListener('input', e=> selectedEl && (selectedEl.style.fontSize = e.target.value+'px'));
+    document.getElementById('tbColor').addEventListener('input', e=> selectedEl && (selectedEl.style.color    = e.target.value));
+
+    // Font menu
+    tbFont.addEventListener('click', e=>{
+      e.stopPropagation(); fontMenu.style.display = fontMenu.style.display==='block'?'none':'block';
+    });
+    fontOpts.forEach(btn=> btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const fam=btn.dataset.font;
+      if(selectedEl && selectedEl.classList.contains('text-element')) selectedEl.style.fontFamily = `'${fam}', sans-serif`;
+      fontMenu.style.display='none';
+    }));
+    document.addEventListener('click', ()=>{ fontMenu.style.display='none'; });
+
+    // Shape toolbar
+    shapeFill.addEventListener('input', e=>{ if(selectedEl){ if(selectedPoly) selectedPoly.setAttribute('fill',e.target.value); else selectedEl.style.backgroundColor=e.target.value; }});
+    shapeStroke.addEventListener('input', e=>{ if(selectedEl){ if(selectedPoly) selectedPoly.setAttribute('stroke',e.target.value); else selectedEl.style.borderColor=e.target.value; }});
+    shapeStW.addEventListener('input', e=>{ const v=e.target.value; if(selectedEl){ if(selectedPoly) selectedPoly.setAttribute('stroke-width',v); else selectedEl.style.borderWidth=v+'px'; }});
+    shapeOp.addEventListener('input', e=>{ if(selectedEl) selectedEl.style.opacity=e.target.value; });
 
   })();
   </script>
