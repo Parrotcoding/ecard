@@ -80,12 +80,13 @@
       min-width:50px; min-height:20px; padding:.2rem;
       background:transparent; outline:none; cursor:text;
     }
+    /* fully opaque by default now */
     .shape-rect {
-      width:100px; height:60px; background:rgba(96,160,133,0.3);
+      width:100px; height:60px; background:#60A085;
       border:2px solid #60A085;
     }
     .shape-circle {
-      width:60px; height:60px; background:rgba(96,160,133,0.3);
+      width:60px; height:60px; background:#60A085;
       border:2px solid #60A085; border-radius:50%;
     }
     .shape-wrapper svg { display:block }
@@ -155,8 +156,7 @@
           shapeOp      = document.getElementById('shapeOpacity');
     let clickX=0, clickY=0, selectedEl=null, selectedPoly=null;
 
-    // --- HELPER FUNCTIONS ---
-
+    // Helper: convert rgb(...) to hex
     function rgbToHex(rgb){
       const [r,g,b] = rgb.match(/\d+/g).map(Number);
       return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
@@ -255,7 +255,7 @@
             poly=document.createElementNS(svgNS,'polygon');
       svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
       poly.setAttribute('points','0,70 40,0 80,70');
-      poly.setAttribute('fill','rgba(96,160,133,0.3)');
+      poly.setAttribute('fill','#60A085');
       poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
       svg.append(poly); wrap.append(svg);
       paper.append(wrap);
@@ -376,41 +376,31 @@
     function makeTriangleResizable(wrap,poly){
       let pts=[[0,70],[40,0],[80,70]];
       const handles=pts.map((_,i)=>{
-        const h=document.createElement('div');
-        h.className='vertex-handle'; wrap.append(h);
-        return h;
+        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
       });
       function update(){
-        handles.forEach((h,i)=>{
-          h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`;
-        });
+        handles.forEach((h,i)=>{ h.style.left=`${pts[i][0]}px`; h.style.top=`${pts[i][1]}px`; });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
-      handles.forEach((h,i)=>{
-        h.addEventListener('mousedown', e=>{
-          e.stopPropagation(); e.preventDefault(); select(wrap,poly);
-          const start={
-            x:e.clientX, y:e.clientY,
-            wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
-            pts:pts.map(p=>p.slice())
-          };
-          document.addEventListener('mousemove', ondrag);
-          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
-          function ondrag(ev){
-            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
-            const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
-            const minX=Math.min(...xs), minY=Math.min(...ys),
-                  maxX=Math.max(...xs), maxY=Math.max(...ys);
-            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left   = `${start.wrapL+minX}px`;
-            wrap.style.top    = `${start.wrapT+minY}px`;
-            wrap.style.width  = `${maxX-minX}px`;
-            wrap.style.height = `${maxY-minY}px`;
-            update();
-          }
-        });
-      });
+      handles.forEach((h,i)=>{ h.addEventListener('mousedown', e=>{
+        e.stopPropagation(); e.preventDefault(); select(wrap,poly);
+        const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
+        document.addEventListener('mousemove', ondrag);
+        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
+        function ondrag(ev){
+          const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+          const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
+          const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
+          const minX=Math.min(...xs), minY=Math.min(...ys),
+                maxX=Math.max(...xs), maxY=Math.max(...ys);
+          pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
+          wrap.style.left   = `${start.wrapL+minX}px`;
+          wrap.style.top    = `${start.wrapT+minY}px`;
+          wrap.style.width  = `${maxX-minX}px`;
+          wrap.style.height = `${maxY-minY}px`;
+          update();
+        }
+      })});
       update();
     }
 
@@ -433,7 +423,7 @@
       e.stopPropagation();
     });
 
-    // — HIDE all toolbars on mousedown outside —
+    // — HIDE toolbars when clicking/touching outside —
     ['mousedown','touchstart'].forEach(evt=>{
       document.addEventListener(evt, e=>{
         if (e.target === paper) return;
@@ -446,7 +436,7 @@
       });
     });
 
-    // — PREVENT hide when interacting inside toolbars —
+    // — PREVENT hide-listener from catching interactions inside toolbars —
     [toolbar, shapeMenu, textToolbar, shapeToolbar, fontMenu].forEach(el=>{
       el.addEventListener('mousedown', e=>e.stopPropagation());
       el.addEventListener('touchstart', e=>e.stopPropagation());
