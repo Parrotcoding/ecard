@@ -938,7 +938,10 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
             el.style.backgroundImage = `url(${url})`;
             el.style.backgroundSize = "cover";
             el.style.backgroundPosition = "center";
-            el.style.zIndex = "999";
+            // only bump true image-wrapper elements to the front
+            if (el.classList.contains("image-wrapper")) {
+              el.style.zIndex = "999";
+            }
             if (el.classList.contains("shape-wrapper")) {
               const poly = el.querySelector("polygon");
               poly.setAttribute("fill", "none");
@@ -1349,29 +1352,39 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         // -- Layers panel logic --
         const layersList = document.getElementById("layersList");
         function addToLayers(wrapper) {
-  const li = document.createElement("li");
-  // keep reference for reordering
-  li._wrapper = wrapper;
+          const li = document.createElement("li");
+          // keep reference for reordering
+          li._wrapper = wrapper;
           li.className = "layerItem";
           li.draggable = true;
-  // create a mini-clone icon
-  const icon = document.createElement('div');
-  icon.className = 'layerIcon';
-  icon.style.overflow = 'hidden';
-  icon.style.position = 'relative';
-  
-  // clone the element for mini-preview
-  const clone = wrapper.cloneNode(true);
-  clone.style.position = 'static';
-  clone.style.left = '0';
-  clone.style.top = '0';
-  clone.style.margin = '0';
-  clone.style.pointerEvents = 'none';
-  // scale to fit
-  const scale = 24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
-  clone.style.transform = `scale(${scale})`;
-  clone.style.transformOrigin = 'top left';
-  icon.appendChild(clone);
+          // create a mini-icon: real <img> for images, clone otherwise
+          let icon;
+          if (wrapper.classList.contains("image-wrapper")) {
+            // extract URL from background-image
+            const bg = getComputedStyle(wrapper).backgroundImage;
+            const m = bg.match(/^url\("?(.+?)"?\)$/);
+            icon = document.createElement("img");
+            if (m && m[1]) icon.src = m[1];
+            icon.className = "layerIcon";
+          } else {
+            icon = document.createElement("div");
+            icon.className = "layerIcon";
+            icon.style.overflow = "hidden";
+            icon.style.position = "relative";
+            // clone the element for mini-preview
+            const clone = wrapper.cloneNode(true);
+            clone.style.position = "static";
+            clone.style.left = "0";
+            clone.style.top = "0";
+            clone.style.margin = "0";
+            clone.style.pointerEvents = "none";
+            // scale to fit a 24×24 box
+            const scale =
+              24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
+            clone.style.transform = `scale(${scale})`;
+            clone.style.transformOrigin = "top left";
+            icon.appendChild(clone);
+          }
           const label = document.createElement("span");
           label.className = "layerLabel";
           label.textContent = wrapper.classList.contains("text-wrapper")
@@ -1413,9 +1426,9 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           // on drop, reorder DOM per li._wrapper references
           const items = Array.from(layersList.children);
           // bottom of list = bottom stacking; iterate top to bottom
-          items.forEach(li => {
+          items.forEach((li) => {
             const wrapper = li._wrapper;
-            if(wrapper) paper.appendChild(wrapper);
+            if (wrapper) paper.appendChild(wrapper);
           });
         });
       })();
