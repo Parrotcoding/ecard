@@ -12,7 +12,6 @@
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
 
-    /* workspace */
     #workspace { display:flex; gap:1rem; }
     #paper {
       position:relative; flex:1;
@@ -52,8 +51,56 @@
       padding:.25rem; margin:.25rem; cursor:grab;
     }
 
-    /* insert toolbar, shape menu, text & shape toolbars */
-    /* … identical to previous full code … */
+    /* toolbars */
+    #toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu {
+      position:absolute; display:none; z-index:2000;
+      background:#fff; border:1px solid #ccc; border-radius:4px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    }
+    #toolbar { padding:.25rem; display:flex; gap:.5rem; border-radius:8px; transform:translateX(0); }
+    #toolbar button {
+      width:36px; height:36px; border:none; border-radius:50%;
+      background:#A8E6CF; cursor:pointer;
+    }
+    #toolbar button:hover { background:#76C69C }
+    #toolbar button img { width:20px; height:20px }
+
+    #shapeMenu { padding:.25rem; display:flex; gap:.5rem; border-radius:8px; transform:translateX(0); }
+    #shapeMenu button {
+      width:32px; height:32px; border:none; border-radius:4px;
+      background:#A8E6CF; cursor:pointer;
+    }
+    #shapeMenu button:hover { background:#76C69C }
+    #shapeMenu button img { width:20px; height:20px }
+
+    #textToolbar, #shapeToolbar {
+      padding:.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap; transform:translateX(0);
+    }
+    #textToolbar button, #shapeToolbar button {
+      background:transparent; border:none; cursor:pointer; font-size:1.1rem;
+    }
+    #textToolbar button img, #shapeToolbar button img {
+      width:20px; height:20px;
+    }
+    #textToolbar input, #shapeToolbar input {
+      border:1px solid #ccc; border-radius:4px; padding:2px;
+    }
+    #shapeToolbar input[type=number] { width:3rem }
+    #shapeToolbar input[type=range]  { width:5rem }
+
+    .tb-delete {
+      font-size:1.2rem; color:#c0392b; padding:0 6px; cursor:pointer;
+    }
+    .tb-delete:hover { color:#e74c3c; }
+
+    #fontMenu {
+      top:100%; left:0; max-height:200px; width:150px; overflow-y:auto;
+    }
+    #fontMenu .fontOption {
+      display:block; width:100%; padding:6px 8px; text-align:left;
+      background:transparent; border:none; cursor:pointer; font-size:.95rem;
+    }
+    #fontMenu .fontOption:hover { background:#f0f0f0 }
 
     /* handles */
     .resize-handle, .vertex-handle, .rotate-handle { display:none; }
@@ -82,7 +129,7 @@
       display:block !important;
     }
 
-    /* content elements */
+    /* content */
     .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
     .text-wrapper { position:relative; }
     .text-content {
@@ -162,20 +209,20 @@
     <input type="color" id="tbColor">
     <button id="tbDeleteText" class="tb-delete" title="Delete Text">×</button>
     <div id="fontMenu">
-      <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
-      <button class="fontOption" data-font="Roboto"    style="font-family:'Roboto',sans-serif">Roboto</button>
+      <button class="fontOption" data-font="Poppins" style="font-family:'Poppins',sans-serif">Poppins</button>
+      <button class="fontOption" data-font="Roboto" style="font-family:'Roboto',sans-serif">Roboto</button>
       <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
-      <button class="fontOption" data-font="Lora"      style="font-family:'Lora',serif">Lora</button>
-      <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
+      <button class="fontOption" data-font="Lora" style="font-family:'Lora',serif">Lora</button>
+      <button class="fontOption" data-font="Montserrat" style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
 
   <!-- shape toolbar -->
   <div id="shapeToolbar">
-    <input type="color" id="shapeFill"    title="Fill Color">
-    <input type="color" id="shapeStroke"  title="Stroke Color">
+    <input type="color" id="shapeFill" title="Fill Color">
+    <input type="color" id="shapeStroke" title="Stroke Color">
     <input type="number" id="shapeStrokeWidth" min="0" max="20" title="Stroke Width">px
-    <input type="range"  id="shapeOpacity" min="0" max="1" step="0.05" title="Opacity">
+    <input type="range" id="shapeOpacity" min="0" max="1" step="0.05" title="Opacity">
     <button id="tbDeleteShape" class="tb-delete" title="Delete Shape">×</button>
   </div>
 
@@ -236,19 +283,21 @@
     }
     function updateTextToolbarPosition(w){
       const r=w.getBoundingClientRect(), tb=textToolbar.getBoundingClientRect();
-      const left=r.left+scrollX;
-      const topC=scrollY+r.top-tb.height-8;
-      const top=topC<scrollY+8?scrollY+r.bottom+8:topC;
-      textToolbar.style.left=left+'px';
-      textToolbar.style.top=top+'px';
+      const centerX = r.left + r.width/2 + window.scrollX;
+      let top = r.top + window.scrollY - tb.height - 8;
+      if(top < window.scrollY + 8) top = r.bottom + window.scrollY + 8;
+      textToolbar.style.left = centerX + 'px';
+      textToolbar.style.top  = top + 'px';
+      textToolbar.style.transform = 'translateX(-50%)';
     }
     function updateShapeToolbarPosition(w){
-      const r=w.getBoundingClientRect(), st=shapeToolbar.getBoundingClientRect();
-      const left=r.left+scrollX;
-      const topC=scrollY+r.top-st.height-8;
-      const top=topC<scrollY+8?scrollY+r.bottom+8:topC;
-      shapeToolbar.style.left=left+'px';
-      shapeToolbar.style.top=top+'px';
+      const r=w.getBoundingClientRect(), tb=shapeToolbar.getBoundingClientRect();
+      const centerX = r.left + r.width/2 + window.scrollX;
+      let top = r.top + window.scrollY - tb.height - 8;
+      if(top < window.scrollY + 8) top = r.bottom + window.scrollY + 8;
+      shapeToolbar.style.left = centerX + 'px';
+      shapeToolbar.style.top  = top + 'px';
+      shapeToolbar.style.transform = 'translateX(-50%)';
     }
     function deselect(){
       if(!selectedWrapper) return;
@@ -264,22 +313,20 @@
       wrapper.classList.add('selected');
       toolbar.style.display='none'; shapeMenu.style.display='none'; fontMenu.style.display='none';
       if(content){
-        textToolbar.style.display='flex';
-        updateTextToolbarPosition(wrapper);
-        document.getElementById('tbFontSize').value=parseInt(getComputedStyle(content).fontSize);
-        document.getElementById('tbColor').value=rgbToHex(getComputedStyle(content).color);
+        textToolbar.style.display='flex'; updateTextToolbarPosition(wrapper);
+        document.getElementById('tbFontSize').value = parseInt(getComputedStyle(content).fontSize);
+        document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(content).color);
       } else {
-        shapeToolbar.style.display='flex';
-        updateShapeToolbarPosition(wrapper);
+        shapeToolbar.style.display='flex'; updateShapeToolbarPosition(wrapper);
         const cs=getComputedStyle(wrapper);
-        shapeFill.value=rgbToHex(cs.backgroundColor);
-        shapeStroke.value=rgbToHex(cs.borderColor);
-        shapeStW.value=parseInt(cs.borderWidth);
-        shapeOp.value=cs.opacity;
+        shapeFill.value   = rgbToHex(cs.backgroundColor);
+        shapeStroke.value = rgbToHex(cs.borderColor);
+        shapeStW.value    = parseInt(cs.borderWidth);
+        shapeOp.value     = cs.opacity;
       }
     }
 
-    // Initialize an element (text, shape, image or emoji)
+    // Initialize element
     function initElement(wrapper,isTri,poly){
       makeDraggable(wrapper);
       enableDrop(wrapper);
@@ -300,7 +347,7 @@
       }
     }
 
-    // Add thumbnail to image tab
+    // Add thumbnail
     function addAsset(src){
       const thumb=document.createElement('img');
       thumb.src=src; thumb.draggable=true;
@@ -308,13 +355,11 @@
       assetList.append(thumb);
     }
     assetAddBtn.addEventListener('click', ()=>{
-      const url=assetUrlIn.value.trim();
-      if(!url) return;
-      addAsset(url);
-      assetUrlIn.value='';
+      const url=assetUrlIn.value.trim(); if(!url) return;
+      addAsset(url); assetUrlIn.value='';
     });
 
-    // Insert text element
+    // Insert text
     document.getElementById('btnText').onclick=e=>{
       e.stopPropagation();
       const wrap=document.createElement('div');
@@ -331,17 +376,16 @@
       txt.focus();
     };
 
-    // Insert shape element
+    // Insert shape
     document.getElementById('btnShape').onclick=e=>{
       e.stopPropagation();
       const r=e.currentTarget.getBoundingClientRect();
       shapeMenu.style.left=r.right+8+'px';
-      shapeMenu.style.top =r.top+'px';
+      shapeMenu.style.top=r.top+'px';
       shapeMenu.style.display='flex';
     };
     shapeMenu.addEventListener('click', e=>{
-      const btn=e.target.closest('[data-shape]');
-      if(!btn) return;
+      const btn=e.target.closest('[data-shape]'); if(!btn) return;
       btn.dataset.shape==='triangle'? insertTriangle(): insertBasic(btn.dataset.shape);
       shapeMenu.style.display='none';
     });
@@ -371,7 +415,7 @@
       select(wrap,null,poly);
     }
 
-    // Handle drops for images & emojis
+    // Drop handling
     paper.addEventListener('dragover', e=>e.preventDefault());
     paper.addEventListener('drop', e=>{
       e.preventDefault();
@@ -392,7 +436,7 @@
       select(wrap,null);
     });
 
-    // Draggable support
+    // Draggable
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
@@ -404,14 +448,14 @@
       });
       function move(ev){
         el.style.left=ev.clientX-dx+'px';
-        el.style.top =ev.clientY-dy+'px';
+        el.style.top=ev.clientY-dy+'px';
         if(selectedWrapper===el){
           selectedContent ? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
         }
       }
     }
 
-    // Enable drop onto existing elements
+    // Enable drop on existing
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
@@ -430,7 +474,7 @@
       });
     }
 
-    // Add resize handles
+    // Resize handles
     function addResizeHandles(el){
       ['nw','ne','sw','se'].forEach(dir=>{
         const h=document.createElement('div');
@@ -454,7 +498,7 @@
           if(dir.includes('s')) newH=start.h+dy;
           if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
           if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          // image-wrapper always preserves ratio
+          // preserve ratio always for image-wrapper
           newH=newW/start.aspect;
           if(dir.includes('n')) newT=start.top+(start.h-newH);
           el.style.width=newW+'px'; el.style.height=newH+'px';
@@ -466,7 +510,7 @@
       };
     }
 
-    // Add rotate handle
+    // Rotate handle
     function addRotateHandle(el){
       const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
@@ -489,7 +533,7 @@
       });
     }
 
-    // Triangle vertex handles
+    // Triangle handles
     function makeTriangleResizable(wrap,poly){
       let pts=[[0,70],[40,0],[80,70]];
       const handles=pts.map((_,i)=>{
@@ -525,40 +569,43 @@
       update();
     }
 
-    // Show insert toolbar
+    // Show insert toolbar above click
     paper.addEventListener('mousedown', e=>{
       if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper)
         return;
       deselect();
       clickX=e.offsetX; clickY=e.offsetY;
-      const tb=toolbar.getBoundingClientRect();
-      toolbar.style.left=(e.pageX-tb.width/2)+'px';
-      toolbar.style.top =(e.pageY-tb.height-12)+'px';
-      toolbar.style.display='flex';
-      shapeMenu.style.display='none';
-      textToolbar.style.display='none';
-      shapeToolbar.style.display='none';
-      fontMenu.style.display='none';
+      const tbW=toolbar.offsetWidth, tbH=toolbar.offsetHeight;
+      let left = e.clientX + window.scrollX - tbW/2;
+      let top  = e.clientY + window.scrollY - tbH -8;
+      if(top < window.scrollY+8) top = e.clientY + window.scrollY +8;
+      toolbar.style.left    = left+'px';
+      toolbar.style.top     = top +'px';
+      toolbar.style.display ='flex';
+      shapeMenu.style.display    ='none';
+      textToolbar.style.display  ='none';
+      shapeToolbar.style.display ='none';
+      fontMenu.style.display     ='none';
       e.stopPropagation();
     });
 
     // Hide toolbars on outside click
     ['mousedown','touchstart'].forEach(evt=>{
-      document.addEventListener(evt,e=>{
+      document.addEventListener(evt, e=>{
         if(e.target===paper) return;
         if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')) return;
-        toolbar.style.display='none';
-        shapeMenu.style.display='none';
+        toolbar.style.display    ='none';
+        shapeMenu.style.display  ='none';
         textToolbar.style.display='none';
         shapeToolbar.style.display='none';
-        fontMenu.style.display='none';
+        fontMenu.style.display   ='none';
       });
     });
 
-    // Prevent hiding when interacting in toolbars
+    // Prevent hiding when interacting in toolbar
     [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
-      el.addEventListener('mousedown',e=>e.stopPropagation());
-      el.addEventListener('touchstart',e=>e.stopPropagation());
+      el.addEventListener('mousedown', e=>e.stopPropagation());
+      el.addEventListener('touchstart', e=>e.stopPropagation());
     });
 
     // Text toolbar actions
@@ -568,11 +615,11 @@
     document.getElementById('tbAlignLeft').onclick   =()=> selectedContent&&(selectedContent.style.textAlign='left');
     document.getElementById('tbAlignCenter').onclick =()=> selectedContent&&(selectedContent.style.textAlign='center');
     document.getElementById('tbAlignRight').onclick  =()=> selectedContent&&(selectedContent.style.textAlign='right');
-    document.getElementById('tbFontSize').addEventListener('input',e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
-    document.getElementById('tbColor').addEventListener('input',e=> selectedContent&&(selectedContent.style.color=e.target.value));
+    document.getElementById('tbFontSize').addEventListener('input', e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
+    document.getElementById('tbColor').addEventListener('input', e=> selectedContent&&(selectedContent.style.color=e.target.value));
 
     // Delete text
-    document.getElementById('tbDeleteText').addEventListener('click', ()=>{
+    tbDeleteText.addEventListener('click', ()=>{
       if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
 
@@ -580,33 +627,33 @@
     tbFont.addEventListener('click', e=>{
       e.stopPropagation(); fontMenu.style.display=fontMenu.style.display==='block'?'none':'block';
     });
-    fontOpts.forEach(btn=>btn.addEventListener('click',e=>{
+    fontOpts.forEach(btn=>btn.addEventListener('click', e=>{
       e.stopPropagation();
       if(selectedContent) selectedContent.style.fontFamily=`'${btn.dataset.font}',sans-serif`;
       fontMenu.style.display='none';
     }));
 
-    // Shape toolbar actions
-    shapeFill.addEventListener('input',e=>{
+    // Shape toolbar
+    shapeFill.addEventListener('input', e=>{
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('fill',e.target.value);
         else selectedWrapper.style.backgroundColor=e.target.value;
       }
     });
-    shapeStroke.addEventListener('input',e=>{
+    shapeStroke.addEventListener('input', e=>{
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('stroke',e.target.value);
         else selectedWrapper.style.borderColor=e.target.value;
       }
     });
-    shapeStW.addEventListener('input',e=>{
+    shapeStW.addEventListener('input', e=>{
       const v=e.target.value;
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('stroke-width',v);
         else selectedWrapper.style.borderWidth=v+'px';
       }
     });
-    shapeOp.addEventListener('input',e=>{
+    shapeOp.addEventListener('input', e=>{
       if(selectedWrapper) selectedWrapper.style.opacity=e.target.value;
     });
 
@@ -615,7 +662,7 @@
       if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
 
-    // Delete key support
+    // Delete key
     document.addEventListener('keydown', e=>{
       if(e.key==='Delete' && selectedWrapper){
         selectedWrapper.remove(); deselect();
