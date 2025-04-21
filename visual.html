@@ -197,7 +197,7 @@
     <div id="fontMenu">
       <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
       <button class="fontOption" data-font="Roboto"    style="font-family:'Roboto',sans-serif">Roboto</button>
-      <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
+      <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
       <button class="fontOption" data-font="Lora"      style="font-family:'Lora',serif">Lora</button>
       <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
@@ -259,7 +259,7 @@
       });
     });
 
-    // COMMON HELPERS
+    // HELPERS
     function rgbToHex(rgb){
       const [r,g,b] = rgb.match(/\d+/g).map(Number);
       return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
@@ -313,7 +313,7 @@
       }
     }
 
-    // ELEMENT INITIALIZER
+    // ELEMENT INIT
     function initElement(wrapper, isTri, poly){
       makeDraggable(wrapper);
       enableDrop(wrapper);
@@ -334,7 +334,7 @@
       }
     }
 
-    // DRAG + DROP FOR PAPER
+    // PAPER DROP
     paper.addEventListener('dragover', e=>e.preventDefault());
     paper.addEventListener('drop', e=>{
       e.preventDefault();
@@ -539,6 +539,13 @@
           el.style.height = newH + 'px';
           el.style.left   = newL + 'px';
           el.style.top    = newT + 'px';
+
+          // ⬆︎ grow/shrink emoji font dynamically
+          if(el.classList.contains('image-wrapper') && !el.style.backgroundImage){
+            const maxDim = Math.min(newW, newH);
+            el.style.fontSize = Math.floor(maxDim * 0.8) + 'px';
+          }
+
           if(selectedWrapper === el){
             selectedContent
               ? updateTextToolbarPosition(el)
@@ -578,7 +585,7 @@
       });
     }
 
-    // TRIANGLE RESIZING
+    // TRIANGLE HANDLES
     function makeTriangleResizable(wrap, poly){
       let pts = [[0,70],[40,0],[80,70]];
       const handles = pts.map((_,i)=>{
@@ -608,7 +615,7 @@
           function ondrag(ev){
             const dx = ev.clientX - start.x,
                   dy = ev.clientY - start.y;
-            const abs = start.pts.map((p,j)=> j===i ? [p[0]+dx,p[1]+dy] : p );
+            const abs = start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
             const xs = abs.map(p=>p[0]),
                   ys = abs.map(p=>p[1]),
                   minX = Math.min(...xs),
@@ -629,20 +636,17 @@
       update();
     }
 
-    // INSERT TOOLBAR POSITIONING
+    // INSERT TOOLBAR
     paper.addEventListener('mousedown', e=>{
-      if(
-        e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')
-        || e.target !== paper
-      ) return;
+      if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper) return;
       deselect();
       clickX = e.offsetX; clickY = e.offsetY;
       const tbW = toolbar.offsetWidth, tbH = toolbar.offsetHeight;
       let left = e.clientX + window.scrollX - tbW/2,
           top  = e.clientY + window.scrollY - tbH - 8;
       if(top < window.scrollY + 8) top = e.clientY + window.scrollY + 8;
-      toolbar.style.left = left + 'px';
-      toolbar.style.top  = top  + 'px';
+      toolbar.style.left    = left + 'px';
+      toolbar.style.top     = top  + 'px';
       toolbar.style.display = 'flex';
       shapeMenu.style.display    = 'none';
       textToolbar.style.display  = 'none';
@@ -651,12 +655,11 @@
       e.stopPropagation();
     });
 
-    // HIDE ON OUTSIDE CLICK
+    // HIDE ON OUTSIDE
     ['mousedown','touchstart'].forEach(evt=>{
       document.addEventListener(evt, e=>{
-        if(e.target === paper) return;
-        if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu'))
-          return;
+        if(e.target===paper) return;
+        if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')) return;
         toolbar.style.display    = 'none';
         shapeMenu.style.display  = 'none';
         textToolbar.style.display= 'none';
@@ -665,7 +668,7 @@
       });
     });
 
-    // PREVENT HIDING WHEN INTERACTING TOOLBARS
+    // PREVENT HIDING
     [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
       el.addEventListener('mousedown', e=>e.stopPropagation());
       el.addEventListener('touchstart', e=>e.stopPropagation());
