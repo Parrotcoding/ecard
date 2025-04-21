@@ -149,6 +149,51 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         margin: 0.25rem;
         cursor: grab;
       }
+
+      /* Layers panel */
+      #layersPanel {
+        margin-top: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        padding: .5rem;
+      }
+      #layersPanel h4 {
+        margin: 0 0 .5rem;
+        font-size: .9rem;
+        font-weight: 600;
+        color: #155f46;
+      }
+      #layersList {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .layerItem {
+        display: flex;
+        align-items: center;
+        padding: 4px;
+        margin-bottom: 2px;
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: grab;
+      }
+      .layerIcon {
+        width: 16px; height: 16px;
+        margin-right: 6px;
+        flex-shrink: 0;
+      }
+      .layerLabel {
+        flex: 1;
+        font-size: .85rem;
+        color: #333;
+      }
+      .layerItem.dragging {
+        opacity: 0.5;
+      }
       /* toolbars & handles */
       #toolbar,
       #shapeMenu,
@@ -385,6 +430,10 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
             </div>
             <span>Thank You 🙏</span>
           </div>
+        </div>
+        <div id="layersPanel">
+          <h4>Layers</h4>
+          <ul id="layersList"></ul>
         </div>
         <div id="assetsImages" class="assetPanel">
           <input type="text" id="assetUrlInput" placeholder="Image URL" />
@@ -758,16 +807,17 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         }
         function select(wrapper, content = null, poly = null) {
           if (selectedWrapper === wrapper) return;
-          if(wrapper.classList.contains('image-wrapper')) {
+          if (wrapper.classList.contains("image-wrapper")) {
             // images are handled separately: only show resize/rotate handles
             deselect();
             selectedWrapper = wrapper;
-            wrapper.classList.add('selected');
+            wrapper.classList.add("selected");
             toolbar.style.display =
               shapeMenu.style.display =
               textToolbar.style.display =
               shapeToolbar.style.display =
-              fontMenu.style.display = 'none';
+              fontMenu.style.display =
+                "none";
             return;
           }
           deselect();
@@ -816,6 +866,7 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
               content.focus();
             });
           }
+          addToLayers(wrapper);
         }
         paper.addEventListener("dragover", (e) => e.preventDefault());
         paper.addEventListener("drop", (e) => {
@@ -1102,19 +1153,20 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           if (!b) return;
           shapeMenu.style.display = "none";
           const type = b.dataset.shape;
-          if(type==='rect'||type==='circle'){
-            const wrap = document.createElement('div');
-            wrap.className = 'element ' + (type==='rect'?'shape-rect':'shape-circle');
-            wrap.style.left            = clickX + 'px';
-            wrap.style.top             = clickY + 'px';
-            wrap.style.width           = '100px';
-            wrap.style.height          = '100px';
+          if (type === "rect" || type === "circle") {
+            const wrap = document.createElement("div");
+            wrap.className =
+              "element " + (type === "rect" ? "shape-rect" : "shape-circle");
+            wrap.style.left = clickX + "px";
+            wrap.style.top = clickY + "px";
+            wrap.style.width = "100px";
+            wrap.style.height = "100px";
             // Default fill and border so the shape shows immediately
-            wrap.style.backgroundColor = '#A8E6CF';
-            wrap.style.border          = '2px solid #82C9A1';
+            wrap.style.backgroundColor = "#A8E6CF";
+            wrap.style.border = "2px solid #82C9A1";
             paper.append(wrap);
-            initElement(wrap,false,null);
-            select(wrap,null);
+            initElement(wrap, false, null);
+            select(wrap, null);
           } else {
             // triangle
             const wrap = document.createElement("div"),
@@ -1292,6 +1344,61 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
             deselect();
           }
         });
+
+  // -- Layers panel logic --
+  const layersList = document.getElementById('layersList');
+  function addToLayers(wrapper) {
+    const li = document.createElement('li');
+    li.className = 'layerItem';
+    li.draggable = true;
+    // Icon based on element type
+    const icon = document.createElement('div');
+    icon.className = 'layerIcon';
+    if (wrapper.classList.contains('text-wrapper')) {
+      icon.textContent = 'T';
+    } else if (wrapper.classList.contains('shape-rect') || wrapper.classList.contains('shape-circle') || wrapper.classList.contains('shape-wrapper')) {
+      icon.style.backgroundColor = '#A8E6CF';
+      icon.style.borderRadius = wrapper.classList.contains('shape-circle') ? '50%' : '2px';
+    } else if (wrapper.classList.contains('image-wrapper')) {
+      icon.textContent = '🖼️';
+    }
+    const label = document.createElement('span');
+    label.className = 'layerLabel';
+    label.textContent = wrapper.classList.contains('text-wrapper') ? 'Text' :
+                        wrapper.classList.contains('shape-rect') ? 'Rect' :
+                        wrapper.classList.contains('shape-circle') ? 'Circle' :
+                        wrapper.classList.contains('shape-wrapper') ? 'Triangle' :
+                        'Image';
+    li.append(icon, label);
+    layersList.append(li);
+
+    // Drag & drop to reorder
+    li.addEventListener('dragstart', e => {
+      li.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', '');
+    });
+    li.addEventListener('dragend', () => li.classList.remove('dragging'));
+
+    layersList.addEventListener('dragover', e => {
+      e.preventDefault();
+      const dragging = layersList.querySelector('.dragging');
+      const after = [...layersList.querySelectorAll('.layerItem:not(.dragging)')]
+        .find(item => e.clientY < item.getBoundingClientRect().top + item.offsetHeight/2);
+      if (after) layersList.insertBefore(dragging, after);
+      else layersList.append(dragging);
+    });
+  }
+
+  // Whenever the layers list changes order, reflow the canvas
+  layersList.addEventListener('drop', () => {
+    const items = [...layersList.children];
+    // Bottom of list = bottom element in DOM; reverse to maintain stacking
+    items.reverse().forEach(li => {
+      const idx = Array.from(layersList.children).indexOf(li);
+      const wrapper = paper.children[idx];
+      paper.appendChild(wrapper);
+    });
+  });
       })();
     </script>
   </body>
