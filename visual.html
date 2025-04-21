@@ -12,12 +12,14 @@
     body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
     h1 { text-align:center; margin-bottom:1rem }
 
+    /* workspace */
     #workspace { display:flex; gap:1rem; }
     #paper {
       position:relative; flex:1;
       background:#fff8e7; border:2px solid #82C9A1;
       min-height:400px; resize:vertical; overflow:auto;
     }
+    /* assets panel with tabs */
     #assets {
       width:240px; background:#fafafa; border:2px solid #ddd;
       display:flex; flex-direction:column;
@@ -34,7 +36,7 @@
       flex:1; overflow:auto; padding:.5rem; display:none;
     }
     .assetPanel.active { display:block }
-    /* Image panel */
+    /* image panel */
     #assetsImages input { width:100%; margin-bottom:.5rem; padding:.25rem; }
     #assetsImages button {
       width:100%; margin-bottom:1rem; padding:.5rem;
@@ -45,7 +47,7 @@
       width:100%; margin-bottom:.5rem; cursor:grab;
       border:1px solid #ccc; border-radius:4px;
     }
-    /* Emoji panel */
+    /* emoji panel */
     #assetEmojis .emojiItem {
       font-size:1.5rem; display:inline-block;
       padding:.25rem; margin:.25rem; cursor:grab;
@@ -57,7 +59,7 @@
       background:#fff; border:1px solid #ccc; border-radius:4px;
       box-shadow:0 2px 6px rgba(0,0,0,0.1);
     }
-    #toolbar { padding:.25rem; display:flex; gap:.5rem; border-radius:8px; transform:translateX(0); }
+    #toolbar { padding:.25rem; display:flex; gap:.5rem; }
     #toolbar button {
       width:36px; height:36px; border:none; border-radius:50%;
       background:#A8E6CF; cursor:pointer;
@@ -65,7 +67,7 @@
     #toolbar button:hover { background:#76C69C }
     #toolbar button img { width:20px; height:20px }
 
-    #shapeMenu { padding:.25rem; display:flex; gap:.5rem; border-radius:8px; transform:translateX(0); }
+    #shapeMenu { padding:.25rem; display:flex; gap:.5rem; border-radius:8px; }
     #shapeMenu button {
       width:32px; height:32px; border:none; border-radius:4px;
       background:#A8E6CF; cursor:pointer;
@@ -74,7 +76,7 @@
     #shapeMenu button img { width:20px; height:20px }
 
     #textToolbar, #shapeToolbar {
-      padding:.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap; transform:translateX(0);
+      padding:.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap;
     }
     #textToolbar button, #shapeToolbar button {
       background:transparent; border:none; cursor:pointer; font-size:1.1rem;
@@ -94,7 +96,8 @@
     .tb-delete:hover { color:#e74c3c; }
 
     #fontMenu {
-      top:100%; left:0; max-height:200px; width:150px; overflow-y:auto;
+      position:absolute; top:100%; left:0;
+      max-height:200px; width:150px; overflow-y:auto;
     }
     #fontMenu .fontOption {
       display:block; width:100%; padding:6px 8px; text-align:left;
@@ -131,11 +134,13 @@
 
     /* content */
     .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
+    /* text wrapper/content */
     .text-wrapper { position:relative; }
     .text-content {
       position:absolute; top:0; left:0; right:0; bottom:0;
       padding-top:20px; overflow:auto; outline:none; cursor:text;
     }
+    /* shapes */
     .shape-rect {
       width:100px; height:60px; background:#60A085;
       border:2px solid #60A085;
@@ -147,10 +152,9 @@
     .shape-wrapper svg { display:block; }
     /* unified wrapper for images & emojis */
     .image-wrapper {
-      width:100px; height:100px;
+      display:flex; align-items:center; justify-content:center;
       background-size:contain; background-repeat:no-repeat;
       background-position:center;
-      display:flex; align-items:center; justify-content:center;
     }
   </style>
 </head>
@@ -209,48 +213,48 @@
     <input type="color" id="tbColor">
     <button id="tbDeleteText" class="tb-delete" title="Delete Text">×</button>
     <div id="fontMenu">
-      <button class="fontOption" data-font="Poppins" style="font-family:'Poppins',sans-serif">Poppins</button>
-      <button class="fontOption" data-font="Roboto" style="font-family:'Roboto',sans-serif">Roboto</button>
+      <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
+      <button class="fontOption" data-font="Roboto"    style="font-family:'Roboto',sans-serif">Roboto</button>
       <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
-      <button class="fontOption" data-font="Lora" style="font-family:'Lora',serif">Lora</button>
-      <button class="fontOption" data-font="Montserrat" style="font-family:'Montserrat',sans-serif">Montserrat</button>
+      <button class="fontOption" data-font="Lora"      style="font-family:'Lora',serif">Lora</button>
+      <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
 
   <!-- shape toolbar -->
   <div id="shapeToolbar">
-    <input type="color" id="shapeFill" title="Fill Color">
-    <input type="color" id="shapeStroke" title="Stroke Color">
+    <input type="color" id="shapeFill"    title="Fill Color">
+    <input type="color" id="shapeStroke"  title="Stroke Color">
     <input type="number" id="shapeStrokeWidth" min="0" max="20" title="Stroke Width">px
-    <input type="range" id="shapeOpacity" min="0" max="1" step="0.05" title="Opacity">
+    <input type="range"  id="shapeOpacity" min="0" max="1" step="0.05" title="Opacity">
     <button id="tbDeleteShape" class="tb-delete" title="Delete Shape">×</button>
   </div>
 
   <script>
   ;(function(){
     // DOM refs
-    const paper        = document.getElementById('paper'),
-          toolbar      = document.getElementById('toolbar'),
-          shapeMenu    = document.getElementById('shapeMenu'),
-          textToolbar  = document.getElementById('textToolbar'),
-          shapeToolbar = document.getElementById('shapeToolbar'),
-          assetUrlIn   = document.getElementById('assetUrlInput'),
-          assetAddBtn  = document.getElementById('assetAddBtn'),
-          assetList    = document.getElementById('assetList'),
-          tabImages    = document.getElementById('tabImages'),
-          tabEmojis    = document.getElementById('tabEmojis'),
-          panelImages  = document.getElementById('assetsImages'),
-          panelEmojis  = document.getElementById('assetEmojis'),
-          emojiItems   = document.querySelectorAll('.emojiItem'),
-          tbFont       = document.getElementById('tbFont'),
-          fontMenu     = document.getElementById('fontMenu'),
-          fontOpts     = fontMenu.querySelectorAll('.fontOption'),
-          shapeFill    = document.getElementById('shapeFill'),
-          shapeStroke  = document.getElementById('shapeStroke'),
-          shapeStW     = document.getElementById('shapeStrokeWidth'),
-          shapeOp      = document.getElementById('shapeOpacity'),
-          tbDeleteText = document.getElementById('tbDeleteText'),
-          tbDeleteShape= document.getElementById('tbDeleteShape');
+    const paper         = document.getElementById('paper'),
+          toolbar       = document.getElementById('toolbar'),
+          shapeMenu     = document.getElementById('shapeMenu'),
+          textToolbar   = document.getElementById('textToolbar'),
+          shapeToolbar  = document.getElementById('shapeToolbar'),
+          assetUrlIn    = document.getElementById('assetUrlInput'),
+          assetAddBtn   = document.getElementById('assetAddBtn'),
+          assetList     = document.getElementById('assetList'),
+          tabImages     = document.getElementById('tabImages'),
+          tabEmojis     = document.getElementById('tabEmojis'),
+          panelImages   = document.getElementById('assetsImages'),
+          panelEmojis   = document.getElementById('assetEmojis'),
+          emojiItems    = document.querySelectorAll('.emojiItem'),
+          tbFont        = document.getElementById('tbFont'),
+          fontMenu      = document.getElementById('fontMenu'),
+          fontOpts      = fontMenu.querySelectorAll('.fontOption'),
+          shapeFill     = document.getElementById('shapeFill'),
+          shapeStroke   = document.getElementById('shapeStroke'),
+          shapeStW      = document.getElementById('shapeStrokeWidth'),
+          shapeOp       = document.getElementById('shapeOpacity'),
+          tbDeleteText  = document.getElementById('tbDeleteText'),
+          tbDeleteShape = document.getElementById('tbDeleteShape');
 
     let clickX=0, clickY=0, selectedWrapper=null, selectedContent=null, selectedPoly=null;
 
@@ -347,7 +351,7 @@
       }
     }
 
-    // Add thumbnail
+    // Add image asset thumbnail
     function addAsset(src){
       const thumb=document.createElement('img');
       thumb.src=src; thumb.draggable=true;
@@ -415,13 +419,14 @@
       select(wrap,null,poly);
     }
 
-    // Drop handling
+    // Drop handling for images & emojis
     paper.addEventListener('dragover', e=>e.preventDefault());
     paper.addEventListener('drop', e=>{
       e.preventDefault();
       if(e.target!==paper) return;
       const data=e.dataTransfer.getData('text/plain');
       clickX=e.offsetX; clickY=e.offsetY;
+
       const wrap=document.createElement('div');
       wrap.className='element image-wrapper';
       wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
@@ -432,11 +437,22 @@
         wrap.style.fontSize='40px';
       }
       paper.append(wrap);
+
+      // **force explicit size on emoji/text** so handles work
+      if(!data.startsWith('http')) {
+        const cw=wrap.clientWidth, ch=wrap.clientHeight;
+        wrap.style.width=cw+'px';
+        wrap.style.height=ch+'px';
+      } else {
+        wrap.style.width='100px';
+        wrap.style.height='100px';
+      }
+
       initElement(wrap,false,null);
       select(wrap,null);
     });
 
-    // Draggable
+    // Draggable support
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
@@ -455,14 +471,16 @@
       }
     }
 
-    // Enable drop on existing
+    // Enable drop onto existing
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
         const url=e.dataTransfer.getData('text/plain'); if(!url) return;
         el.style.backgroundImage=`url(${url})`;
-        el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.style.zIndex='999';
+        el.style.backgroundSize='cover';
+        el.style.backgroundPosition='center';
+        el.style.zIndex='999';
         if(el.classList.contains('shape-wrapper')){
           const poly=el.querySelector('polygon');
           poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
@@ -474,7 +492,7 @@
       });
     }
 
-    // Resize handles
+    // Add resize handles
     function addResizeHandles(el){
       ['nw','ne','sw','se'].forEach(dir=>{
         const h=document.createElement('div');
@@ -498,11 +516,15 @@
           if(dir.includes('s')) newH=start.h+dy;
           if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
           if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          // preserve ratio always for image-wrapper
-          newH=newW/start.aspect;
-          if(dir.includes('n')) newT=start.top+(start.h-newH);
-          el.style.width=newW+'px'; el.style.height=newH+'px';
-          el.style.left=newL+'px'; el.style.top=newT+'px';
+          // aspect-lock for images/emojis; shapes freeform only with Shift
+          if(el.classList.contains('image-wrapper') || ev.shiftKey){
+            newH = newW / start.aspect;
+            if(dir.includes('n')) newT = start.top + (start.h - newH);
+          }
+          el.style.width  = newW + 'px';
+          el.style.height = newH + 'px';
+          el.style.left   = newL + 'px';
+          el.style.top    = newT + 'px';
           if(selectedWrapper===el){
             selectedContent ? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
           }
@@ -510,7 +532,7 @@
       };
     }
 
-    // Rotate handle
+    // Add rotate handle
     function addRotateHandle(el){
       const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
       h.addEventListener('mousedown', e=>{
@@ -569,7 +591,7 @@
       update();
     }
 
-    // Show insert toolbar above click
+    // Insert toolbar above click
     paper.addEventListener('mousedown', e=>{
       if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper)
         return;
@@ -662,7 +684,7 @@
       if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
 
-    // Delete key
+    // Delete key support
     document.addEventListener('keydown', e=>{
       if(e.key==='Delete' && selectedWrapper){
         selectedWrapper.remove(); deselect();
