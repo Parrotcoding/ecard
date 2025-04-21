@@ -1,102 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Seafoam E‑Card Visual Editor</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
     rel="stylesheet"
   />
   <style>
-    body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif; }
+    body { margin:0; padding:1rem; background:#f0f0f0; font-family:'Poppins',sans-serif }
     h1 { text-align:center; margin-bottom:1rem }
-    #workspace { display:flex; gap:1rem; }
+    #workspace { display:flex; gap:1rem }
     #paper {
       position:relative; flex:1;
       background:#fff8e7; border:2px solid #82C9A1;
       min-height:400px; resize:vertical; overflow:auto;
     }
-    /* assets tabs & panels */
-    #assets { width:240px; background:#fafafa; border:2px solid #ddd; display:flex; flex-direction:column; }
-    #assetTabs { display:flex; }
+    /* Assets panel */
+    #assets { width:240px; background:#fafafa; border:2px solid #ddd; display:flex; flex-direction:column }
+    #assetTabs { display:flex }
     #assetTabs button {
-      flex:1; padding:.5rem; border:none; cursor:pointer; background:#ddd; font-weight:600;
+      flex:1; padding:.5rem; border:none; cursor:pointer; background:#ddd; font-weight:600
     }
-    #assetTabs button.active { background:#fff; border-bottom:2px solid #fff; }
-    .assetPanel { flex:1; overflow:auto; padding:.5rem; display:none; }
+    #assetTabs button.active { background:#fff; border-bottom:2px solid #fff }
+    .assetPanel { flex:1; overflow:auto; padding:.5rem; display:none }
     .assetPanel.active { display:block }
-    #assetsImages input { width:100%; margin-bottom:.5rem; padding:.25rem; }
+    #assetsImages input { width:100%; margin-bottom:.5rem; padding:.25rem }
     #assetsImages button {
       width:100%; margin-bottom:1rem; padding:.5rem;
-      background:#60A085; border:none; color:#fff;
-      cursor:pointer; border-radius:4px;
+      background:#60A085; border:none; color:#fff; cursor:pointer; border-radius:4px
     }
     #assetList img {
       width:100%; margin-bottom:.5rem; cursor:grab;
-      border:1px solid #ccc; border-radius:4px;
+      border:1px solid #ccc; border-radius:4px
     }
     #assetEmojis .emojiItem {
       font-size:1.5rem; display:inline-block;
-      padding:.25rem; margin:.25rem; cursor:grab;
+      padding:.25rem; margin:.25rem; cursor:grab
     }
 
-    /* toolbars */
-    #toolbar, #shapeMenu, #textToolbar, #shapeToolbar, #fontMenu {
+    /* Toolbars */
+    #toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu {
       position:absolute; display:none; z-index:2000;
       background:#fff; border:1px solid #ccc; border-radius:4px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      box-shadow:0 2px 6px rgba(0,0,0,0.1)
     }
-    #toolbar { padding:.25rem; display:flex; gap:.5rem; }
+    #toolbar { padding:.25rem; display:flex; gap:.5rem }
     #toolbar button {
       width:36px; height:36px; border:none; border-radius:50%;
-      background:#A8E6CF; cursor:pointer;
+      background:#A8E6CF; cursor:pointer
     }
     #toolbar button:hover { background:#76C69C }
     #toolbar button img { width:20px; height:20px }
 
-    #shapeMenu { padding:.25rem; display:flex; gap:.5rem; border-radius:8px; }
+    #shapeMenu { padding:.25rem; display:flex; gap:.5rem; border-radius:8px }
     #shapeMenu button {
       width:32px; height:32px; border:none; border-radius:4px;
-      background:#A8E6CF; cursor:pointer;
+      background:#A8E6CF; cursor:pointer
     }
     #shapeMenu button:hover { background:#76C69C }
+    #shapeMenu button img { width:20px; height:20px }
 
-    #textToolbar, #shapeToolbar {
-      padding:.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap;
+    #textToolbar,#shapeToolbar {
+      padding:.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap
     }
-    #textToolbar button, #shapeToolbar button {
-      background:transparent; border:none; cursor:pointer; font-size:1.1rem;
+    #textToolbar button,#shapeToolbar button {
+      background:transparent; border:none; cursor:pointer; font-size:1.1rem
     }
-    #textToolbar button img, #shapeToolbar button img {
-      width:20px; height:20px;
+    #textToolbar button img,#shapeToolbar button img {
+      width:20px; height:20px
     }
-    #textToolbar input, #shapeToolbar input {
-      border:1px solid #ccc; border-radius:4px; padding:2px;
+    #textToolbar input,#shapeToolbar input {
+      border:1px solid #ccc; border-radius:4px; padding:2px
     }
     #shapeToolbar input[type=number] { width:3rem }
     #shapeToolbar input[type=range]  { width:5rem }
 
     .tb-delete {
-      font-size:1.2rem; color:#c0392b; padding:0 6px; cursor:pointer;
+      font-size:1.2rem; color:#c0392b; padding:0 6px; cursor:pointer
     }
-    .tb-delete:hover { color:#e74c3c; }
+    .tb-delete:hover { color:#e74c3c }
 
     #fontMenu {
       position:absolute; top:100%; left:0;
-      max-height:200px; width:150px; overflow-y:auto;
+      max-height:200px; width:150px; overflow-y:auto
     }
     #fontMenu .fontOption {
       display:block; width:100%; padding:6px 8px; text-align:left;
-      background:transparent; border:none; cursor:pointer; font-size:.95rem;
+      background:transparent; border:none; cursor:pointer; font-size:.95rem
     }
     #fontMenu .fontOption:hover { background:#f0f0f0 }
 
-    /* handles */
-    .resize-handle, .vertex-handle, .rotate-handle { display:none; }
+    /* Handles */
+    .resize-handle,.vertex-handle,.rotate-handle { display:none }
     .resize-handle {
       position:absolute; width:10px; height:10px;
-      background:#fff; border:1px solid #60A085;
+      background:#fff; border:1px solid #60A085
     }
     .handle-nw { cursor:nwse-resize; top:-5px; left:-5px }
     .handle-ne { cursor:nesw-resize; top:-5px; right:-5px }
@@ -105,40 +105,40 @@
     .vertex-handle {
       position:absolute; width:12px; height:12px;
       background:#fff; border:2px solid #60A085;
-      border-radius:50%; cursor:move; margin:-6px;
+      border-radius:50%; cursor:move; margin:-6px
     }
     .rotate-handle {
       position:absolute; top:-20px; left:50%;
       transform:translateX(-50%); width:12px; height:12px;
       background:#fff; border:2px solid #60A085;
-      border-radius:50%; cursor:grab;
+      border-radius:50%; cursor:grab
     }
     .element.selected .resize-handle,
     .element.selected .rotate-handle,
     .shape-wrapper.selected .vertex-handle {
-      display:block !important;
+      display:block !important
     }
 
-    /* content */
-    .element, .shape-wrapper { position:absolute; user-select:none; transform-origin:center; }
-    .text-wrapper { position:relative; }
+    /* Content */
+    .element,.shape-wrapper { position:absolute; user-select:none; transform-origin:center }
+    .text-wrapper { position:relative }
     .text-content {
       position:absolute; top:0; left:0; right:0; bottom:0;
-      padding-top:20px; overflow:auto; outline:none; cursor:text;
+      padding-top:20px; overflow:auto; outline:none; cursor:text
     }
     .shape-rect {
       width:100px; height:60px; background:#60A085;
-      border:2px solid #60A085;
+      border:2px solid #60A085
     }
     .shape-circle {
       width:60px; height:60px; background:#60A085;
-      border:2px solid #60A085; border-radius:50%;
+      border:2px solid #60A085; border-radius:50%
     }
-    .shape-wrapper svg { display:block; }
+    .shape-wrapper svg { display:block }
     .image-wrapper {
       display:flex; align-items:center; justify-content:center;
       background-size:contain; background-repeat:no-repeat;
-      background-position:center;
+      background-position:center
     }
   </style>
 </head>
@@ -152,8 +152,8 @@
         <button id="tabEmojis">Emojis</button>
       </div>
       <div id="assetsImages" class="assetPanel active">
-        <input type="text" id="assetUrlInput" placeholder="Image URL">
-        <button id="assetAddBtn">Add Image</button>
+        <input type="text" id="assetUrlInput" placeholder="Image URL" />
+        <button id="assetAddBtn">Add Image</button>
         <div id="assetList"></div>
       </div>
       <div id="assetEmojis" class="assetPanel">
@@ -171,62 +171,62 @@
     </div>
   </div>
 
-  <!-- insert toolbar -->
+  <!-- Insert toolbar -->
   <div id="toolbar">
     <button id="btnText" title="Add Text">T</button>
-    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes"></button>
+    <button id="btnShape" title="Add Shape"><img src="shapes.svg" alt="Shapes" /></button>
   </div>
-  <!-- shape menu -->
+  <!-- Shape menu -->
   <div id="shapeMenu">
-    <button data-shape="rect">◻</button>
-    <button data-shape="circle">◯</button>
-    <button data-shape="triangle">△</button>
+    <button data-shape="rect" title="Rectangle">◻</button>
+    <button data-shape="circle" title="Circle">◯</button>
+    <button data-shape="triangle" title="Triangle">△</button>
   </div>
-  <!-- text toolbar -->
+  <!-- Text toolbar -->
   <div id="textToolbar">
     <button id="tbBold"><b>B</b></button>
     <button id="tbItalic"><i>I</i></button>
     <button id="tbUnderline"><u>U</u></button>
-    <button id="tbAlignLeft"><img src="align-left.svg"></button>
-    <button id="tbAlignCenter"><img src="align-center.svg"></button>
-    <button id="tbAlignRight"><img src="align-right.svg"></button>
+    <button id="tbAlignLeft"><img src="align-left.svg" alt="" /></button>
+    <button id="tbAlignCenter"><img src="align-center.svg" alt="" /></button>
+    <button id="tbAlignRight"><img src="align-right.svg" alt="" /></button>
     <button id="tbFont">Aa</button>
-    <input type="number" id="tbFontSize" min="8" max="72">px
-    <input type="color" id="tbColor">
-    <button id="tbDeleteText" class="tb-delete">×</button>
+    <input type="number" id="tbFontSize" min="8" max="72" />px
+    <input type="color" id="tbColor" />
+    <button id="tbDeleteText" class="tb-delete" title="Delete Text">×</button>
     <div id="fontMenu">
-      <button class="fontOption" data-font="Poppins" style="font-family:'Poppins',sans-serif">Poppins</button>
-      <button class="fontOption" data-font="Roboto" style="font-family:'Roboto',sans-serif">Roboto</button>
-      <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
-      <button class="fontOption" data-font="Lora" style="font-family:'Lora',serif">Lora</button>
-      <button class="fontOption" data-font="Montserrat" style="font-family:'Montserrat',sans-serif">Montserrat</button>
+      <button class="fontOption" data-font="Poppins"   style="font-family:'Poppins',sans-serif">Poppins</button>
+      <button class="fontOption" data-font="Roboto"    style="font-family:'Roboto',sans-serif">Roboto</button>
+      <button class="fontOption" data-font="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button>
+      <button class="fontOption" data-font="Lora"      style="font-family:'Lora',serif">Lora</button>
+      <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
-  <!-- shape toolbar -->
+  <!-- Shape toolbar -->
   <div id="shapeToolbar">
-    <input type="color" id="shapeFill">
-    <input type="color" id="shapeStroke">
-    <input type="number" id="shapeStrokeWidth" min="0" max="20">px
-    <input type="range" id="shapeOpacity" min="0" max="1" step="0.05">
-    <button id="tbDeleteShape" class="tb-delete">×</button>
+    <input type="color" id="shapeFill" title="Fill Color" />
+    <input type="color" id="shapeStroke" title="Stroke Color" />
+    <input type="number" id="shapeStrokeWidth" min="0" max="20" title="Stroke Width" />px
+    <input type="range" id="shapeOpacity" min="0" max="1" step="0.05" title="Opacity" />
+    <button id="tbDeleteShape" class="tb-delete" title="Delete Shape">×</button>
   </div>
 
   <script>
   ;(function(){
+    // DOM references
     const paper         = document.getElementById('paper'),
-          toolbar       = document.getElementById('toolbar'),
-          shapeMenu     = document.getElementById('shapeMenu'),
-          textToolbar   = document.getElementById('textToolbar'),
-          shapeToolbar  = document.getElementById('shapeToolbar'),
-          assetUrlIn    = document.getElementById('assetUrlInput'),
-          assetAddBtn   = document.getElementById('assetAddBtn'),
-          assetList     = document.getElementById('assetList'),
           tabImages     = document.getElementById('tabImages'),
           tabEmojis     = document.getElementById('tabEmojis'),
           panelImages   = document.getElementById('assetsImages'),
           panelEmojis   = document.getElementById('assetEmojis'),
+          assetUrlIn    = document.getElementById('assetUrlInput'),
+          assetAddBtn   = document.getElementById('assetAddBtn'),
+          assetList     = document.getElementById('assetList'),
           emojiItems    = document.querySelectorAll('.emojiItem'),
-          tbFont        = document.getElementById('tbFont'),
+          toolbar       = document.getElementById('toolbar'),
+          shapeMenu     = document.getElementById('shapeMenu'),
+          textToolbar   = document.getElementById('textToolbar'),
+          shapeToolbar  = document.getElementById('shapeToolbar'),
           fontMenu      = document.getElementById('fontMenu'),
           fontOpts      = fontMenu.querySelectorAll('.fontOption'),
           shapeFill     = document.getElementById('shapeFill'),
@@ -237,70 +237,94 @@
           tbDeleteShape = document.getElementById('tbDeleteShape');
     let clickX=0, clickY=0, selectedWrapper=null, selectedContent=null, selectedPoly=null;
 
+    // TAB SWITCHING
+    tabImages.addEventListener('click', ()=>{
+      tabImages.classList.add('active');
+      tabEmojis.classList.remove('active');
+      panelImages.classList.add('active');
+      panelEmojis.classList.remove('active');
+    });
+    tabEmojis.addEventListener('click', ()=>{
+      tabEmojis.classList.add('active');
+      tabImages.classList.remove('active');
+      panelEmojis.classList.add('active');
+      panelImages.classList.remove('active');
+    });
+
+    // EMOJI DRAG
+    emojiItems.forEach(em=>{
+      em.draggable = true;
+      em.addEventListener('dragstart', ev=>{
+        ev.dataTransfer.setData('text/plain', em.textContent);
+      });
+    });
+
+    // COMMON HELPERS
     function rgbToHex(rgb){
-      const [r,g,b]=rgb.match(/\d+/g).map(Number);
-      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+      const [r,g,b] = rgb.match(/\d+/g).map(Number);
+      return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
     }
     function updateTextToolbarPosition(w){
-      const r=w.getBoundingClientRect(), tb=textToolbar.getBoundingClientRect();
-      const cx=r.left+r.width/2+window.scrollX;
-      let top=r.top+window.scrollY-tb.height-8;
-      if(top<window.scrollY+8) top=r.bottom+window.scrollY+8;
-      textToolbar.style.left=cx+'px';
-      textToolbar.style.top=top+'px';
-      textToolbar.style.transform='translateX(-50%)';
+      const r = w.getBoundingClientRect(), tb = textToolbar.getBoundingClientRect();
+      const cx = r.left + r.width/2 + window.scrollX;
+      let top = r.top + window.scrollY - tb.height - 8;
+      if(top < window.scrollY + 8) top = r.bottom + window.scrollY + 8;
+      textToolbar.style.left = cx + 'px';
+      textToolbar.style.top  = top + 'px';
+      textToolbar.style.transform = 'translateX(-50%)';
     }
     function updateShapeToolbarPosition(w){
-      const r=w.getBoundingClientRect(), tb=shapeToolbar.getBoundingClientRect();
-      const cx=r.left+r.width/2+window.scrollX;
-      let top=r.top+window.scrollY-tb.height-8;
-      if(top<window.scrollY+8) top=r.bottom+window.scrollY+8;
-      shapeToolbar.style.left=cx+'px';
-      shapeToolbar.style.top=top+'px';
-      shapeToolbar.style.transform='translateX(-50%)';
+      const r = w.getBoundingClientRect(), tb = shapeToolbar.getBoundingClientRect();
+      const cx = r.left + r.width/2 + window.scrollX;
+      let top = r.top + window.scrollY - tb.height - 8;
+      if(top < window.scrollY + 8) top = r.bottom + window.scrollY + 8;
+      shapeToolbar.style.left = cx + 'px';
+      shapeToolbar.style.top  = top + 'px';
+      shapeToolbar.style.transform = 'translateX(-50%)';
     }
     function deselect(){
       if(!selectedWrapper) return;
       selectedWrapper.classList.remove('selected');
-      selectedWrapper=null; selectedContent=null; selectedPoly=null;
-      textToolbar.style.display='none';
-      shapeToolbar.style.display='none';
+      selectedWrapper = selectedContent = selectedPoly = null;
+      textToolbar.style.display = 'none';
+      shapeToolbar.style.display = 'none';
     }
     function select(wrapper, content=null, poly=null){
-      if(selectedWrapper===wrapper) return;
+      if(selectedWrapper === wrapper) return;
       deselect();
-      selectedWrapper=wrapper; selectedContent=content; selectedPoly=poly;
+      selectedWrapper = wrapper;
+      selectedContent = content;
+      selectedPoly     = poly;
       wrapper.classList.add('selected');
-      toolbar.style.display='none';
-      shapeMenu.style.display='none';
-      fontMenu.style.display='none';
+      toolbar.style.display = shapeMenu.style.display = fontMenu.style.display = 'none';
       if(content){
-        textToolbar.style.display='flex';
+        textToolbar.style.display = 'flex';
         updateTextToolbarPosition(wrapper);
-        document.getElementById('tbFontSize').value=parseInt(getComputedStyle(content).fontSize);
-        document.getElementById('tbColor').value=rgbToHex(getComputedStyle(content).color);
+        document.getElementById('tbFontSize').value = parseInt(getComputedStyle(content).fontSize);
+        document.getElementById('tbColor').value    = rgbToHex(getComputedStyle(content).color);
       } else {
-        shapeToolbar.style.display='flex';
+        shapeToolbar.style.display = 'flex';
         updateShapeToolbarPosition(wrapper);
-        const cs=getComputedStyle(wrapper);
-        shapeFill.value=rgbToHex(cs.backgroundColor);
-        shapeStroke.value=rgbToHex(cs.borderColor);
-        shapeStW.value=parseInt(cs.borderWidth);
-        shapeOp.value=cs.opacity;
+        const cs = getComputedStyle(wrapper);
+        shapeFill.value   = rgbToHex(cs.backgroundColor);
+        shapeStroke.value = rgbToHex(cs.borderColor);
+        shapeStW.value    = parseInt(cs.borderWidth);
+        shapeOp.value     = cs.opacity;
       }
     }
 
-    function initElement(wrapper,isTri,poly){
+    // ELEMENT INITIALIZER
+    function initElement(wrapper, isTri, poly){
       makeDraggable(wrapper);
       enableDrop(wrapper);
       addResizeHandles(wrapper);
       addRotateHandle(wrapper);
-      if(isTri) makeTriangleResizable(wrapper,poly);
+      if(isTri) makeTriangleResizable(wrapper, poly);
       wrapper.addEventListener('mousedown', e=>{
         e.stopPropagation();
         select(wrapper, wrapper.querySelector('.text-content'), poly);
       });
-      const content=wrapper.querySelector('.text-content');
+      const content = wrapper.querySelector('.text-content');
       if(content){
         content.addEventListener('dblclick', e=>{
           e.stopPropagation();
@@ -310,291 +334,368 @@
       }
     }
 
-    function addAsset(src){
-      const thumb=document.createElement('img');
-      thumb.src=src; thumb.draggable=true;
-      thumb.addEventListener('dragstart', ev=>ev.dataTransfer.setData('text/plain',src));
-      assetList.append(thumb);
-    }
-    assetAddBtn.addEventListener('click', ()=>{
-      const url=assetUrlIn.value.trim(); if(!url) return;
-      addAsset(url); assetUrlIn.value='';
-    });
-
-    document.getElementById('btnText').onclick=e=>{
-      e.stopPropagation();
-      const wrap=document.createElement('div');
-      wrap.className='element text-wrapper';
-      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
-      wrap.style.width='150px'; wrap.style.height='100px';
-      const txt=document.createElement('div');
-      txt.className='text-content'; txt.contentEditable=true;
-      txt.innerText='Enter text';
-      wrap.append(txt);
-      paper.append(wrap);
-      initElement(wrap,false,null);
-      select(wrap,txt);
-      txt.focus();
-    };
-
-    document.getElementById('btnShape').onclick=e=>{
-      e.stopPropagation();
-      const r=e.currentTarget.getBoundingClientRect();
-      shapeMenu.style.left=r.right+8+'px';
-      shapeMenu.style.top=r.top+'px';
-      shapeMenu.style.display='flex';
-    };
-    shapeMenu.addEventListener('click', e=>{
-      const btn=e.target.closest('[data-shape]'); if(!btn) return;
-      btn.dataset.shape==='triangle'? insertTriangle(): insertBasic(btn.dataset.shape);
-      shapeMenu.style.display='none';
-    });
-    function insertBasic(type){
-      const wrap=document.createElement('div');
-      wrap.className='element '+(type==='rect'?'shape-rect':'shape-circle');
-      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
-      paper.append(wrap);
-      initElement(wrap,false,null);
-      select(wrap,null);
-    }
-    function insertTriangle(){
-      const wrap=document.createElement('div');
-      wrap.className='shape-wrapper';
-      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
-      wrap.style.width='80px'; wrap.style.height='70px';
-      const svgNS="http://www.w3.org/2000/svg",
-            svg=document.createElementNS(svgNS,'svg'),
-            poly=document.createElementNS(svgNS,'polygon');
-      svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
-      poly.setAttribute('points','0,70 40,0 80,70');
-      poly.setAttribute('fill','#60A085');
-      poly.setAttribute('stroke','#60A085'); poly.setAttribute('stroke-width','2');
-      svg.append(poly); wrap.append(svg);
-      paper.append(wrap);
-      initElement(wrap,true,poly);
-      select(wrap,null,poly);
-    }
-
+    // DRAG + DROP FOR PAPER
     paper.addEventListener('dragover', e=>e.preventDefault());
     paper.addEventListener('drop', e=>{
       e.preventDefault();
-      if(e.target!==paper) return;
-      const data=e.dataTransfer.getData('text/plain');
-      clickX=e.offsetX; clickY=e.offsetY;
-
-      const wrap=document.createElement('div');
-      wrap.className='element image-wrapper';
-      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
+      if(e.target !== paper) return;
+      const data = e.dataTransfer.getData('text/plain');
+      clickX = e.offsetX; clickY = e.offsetY;
+      const wrap = document.createElement('div');
+      wrap.className = 'element image-wrapper';
+      wrap.style.left = clickX + 'px';
+      wrap.style.top  = clickY + 'px';
       if(data.startsWith('http')){
-        wrap.style.backgroundImage=`url(${data})`;
+        wrap.style.backgroundImage = `url(${data})`;
+        wrap.style.width  = '100px';
+        wrap.style.height = '100px';
       } else {
-        wrap.textContent=data;
-        // append temporarily to measure
+        wrap.textContent = data;
         paper.append(wrap);
-        wrap.style.fontSize='40px';
-        const cw=wrap.clientWidth, ch=wrap.clientHeight;
-        const maxDim=Math.min(cw,ch);
-        wrap.style.fontSize=Math.floor(maxDim*0.9)+'px';
-        wrap.style.width=cw+'px';
-        wrap.style.height=ch+'px';
+        wrap.style.fontSize = '40px';
+        const cw = wrap.clientWidth, ch = wrap.clientHeight,
+              maxDim = Math.min(cw,ch);
+        wrap.style.fontSize = Math.floor(maxDim*0.9) + 'px';
+        wrap.style.width  = cw + 'px';
+        wrap.style.height = ch + 'px';
         wrap.remove();
       }
-      if(data.startsWith('http')){
-        wrap.style.width='100px';
-        wrap.style.height='100px';
-      }
       paper.append(wrap);
-      initElement(wrap,false,null);
-      select(wrap,null);
+      initElement(wrap, false, null);
+      select(wrap, null);
     });
 
+    // ADD IMAGE ASSET
+    assetAddBtn.addEventListener('click', ()=>{
+      const url = assetUrlIn.value.trim();
+      if(!url) return;
+      const thumb = document.createElement('img');
+      thumb.src = url; thumb.draggable = true;
+      thumb.addEventListener('dragstart', ev=>ev.dataTransfer.setData('text/plain', url));
+      assetList.append(thumb);
+      assetUrlIn.value = '';
+    });
+
+    // INSERT TEXT
+    document.getElementById('btnText').onclick = e=>{
+      e.stopPropagation();
+      const wrap = document.createElement('div');
+      wrap.className = 'element text-wrapper';
+      wrap.style.left = clickX + 'px';
+      wrap.style.top  = clickY + 'px';
+      wrap.style.width  = '150px';
+      wrap.style.height = '100px';
+      const txt = document.createElement('div');
+      txt.className = 'text-content';
+      txt.contentEditable = true;
+      txt.innerText = 'Enter text';
+      wrap.append(txt);
+      paper.append(wrap);
+      initElement(wrap, false, null);
+      select(wrap, txt);
+      txt.focus();
+    };
+
+    // INSERT SHAPE
+    document.getElementById('btnShape').onclick = e=>{
+      e.stopPropagation();
+      const r = e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left = r.right + 8 + 'px';
+      shapeMenu.style.top  = r.top + 'px';
+      shapeMenu.style.display = 'flex';
+    };
+    shapeMenu.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-shape]');
+      if(!btn) return;
+      btn.dataset.shape === 'triangle'
+        ? insertTriangle()
+        : insertBasic(btn.dataset.shape);
+      shapeMenu.style.display = 'none';
+    });
+    function insertBasic(type){
+      const wrap = document.createElement('div');
+      wrap.className = 'element ' + (type==='rect' ? 'shape-rect' : 'shape-circle');
+      wrap.style.left = clickX + 'px';
+      wrap.style.top  = clickY + 'px';
+      paper.append(wrap);
+      initElement(wrap, false, null);
+      select(wrap, null);
+    }
+    function insertTriangle(){
+      const wrap = document.createElement('div');
+      wrap.className = 'shape-wrapper';
+      wrap.style.left = clickX + 'px';
+      wrap.style.top  = clickY + 'px';
+      wrap.style.width  = '80px';
+      wrap.style.height = '70px';
+      const svgNS = "http://www.w3.org/2000/svg",
+            svg   = document.createElementNS(svgNS, 'svg'),
+            poly  = document.createElementNS(svgNS, 'polygon');
+      svg.setAttribute('width','100%');
+      svg.setAttribute('height','100%');
+      poly.setAttribute('points','0,70 40,0 80,70');
+      poly.setAttribute('fill','#60A085');
+      poly.setAttribute('stroke','#60A085');
+      poly.setAttribute('stroke-width','2');
+      svg.append(poly);
+      wrap.append(svg);
+      paper.append(wrap);
+      initElement(wrap, true, poly);
+      select(wrap, null, poly);
+    }
+
+    // MAKE DRAGGABLE
     function makeDraggable(el){
       let dx,dy;
       el.addEventListener('mousedown', e=>{
         if(e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
         e.preventDefault();
-        dx=e.clientX-el.offsetLeft; dy=e.clientY-el.offsetTop;
+        dx = e.clientX - el.offsetLeft;
+        dy = e.clientY - el.offsetTop;
         document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',move),{once:true});
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', move), { once:true });
       });
       function move(ev){
-        el.style.left=ev.clientX-dx+'px';
-        el.style.top=ev.clientY-dy+'px';
-        if(selectedWrapper===el){
-          selectedContent?updateTextToolbarPosition(el):updateShapeToolbarPosition(el);
+        el.style.left = (ev.clientX - dx) + 'px';
+        el.style.top  = (ev.clientY - dy) + 'px';
+        if(selectedWrapper === el){
+          selectedContent
+            ? updateTextToolbarPosition(el)
+            : updateShapeToolbarPosition(el);
         }
       }
     }
 
+    // ENABLE DROP ON EXISTING
     function enableDrop(el){
       el.addEventListener('dragover', e=>e.preventDefault());
       el.addEventListener('drop', e=>{
         e.preventDefault();
-        const url=e.dataTransfer.getData('text/plain'); if(!url) return;
-        el.style.backgroundImage=`url(${url})`;
-        el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.style.zIndex='999';
+        const url = e.dataTransfer.getData('text/plain');
+        if(!url) return;
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.style.zIndex = '999';
         if(el.classList.contains('shape-wrapper')){
-          const poly=el.querySelector('polygon');
-          poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
-          const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
-          const W=el.clientWidth, H=el.clientHeight;
-          const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
-          el.style.clipPath=`polygon(${pct})`;
+          const poly = el.querySelector('polygon');
+          poly.setAttribute('fill','none');
+          poly.style.pointerEvents = 'none';
+          const pts = poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
+          const W = el.clientWidth, H = el.clientHeight;
+          const pct = pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
+          el.style.clipPath = `polygon(${pct})`;
         }
       });
     }
 
+    // ADD RESIZE HANDLES
     function addResizeHandles(el){
       ['nw','ne','sw','se'].forEach(dir=>{
-        const h=document.createElement('div');
-        h.className='resize-handle handle-'+dir; el.append(h);
-        h.addEventListener('mousedown', startResize(dir,el));
+        const h = document.createElement('div');
+        h.className = 'resize-handle handle-'+dir;
+        el.append(h);
+        h.addEventListener('mousedown', startResize(dir, el));
       });
     }
-    function startResize(dir,el){
+    function startResize(dir, el){
       return function(e){
-        e.stopPropagation(); e.preventDefault();
-        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={x:e.clientX, y:e.clientY,
-                     left:r.left-pr.left, top:r.top-pr.top,
-                     w:r.width, h:r.height, aspect:r.width/r.height};
+        e.stopPropagation();
+        e.preventDefault();
+        const r = el.getBoundingClientRect(),
+              pr = paper.getBoundingClientRect();
+        const start = {
+          x: e.clientX, y: e.clientY,
+          left: r.left - pr.left,
+          top:  r.top  - pr.top,
+          w: r.width,
+          h: r.height,
+          aspect: r.width / r.height
+        };
         document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove',doResize),{once:true});
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', doResize), { once:true });
         function doResize(ev){
-          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
-          if(dir.includes('e')) newW=start.w+dx;
-          if(dir.includes('s')) newH=start.h+dy;
-          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
-          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          if(el.classList.contains('image-wrapper')||ev.shiftKey){
-            newH=newW/start.aspect;
-            if(dir.includes('n')) newT=start.top+(start.h-newH);
+          let dx = ev.clientX - start.x,
+              dy = ev.clientY - start.y,
+              newW = start.w,
+              newH = start.h,
+              newL = start.left,
+              newT = start.top;
+          if(dir.includes('e')) newW = start.w + dx;
+          if(dir.includes('s')) newH = start.h + dy;
+          if(dir.includes('w')){
+            newW = start.w - dx;
+            newL = start.left + dx;
           }
-          el.style.width=newW+'px';
-          el.style.height=newH+'px';
-          el.style.left=newL+'px';
-          el.style.top=newT+'px';
-          if(selectedWrapper===el){
-            selectedContent?updateTextToolbarPosition(el):updateShapeToolbarPosition(el);
+          if(dir.includes('n')){
+            newH = start.h - dy;
+            newT = start.top + dy;
+          }
+          if(el.classList.contains('image-wrapper') || ev.shiftKey){
+            newH = newW / start.aspect;
+            if(dir.includes('n')) newT = start.top + (start.h - newH);
+          }
+          el.style.width  = newW + 'px';
+          el.style.height = newH + 'px';
+          el.style.left   = newL + 'px';
+          el.style.top    = newT + 'px';
+          if(selectedWrapper === el){
+            selectedContent
+              ? updateTextToolbarPosition(el)
+              : updateShapeToolbarPosition(el);
           }
         }
       };
     }
 
+    // ADD ROTATE HANDLE
     function addRotateHandle(el){
-      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
+      const h = document.createElement('div');
+      h.className = 'rotate-handle';
+      el.append(h);
       h.addEventListener('mousedown', e=>{
-        e.stopPropagation(); e.preventDefault();
-        const rect=el.getBoundingClientRect(),
-              cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
-        const startAng=Math.atan2(e.clientY-cy,e.clientX-cx);
-        let currRot=parseFloat(el.dataset.rot||0);
-        const onmove=ev=>{
-          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx),
-                delta=ang-startAng,
-                deg=currRot+delta*180/Math.PI;
-          el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
-          if(selectedWrapper===el){
-            selectedContent?updateTextToolbarPosition(el):updateShapeToolbarPosition(el);
+        e.stopPropagation();
+        e.preventDefault();
+        const rect = el.getBoundingClientRect(),
+              cx = rect.left + rect.width/2,
+              cy = rect.top  + rect.height/2,
+              startAng = Math.atan2(e.clientY-cy, e.clientX-cx),
+              currRot  = parseFloat(el.dataset.rot||0);
+        function onmove(ev){
+          const ang = Math.atan2(ev.clientY-cy, ev.clientX-cx),
+                delta = ang - startAng,
+                deg = currRot + delta*180/Math.PI;
+          el.style.transform = `rotate(${deg}deg)`;
+          el.dataset.rot = deg;
+          if(selectedWrapper === el){
+            selectedContent
+              ? updateTextToolbarPosition(el)
+              : updateShapeToolbarPosition(el);
           }
-        };
-        document.addEventListener('mousemove',onmove);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
+        }
+        document.addEventListener('mousemove', onmove);
+        document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', onmove), { once:true });
       });
     }
 
-    function makeTriangleResizable(wrap,poly){
-      let pts=[[0,70],[40,0],[80,70]];
-      const handles=pts.map((_,i)=>{
-        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
+    // TRIANGLE RESIZING
+    function makeTriangleResizable(wrap, poly){
+      let pts = [[0,70],[40,0],[80,70]];
+      const handles = pts.map((_,i)=>{
+        const h = document.createElement('div');
+        h.className = 'vertex-handle';
+        wrap.append(h);
+        return h;
       });
       function update(){
-        handles.forEach((h,i)=>{ h.style.left=pts[i][0]+'px'; h.style.top=pts[i][1]+'px'; });
+        handles.forEach((h,i)=>{
+          h.style.left = pts[i][0]+'px';
+          h.style.top  = pts[i][1]+'px';
+        });
         poly.setAttribute('points', pts.map(p=>p.join(',')).join(' '));
       }
       handles.forEach((h,i)=>{
         h.addEventListener('mousedown', e=>{
-          e.stopPropagation(); e.preventDefault(); select(wrap,null,poly);
-          const start={x:e.clientX, y:e.clientY,
-                       wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
-                       pts:pts.map(p=>p.slice())};
-          document.addEventListener('mousemove', ondrag);
-          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
+          e.stopPropagation();
+          e.preventDefault();
+          select(wrap,null,poly);
+          const start = {
+            x: e.clientX, y: e.clientY,
+            wrapL: wrap.offsetLeft,
+            wrapT: wrap.offsetTop,
+            pts: pts.map(p=>p.slice())
+          };
           function ondrag(ev){
-            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
-            const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]);
-            const minX=Math.min(...xs), minY=Math.min(...ys),
-                  maxX=Math.max(...xs), maxY=Math.max(...ys);
-            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left=start.wrapL+minX+'px';
-            wrap.style.top=start.wrapT+minY+'px';
-            wrap.style.width=maxX-minX+'px';
-            wrap.style.height=maxY-minY+'px';
+            const dx = ev.clientX - start.x,
+                  dy = ev.clientY - start.y;
+            const abs = start.pts.map((p,j)=> j===i ? [p[0]+dx,p[1]+dy] : p );
+            const xs = abs.map(p=>p[0]),
+                  ys = abs.map(p=>p[1]),
+                  minX = Math.min(...xs),
+                  minY = Math.min(...ys),
+                  maxX = Math.max(...xs),
+                  maxY = Math.max(...ys);
+            pts = abs.map(p=>[p[0]-minX,p[1]-minY]);
+            wrap.style.left   = start.wrapL + minX + 'px';
+            wrap.style.top    = start.wrapT + minY + 'px';
+            wrap.style.width  = maxX - minX + 'px';
+            wrap.style.height = maxY - minY + 'px';
             update();
           }
+          document.addEventListener('mousemove', ondrag);
+          document.addEventListener('mouseup', ()=>document.removeEventListener('mousemove', ondrag), { once:true });
         });
       });
       update();
     }
 
+    // INSERT TOOLBAR POSITIONING
     paper.addEventListener('mousedown', e=>{
-      if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper) return;
+      if(
+        e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')
+        || e.target !== paper
+      ) return;
       deselect();
-      clickX=e.offsetX; clickY=e.offsetY;
-      const tbW=toolbar.offsetWidth, tbH=toolbar.offsetHeight;
-      let left=e.clientX+window.scrollX-tbW/2;
-      let top=e.clientY+window.scrollY-tbH-8;
-      if(top<window.scrollY+8) top=e.clientY+window.scrollY+8;
-      toolbar.style.left=left+'px';
-      toolbar.style.top=top+'px';
-      toolbar.style.display='flex';
-      shapeMenu.style.display='none';
-      textToolbar.style.display='none';
-      shapeToolbar.style.display='none';
-      fontMenu.style.display='none';
+      clickX = e.offsetX; clickY = e.offsetY;
+      const tbW = toolbar.offsetWidth, tbH = toolbar.offsetHeight;
+      let left = e.clientX + window.scrollX - tbW/2,
+          top  = e.clientY + window.scrollY - tbH - 8;
+      if(top < window.scrollY + 8) top = e.clientY + window.scrollY + 8;
+      toolbar.style.left = left + 'px';
+      toolbar.style.top  = top  + 'px';
+      toolbar.style.display = 'flex';
+      shapeMenu.style.display    = 'none';
+      textToolbar.style.display  = 'none';
+      shapeToolbar.style.display = 'none';
+      fontMenu.style.display     = 'none';
       e.stopPropagation();
     });
 
+    // HIDE ON OUTSIDE CLICK
     ['mousedown','touchstart'].forEach(evt=>{
-      document.addEventListener(evt,e=>{
-        if(e.target===paper) return;
-        if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')) return;
-        toolbar.style.display='none';
-        shapeMenu.style.display='none';
-        textToolbar.style.display='none';
+      document.addEventListener(evt, e=>{
+        if(e.target === paper) return;
+        if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu'))
+          return;
+        toolbar.style.display    = 'none';
+        shapeMenu.style.display  = 'none';
+        textToolbar.style.display= 'none';
         shapeToolbar.style.display='none';
-        fontMenu.style.display='none';
+        fontMenu.style.display   = 'none';
       });
     });
 
+    // PREVENT HIDING WHEN INTERACTING TOOLBARS
     [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
       el.addEventListener('mousedown', e=>e.stopPropagation());
       el.addEventListener('touchstart', e=>e.stopPropagation());
     });
 
+    // TEXT TOOLBAR ACTIONS
     document.getElementById('tbBold').onclick      =()=> selectedContent&&(selectedContent.style.fontWeight  = selectedContent.style.fontWeight==='bold'?'':'bold');
     document.getElementById('tbItalic').onclick    =()=> selectedContent&&(selectedContent.style.fontStyle   = selectedContent.style.fontStyle==='italic'?'':'italic');
     document.getElementById('tbUnderline').onclick =()=> selectedContent&&(selectedContent.style.textDecoration = selectedContent.style.textDecoration==='underline'?'':'underline');
     document.getElementById('tbAlignLeft').onclick   =()=> selectedContent&&(selectedContent.style.textAlign='left');
     document.getElementById('tbAlignCenter').onclick =()=> selectedContent&&(selectedContent.style.textAlign='center');
     document.getElementById('tbAlignRight').onclick  =()=> selectedContent&&(selectedContent.style.textAlign='right');
-    document.getElementById('tbFontSize').addEventListener('input',e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
-    document.getElementById('tbColor').addEventListener('input',e=> selectedContent&&(selectedContent.style.color=e.target.value));
-
+    document.getElementById('tbFontSize').addEventListener('input', e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
+    document.getElementById('tbColor').addEventListener('input', e=> selectedContent&&(selectedContent.style.color=e.target.value));
     tbDeleteText.addEventListener('click', ()=>{
       if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
-    tbFont.addEventListener('click', e=>{
-      e.stopPropagation(); fontMenu.style.display=fontMenu.style.display==='block'?'none':'block';
+
+    // FONT MENU
+    document.getElementById('tbFont').addEventListener('click', e=>{
+      e.stopPropagation();
+      fontMenu.style.display = fontMenu.style.display==='block'?'none':'block';
     });
     fontOpts.forEach(btn=>btn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(selectedContent) selectedContent.style.fontFamily=`'${btn.dataset.font}',sans-serif`;
+      if(selectedContent) selectedContent.style.fontFamily = `'${btn.dataset.font}',sans-serif`;
       fontMenu.style.display='none';
     }));
 
+    // SHAPE TOOLBAR ACTIONS
     shapeFill.addEventListener('input', e=>{
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('fill',e.target.value);
@@ -617,13 +718,15 @@
     shapeOp.addEventListener('input', e=>{
       if(selectedWrapper) selectedWrapper.style.opacity=e.target.value;
     });
-
     tbDeleteShape.addEventListener('click', ()=>{
       if(selectedWrapper){ selectedWrapper.remove(); deselect(); }
     });
+
+    // DELETE KEY SUPPORT
     document.addEventListener('keydown', e=>{
       if(e.key==='Delete' && selectedWrapper){
-        selectedWrapper.remove(); deselect();
+        selectedWrapper.remove();
+        deselect();
       }
     });
 
