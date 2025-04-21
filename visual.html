@@ -30,7 +30,7 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         flex: 1;
         background: #fff8e7;
         border: 2px solid #82c9a1;
-        height: 500px;
+        height: 700px;
         overflow: auto;
       }
       /* assets panel & tabs */
@@ -57,7 +57,8 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         border-bottom: 2px solid #fff;
       }
       .assetPanel {
-        flex: 1;
+        height: 350px;
+        margin-bottom: 16px;
         overflow: auto;
         padding: 0.5rem;
         display: none;
@@ -151,7 +152,9 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
 
       /* Layers panel */
       #layersPanel {
-        margin-top: 1rem;
+        height: 350px;
+        margin-top: 16px;
+        overflow: auto;
         border: 1px solid #ccc;
         border-radius: 6px;
         background: #fff;
@@ -431,10 +434,6 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
             <span>Thank You 🙏</span>
           </div>
         </div>
-        <div id="layersPanel">
-          <h4>Layers</h4>
-          <ul id="layersList"></ul>
-        </div>
         <div id="assetsImages" class="assetPanel">
           <input type="text" id="assetUrlInput" placeholder="Image URL" />
           <button id="assetAddBtn">Add Image</button>
@@ -452,6 +451,10 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           <div class="emojiItem">🎈</div>
           <div class="emojiItem">✨</div>
         </div>
+      </div>
+      <div id="layersPanel">
+        <h4>Layers</h4>
+        <ul id="layersList"></ul>
       </div>
     </div>
     <div id="toolbar">
@@ -1397,42 +1400,45 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           if (wrapper.classList.contains("image-wrapper")) {
             // detect real images vs. stickers/text
             const bg = getComputedStyle(wrapper).backgroundImage;
-            const m  = bg.match(/^url\("?(.+?)"?\)$/);
+            const m = bg.match(/^url\("?(.+?)"?\)$/);
             if (m && m[1]) {
-              icon = document.createElement('img');
+              icon = document.createElement("img");
               icon.src = m[1];
-              icon.className = 'layerIcon';
+              icon.className = "layerIcon";
             } else if (wrapper.textContent.trim()) {
               // sticker (emoji) preview
-              icon = document.createElement('div');
-              icon.className = 'layerIcon';
-              icon.style.fontSize   = '16px';
-              icon.style.lineHeight = '16px';
-              icon.style.textAlign  = 'center';
-              icon.textContent      = wrapper.textContent.trim();
+              icon = document.createElement("div");
+              icon.className = "layerIcon";
+              icon.style.fontSize = "16px";
+              icon.style.lineHeight = "16px";
+              icon.style.textAlign = "center";
+              icon.textContent = wrapper.textContent.trim();
             } else {
               // fallback to blank icon
-              icon = document.createElement('div');
-              icon.className = 'layerIcon';
+              icon = document.createElement("div");
+              icon.className = "layerIcon";
             }
           } else {
-            icon = document.createElement('div');
-            icon.className = 'layerIcon';
-            icon.style.overflow = 'hidden';
-            icon.style.position = 'relative';
+            icon = document.createElement("div");
+            icon.className = "layerIcon";
+            icon.style.overflow = "hidden";
+            icon.style.position = "relative";
             // clone the element for mini-preview
             const clone = wrapper.cloneNode(true);
             // remove top padding so text is visible
-            clone.querySelectorAll('.text-content').forEach(el=>el.style.paddingTop='0');
-            clone.style.position      = 'static';
-            clone.style.left          = '0';
-            clone.style.top           = '0';
-            clone.style.margin        = '0';
-            clone.style.pointerEvents = 'none';
+            clone
+              .querySelectorAll(".text-content")
+              .forEach((el) => (el.style.paddingTop = "0"));
+            clone.style.position = "static";
+            clone.style.left = "0";
+            clone.style.top = "0";
+            clone.style.margin = "0";
+            clone.style.pointerEvents = "none";
             // scale to fit a 24×24 box
-            const scale = 24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
-            clone.style.transform       = `scale(${scale})`;
-            clone.style.transformOrigin = 'top left';
+            const scale =
+              24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
+            clone.style.transform = `scale(${scale})`;
+            clone.style.transformOrigin = "top left";
             icon.appendChild(clone);
           }
           const label = document.createElement("span");
