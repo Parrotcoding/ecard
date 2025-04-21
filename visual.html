@@ -30,8 +30,7 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         flex: 1;
         background: #fff8e7;
         border: 2px solid #82c9a1;
-        min-height: 400px;
-        resize: vertical;
+        height: 500px;
         overflow: auto;
       }
       /* assets panel & tabs */
@@ -1396,29 +1395,44 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           // create a mini-icon: real <img> for images, clone otherwise
           let icon;
           if (wrapper.classList.contains("image-wrapper")) {
-            // extract URL from background-image
+            // detect real images vs. stickers/text
             const bg = getComputedStyle(wrapper).backgroundImage;
-            const m = bg.match(/^url\("?(.+?)"?\)$/);
-            icon = document.createElement("img");
-            if (m && m[1]) icon.src = m[1];
-            icon.className = "layerIcon";
+            const m  = bg.match(/^url\("?(.+?)"?\)$/);
+            if (m && m[1]) {
+              icon = document.createElement('img');
+              icon.src = m[1];
+              icon.className = 'layerIcon';
+            } else if (wrapper.textContent.trim()) {
+              // sticker (emoji) preview
+              icon = document.createElement('div');
+              icon.className = 'layerIcon';
+              icon.style.fontSize   = '16px';
+              icon.style.lineHeight = '16px';
+              icon.style.textAlign  = 'center';
+              icon.textContent      = wrapper.textContent.trim();
+            } else {
+              // fallback to blank icon
+              icon = document.createElement('div');
+              icon.className = 'layerIcon';
+            }
           } else {
-            icon = document.createElement("div");
-            icon.className = "layerIcon";
-            icon.style.overflow = "hidden";
-            icon.style.position = "relative";
+            icon = document.createElement('div');
+            icon.className = 'layerIcon';
+            icon.style.overflow = 'hidden';
+            icon.style.position = 'relative';
             // clone the element for mini-preview
             const clone = wrapper.cloneNode(true);
-            clone.style.position = "static";
-            clone.style.left = "0";
-            clone.style.top = "0";
-            clone.style.margin = "0";
-            clone.style.pointerEvents = "none";
+            // remove top padding so text is visible
+            clone.querySelectorAll('.text-content').forEach(el=>el.style.paddingTop='0');
+            clone.style.position      = 'static';
+            clone.style.left          = '0';
+            clone.style.top           = '0';
+            clone.style.margin        = '0';
+            clone.style.pointerEvents = 'none';
             // scale to fit a 24×24 box
-            const scale =
-              24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
-            clone.style.transform = `scale(${scale})`;
-            clone.style.transformOrigin = "top left";
+            const scale = 24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
+            clone.style.transform       = `scale(${scale})`;
+            clone.style.transformOrigin = 'top left';
             icon.appendChild(clone);
           }
           const label = document.createElement("span");
@@ -1433,7 +1447,7 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
             ? "Triangle"
             : "Image";
           li.append(icon, label);
-          layersList.append(li);
+          layersList.prepend(li);
 
           // Drag & drop to reorder
           li.addEventListener("dragstart", (e) => {
@@ -1460,8 +1474,8 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         // Whenever the layers list changes order, reflow the canvas
         layersList.addEventListener("drop", () => {
           // on drop, reorder DOM per li._wrapper references
-          const items = Array.from(layersList.children);
-          // bottom of list = bottom stacking; iterate top to bottom
+          // pop the list order: first list item is top layer, so reverse for stacking
+          const items = Array.from(layersList.children).reverse();
           items.forEach((li) => {
             const wrapper = li._wrapper;
             if (wrapper) paper.appendChild(wrapper);
