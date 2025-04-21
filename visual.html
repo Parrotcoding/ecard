@@ -156,11 +156,11 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         border: 1px solid #ccc;
         border-radius: 6px;
         background: #fff;
-        padding: .5rem;
+        padding: 0.5rem;
       }
       #layersPanel h4 {
-        margin: 0 0 .5rem;
-        font-size: .9rem;
+        margin: 0 0 0.5rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: #155f46;
       }
@@ -182,13 +182,14 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         cursor: grab;
       }
       .layerIcon {
-        width: 16px; height: 16px;
+        width: 16px;
+        height: 16px;
         margin-right: 6px;
         flex-shrink: 0;
       }
       .layerLabel {
         flex: 1;
-        font-size: .85rem;
+        font-size: 0.85rem;
         color: #333;
       }
       .layerItem.dragging {
@@ -1345,60 +1346,78 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           }
         });
 
-  // -- Layers panel logic --
-  const layersList = document.getElementById('layersList');
-  function addToLayers(wrapper) {
-    const li = document.createElement('li');
-    li.className = 'layerItem';
-    li.draggable = true;
-    // Icon based on element type
-    const icon = document.createElement('div');
-    icon.className = 'layerIcon';
-    if (wrapper.classList.contains('text-wrapper')) {
-      icon.textContent = 'T';
-    } else if (wrapper.classList.contains('shape-rect') || wrapper.classList.contains('shape-circle') || wrapper.classList.contains('shape-wrapper')) {
-      icon.style.backgroundColor = '#A8E6CF';
-      icon.style.borderRadius = wrapper.classList.contains('shape-circle') ? '50%' : '2px';
-    } else if (wrapper.classList.contains('image-wrapper')) {
-      icon.textContent = '🖼️';
-    }
-    const label = document.createElement('span');
-    label.className = 'layerLabel';
-    label.textContent = wrapper.classList.contains('text-wrapper') ? 'Text' :
-                        wrapper.classList.contains('shape-rect') ? 'Rect' :
-                        wrapper.classList.contains('shape-circle') ? 'Circle' :
-                        wrapper.classList.contains('shape-wrapper') ? 'Triangle' :
-                        'Image';
-    li.append(icon, label);
-    layersList.append(li);
+        // -- Layers panel logic --
+        const layersList = document.getElementById("layersList");
+        function addToLayers(wrapper) {
+  const li = document.createElement("li");
+  // keep reference for reordering
+  li._wrapper = wrapper;
+          li.className = "layerItem";
+          li.draggable = true;
+  // create a mini-clone icon
+  const icon = document.createElement('div');
+  icon.className = 'layerIcon';
+  icon.style.overflow = 'hidden';
+  icon.style.position = 'relative';
+  
+  // clone the element for mini-preview
+  const clone = wrapper.cloneNode(true);
+  clone.style.position = 'static';
+  clone.style.left = '0';
+  clone.style.top = '0';
+  clone.style.margin = '0';
+  clone.style.pointerEvents = 'none';
+  // scale to fit
+  const scale = 24 / Math.max(wrapper.offsetWidth, wrapper.offsetHeight);
+  clone.style.transform = `scale(${scale})`;
+  clone.style.transformOrigin = 'top left';
+  icon.appendChild(clone);
+          const label = document.createElement("span");
+          label.className = "layerLabel";
+          label.textContent = wrapper.classList.contains("text-wrapper")
+            ? "Text"
+            : wrapper.classList.contains("shape-rect")
+            ? "Rect"
+            : wrapper.classList.contains("shape-circle")
+            ? "Circle"
+            : wrapper.classList.contains("shape-wrapper")
+            ? "Triangle"
+            : "Image";
+          li.append(icon, label);
+          layersList.append(li);
 
-    // Drag & drop to reorder
-    li.addEventListener('dragstart', e => {
-      li.classList.add('dragging');
-      e.dataTransfer.setData('text/plain', '');
-    });
-    li.addEventListener('dragend', () => li.classList.remove('dragging'));
+          // Drag & drop to reorder
+          li.addEventListener("dragstart", (e) => {
+            li.classList.add("dragging");
+            e.dataTransfer.setData("text/plain", "");
+          });
+          li.addEventListener("dragend", () => li.classList.remove("dragging"));
 
-    layersList.addEventListener('dragover', e => {
-      e.preventDefault();
-      const dragging = layersList.querySelector('.dragging');
-      const after = [...layersList.querySelectorAll('.layerItem:not(.dragging)')]
-        .find(item => e.clientY < item.getBoundingClientRect().top + item.offsetHeight/2);
-      if (after) layersList.insertBefore(dragging, after);
-      else layersList.append(dragging);
-    });
-  }
+          layersList.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            const dragging = layersList.querySelector(".dragging");
+            const after = [
+              ...layersList.querySelectorAll(".layerItem:not(.dragging)"),
+            ].find(
+              (item) =>
+                e.clientY <
+                item.getBoundingClientRect().top + item.offsetHeight / 2
+            );
+            if (after) layersList.insertBefore(dragging, after);
+            else layersList.append(dragging);
+          });
+        }
 
-  // Whenever the layers list changes order, reflow the canvas
-  layersList.addEventListener('drop', () => {
-    const items = [...layersList.children];
-    // Bottom of list = bottom element in DOM; reverse to maintain stacking
-    items.reverse().forEach(li => {
-      const idx = Array.from(layersList.children).indexOf(li);
-      const wrapper = paper.children[idx];
-      paper.appendChild(wrapper);
-    });
-  });
+        // Whenever the layers list changes order, reflow the canvas
+        layersList.addEventListener("drop", () => {
+          // on drop, reorder DOM per li._wrapper references
+          const items = Array.from(layersList.children);
+          // bottom of list = bottom stacking; iterate top to bottom
+          items.forEach(li => {
+            const wrapper = li._wrapper;
+            if(wrapper) paper.appendChild(wrapper);
+          });
+        });
       })();
     </script>
   </body>
