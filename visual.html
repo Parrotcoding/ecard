@@ -962,6 +962,42 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
                 .join(", ");
               el.style.clipPath = `polygon(${pct})`;
             }
+            // update the corresponding Layers list icon for this wrapper
+            document
+              .querySelectorAll("#layersList .layerItem")
+              .forEach((li) => {
+                if (li._wrapper === el) {
+                  // remove old icon element
+                  const oldIcon = li.querySelector(".layerIcon, img");
+                  // create new icon: img if background-image exists
+                  let newIcon;
+                  const bg = el.style.backgroundImage;
+                  const m = bg.match(/^url\("?(.+?)"?\)$/);
+                  if (m && m[1]) {
+                    newIcon = document.createElement("img");
+                    newIcon.src = m[1];
+                    newIcon.className = "layerIcon";
+                  } else {
+                    // fallback to scaled clone for shapes without bg image
+                    newIcon = document.createElement("div");
+                    newIcon.className = "layerIcon";
+                    newIcon.style.overflow = "hidden";
+                    newIcon.style.position = "relative";
+                    const clone = el.cloneNode(true);
+                    clone.style.position = "static";
+                    clone.style.left = "0";
+                    clone.style.top = "0";
+                    clone.style.margin = "0";
+                    clone.style.pointerEvents = "none";
+                    const scale =
+                      24 / Math.max(el.offsetWidth, el.offsetHeight);
+                    clone.style.transform = `scale(${scale})`;
+                    clone.style.transformOrigin = "top left";
+                    newIcon.appendChild(clone);
+                  }
+                  li.replaceChild(newIcon, oldIcon);
+                }
+              });
           });
         }
         function addResizeHandles(el) {
