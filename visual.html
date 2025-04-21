@@ -36,22 +36,27 @@
       overflow:hidden; text-align:center;
     }
     #assetsTemplates .templateItem .preview {
-      position:relative; width:100%; height:200px;
+      position:relative; width:100%; height:300px;
       background:#fff8e7; border-bottom:1px solid #ccc;
       display:flex; align-items:center; justify-content:center;
     }
     #assetsTemplates .templateItem .preview .placeholder {
       border:2px dashed #aaa;
-      width:120px; height:120px;
+      width:80%; height:60%;
       display:flex; align-items:center; justify-content:center;
-      font-size:14px; color:#666;
+      font-size:16px; color:#666;
     }
     #assetsTemplates .templateItem .preview .demoText {
       position:absolute;
       bottom:10px; left:10px; right:10px;
       background:rgba(255,255,255,0.8);
-      padding:4px; font-size:12px; color:#333;
+      padding:6px; font-size:14px; color:#333;
       text-align:center;
+    }
+    #assetsTemplates .templateItem .preview .sticker {
+      position:absolute;
+      top:10px; right:10px;
+      font-size:36px;
     }
     #assetsTemplates .templateItem span {
       display:block; padding:.5rem; background:#f9f9f9;
@@ -183,17 +188,17 @@
       <div id="assetsTemplates" class="assetPanel active">
         <div class="templateItem" data-template="birthday">
           <div class="preview">
-            <div class="placeholder">Image<br>Placeholder</div>
-            <div class="demoText">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div>
+            <div class="placeholder">Your Image Here</div>
+            <div class="sticker">🎉</div>
+            <div class="demoText">“Birthdays are the universe’s way of telling us to eat more cake.”</div>
           </div>
-          <span>Birthday 🎉</span>
+          <span>Birthday 🎂</span>
         </div>
         <div class="templateItem" data-template="thankyou">
           <div class="preview">
-            <div class="placeholder" style="width:160px;height:100px;">Image<br>Placeholder</div>
-            <div class="demoText" style="top:10px;bottom:auto;">
-              Praesent commodo cursus magna, vel scelerisque nisl consectetur.
-            </div>
+            <div class="placeholder" style="width:60%;height:50%;">Your Image Here</div>
+            <div class="sticker">🙏</div>
+            <div class="demoText">“Thank you for being the reason I smile.”</div>
           </div>
           <span>Thank You 🙏</span>
         </div>
@@ -261,7 +266,7 @@
 
   <script>
   ;(function(){
-    // DOM refs
+    // refs
     const paper         = document.getElementById('paper'),
           tabTemplates  = document.getElementById('tabTemplates'),
           tabImages     = document.getElementById('tabImages'),
@@ -288,51 +293,49 @@
           tbDeleteShape = document.getElementById('tbDeleteShape');
     let clickX=0, clickY=0, selectedWrapper=null, selectedContent=null, selectedPoly=null;
 
-    // TAB SWITCHING
+    // TABS
     function clearTabs(){
       [tabTemplates,tabImages,tabEmojis].forEach(b=>b.classList.remove('active'));
       [panelTemplates,panelImages,panelEmojis].forEach(p=>p.classList.remove('active'));
     }
     tabTemplates.addEventListener('click',()=>{
-      clearTabs();
-      tabTemplates.classList.add('active');
-      panelTemplates.classList.add('active');
+      clearTabs(); tabTemplates.classList.add('active'); panelTemplates.classList.add('active');
     });
     tabImages.addEventListener('click',()=>{
-      clearTabs();
-      tabImages.classList.add('active');
-      panelImages.classList.add('active');
+      clearTabs(); tabImages.classList.add('active'); panelImages.classList.add('active');
     });
     tabEmojis.addEventListener('click',()=>{
-      clearTabs();
-      tabEmojis.classList.add('active');
-      panelEmojis.classList.add('active');
+      clearTabs(); tabEmojis.classList.add('active'); panelEmojis.classList.add('active');
     });
 
     // TEMPLATES DATA
     const templates = {
       birthday: [
-        // image placeholder rectangle
         { type:'shape', shape:'rect',
-          left:  90, top:  40, width:120, height:120,
+          left:'10%', top:'10%', width:'80%', height:'60%',
           fill:'transparent', stroke:'#aaa', strokeWidth:2, dash:true
         },
-        // demo text
         { type:'text',
-          text:'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          left:  40, top: 180, width:220, height:40,
-          fontSize:12, color:'#333', align:'center'
+          text:'“Birthdays are the universe’s way of telling us to eat more cake.”',
+          left:'10%', top:'72%', width:'80%', height:'18%',
+          fontSize:16, color:'#155f46', align:'center'
+        },
+        { type:'sticker', sticker:'🎉',
+          left:'85%', top:'15%', width:40, height:40
         }
       ],
       thankyou: [
         { type:'shape', shape:'rect',
-          left:  70, top:  60, width:160, height:100,
+          left:'10%', top:'10%', width:'80%', height:'50%',
           fill:'transparent', stroke:'#aaa', strokeWidth:2, dash:true
         },
         { type:'text',
-          text:'Praesent commodo cursus magna, vel scelerisque nisl consectetur.',
-          left:  30, top:  20, width:240, height:40,
-          fontSize:12, color:'#333', align:'center'
+          text:'“Thank you for being the reason I smile every day.”',
+          left:'10%', top:'62%', width:'80%', height:'25%',
+          fontSize:16, color:'#BF360C', align:'center'
+        },
+        { type:'sticker', sticker:'🙏',
+          left:'15%', top:'15%', width:40, height:40
         }
       ]
     };
@@ -342,46 +345,53 @@
       paper.innerHTML='';
       (templates[name]||[]).forEach(item=>{
         if(item.type==='shape'){
-          const wrap=document.createElement('div');
-          wrap.className='element '+(item.shape==='rect'?'shape-rect':'shape-circle');
-          Object.assign(wrap.style,{
-            left:item.left+'px', top:item.top+'px',
-            width:item.width+'px', height:item.height+'px'
+          const w=document.createElement('div');
+          w.className='element '+(item.shape==='rect'?'shape-rect':'shape-circle');
+          Object.assign(w.style,{
+            left: item.left, top: item.top,
+            width: item.width, height: item.height
           });
-          // dashed placeholder
-          if(item.dash) {
-            wrap.style.border = `${item.strokeWidth}px dashed ${item.stroke}`;
-          } else {
-            wrap.style.border = `${item.strokeWidth}px solid ${item.stroke}`;
-          }
-          wrap.style.backgroundColor = item.fill;
-          paper.append(wrap);
-          initElement(wrap,false,null);
+          if(item.dash) w.style.border=`${item.strokeWidth}px dashed ${item.stroke}`;
+          else w.style.border=`${item.strokeWidth}px solid ${item.stroke}`;
+          w.style.backgroundColor=item.fill;
+          paper.append(w);
+          initElement(w,false,null);
         }
         else if(item.type==='text'){
-          const wrap=document.createElement('div');
-          wrap.className='element text-wrapper';
-          Object.assign(wrap.style,{
-            left:item.left+'px', top:item.top+'px',
-            width:item.width+'px', height:item.height+'px'
+          const w=document.createElement('div');
+          w.className='element text-wrapper';
+          Object.assign(w.style,{
+            left: item.left, top: item.top,
+            width: item.width, height: item.height
           });
-          const txt=document.createElement('div');
-          txt.className='text-content';
-          txt.contentEditable=true;
-          txt.innerText=item.text;
-          Object.assign(txt.style,{
-            fontSize:item.fontSize+'px',
-            color:item.color,
-            textAlign:item.align
+          const t=document.createElement('div');
+          t.className='text-content';
+          t.contentEditable=true;
+          t.innerText=item.text;
+          Object.assign(t.style,{
+            fontSize: item.fontSize+'px',
+            color: item.color,
+            textAlign: item.align
           });
-          wrap.append(txt);
-          paper.append(wrap);
-          initElement(wrap,false,null);
+          w.append(t);
+          paper.append(w);
+          initElement(w,false,null);
+        }
+        else if(item.type==='sticker'){
+          const w=document.createElement('div');
+          w.className='element image-wrapper';
+          Object.assign(w.style,{
+            left: item.left+'px', top: item.top+'px',
+            width: item.width+'px', height: item.height+'px',
+            fontSize: item.height*0.8+'px',
+            display:'flex', alignItems:'center', justifyContent:'center'
+          });
+          w.textContent=item.sticker;
+          paper.append(w);
+          initElement(w,false,null);
         }
       });
     }
-
-    // TEMPLATE CLICK
     templateItems.forEach(el=>{
       el.addEventListener('click',()=>applyTemplate(el.dataset.template));
     });
@@ -402,7 +412,7 @@
       em.addEventListener('dragstart',ev=>ev.dataTransfer.setData('text/plain',em.textContent));
     });
 
-    // — ALL HELPER FUNCTIONS — 
+    /* — HELPERS — */
 
     function rgbToHex(rgb){
       const [r,g,b]=rgb.match(/\d+/g).map(Number);
@@ -418,7 +428,6 @@
       textToolbar.style.top=top+'px';
       textToolbar.style.transform='translateX(-50%)';
     }
-
     function updateShapeToolbarPosition(w){
       const r=w.getBoundingClientRect(), tb=shapeToolbar.getBoundingClientRect();
       const cx=r.left+r.width/2+window.scrollX;
@@ -435,7 +444,6 @@
       selectedWrapper=selectedContent=selectedPoly=null;
       textToolbar.style.display=shapeToolbar.style.display='none';
     }
-
     function select(wrapper,content=null,poly=null){
       if(selectedWrapper===wrapper) return;
       deselect();
@@ -489,13 +497,14 @@
       wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
       if(data.startsWith('http')){
         wrap.style.backgroundImage=`url(${data})`;
+        wrap.style.backgroundSize='cover';
+        wrap.style.backgroundPosition='center';
         wrap.style.width='100px'; wrap.style.height='100px';
       } else {
         wrap.textContent=data;
-        paper.append(wrap);
         wrap.style.fontSize='40px';
-        const cw=wrap.clientWidth, ch=wrap.clientHeight,
-              maxDim=Math.min(cw,ch);
+        paper.append(wrap);
+        const cw=wrap.clientWidth, ch=wrap.clientHeight, maxDim=Math.min(cw,ch);
         wrap.style.fontSize=Math.floor(maxDim*0.9)+'px';
         wrap.style.width=cw+'px'; wrap.style.height=ch+'px';
         wrap.remove();
@@ -518,7 +527,7 @@
         el.style.left=ev.clientX-dx+'px';
         el.style.top =ev.clientY-dy+'px';
         if(selectedWrapper===el){
-          selectedContent? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
+          selectedContent? updateTextToolbarPosition(el): updateShapeToolbarPosition(el);
         }
       }
     }
@@ -576,12 +585,12 @@
           el.style.height=newH+'px';
           el.style.left=newL+'px';
           el.style.top=newT+'px';
-          if(el.classList.contains('image-wrapper') && !el.style.backgroundImage){
+          if(el.classList.contains('image-wrapper')&&!el.style.backgroundImage){
             const maxDim=Math.min(newW,newH);
             el.style.fontSize=Math.floor(maxDim*0.8)+'px';
           }
           if(selectedWrapper===el){
-            selectedContent? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
+            selectedContent? updateTextToolbarPosition(el): updateShapeToolbarPosition(el);
           }
         }
       };
@@ -601,7 +610,7 @@
                 deg=currRot+delta*180/Math.PI;
           el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
           if(selectedWrapper===el){
-            selectedContent? updateTextToolbarPosition(el) : updateShapeToolbarPosition(el);
+            selectedContent? updateTextToolbarPosition(el): updateShapeToolbarPosition(el);
           }
         }
         document.addEventListener('mousemove',onmove);
@@ -621,7 +630,9 @@
       handles.forEach((h,i)=>{
         h.addEventListener('mousedown',e=>{
           e.stopPropagation(); e.preventDefault(); select(wrap,null,poly);
-          const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
+          const start={ x:e.clientX, y:e.clientY,
+                        wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop,
+                        pts:pts.map(p=>p.slice()) };
           function ondrag(ev){
             const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
             const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
@@ -629,10 +640,10 @@
                   minX=Math.min(...xs), minY=Math.min(...ys),
                   maxX=Math.max(...xs), maxY=Math.max(...ys);
             pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left=start.wrapL+minX+'px';
-            wrap.style.top=start.wrapT+minY+'px';
-            wrap.style.width=maxX-minX+'px';
-            wrap.style.height=maxY-minY+'px';
+            wrap.style.left   = start.wrapL+minX+'px';
+            wrap.style.top    = start.wrapT+minY+'px';
+            wrap.style.width  = maxX-minX+'px';
+            wrap.style.height = maxY-minY+'px';
             update();
           }
           document.addEventListener('mousemove',ondrag);
@@ -642,17 +653,63 @@
       update();
     }
 
-    // INSERT TOOLBAR
+    // INSERT TEXT & SHAPE BUTTONS
+    document.getElementById('btnText').addEventListener('click', e=>{
+      e.stopPropagation();
+      const wrap=document.createElement('div');
+      wrap.className='element text-wrapper';
+      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
+      wrap.style.width='150px'; wrap.style.height='80px';
+      const txt=document.createElement('div');
+      txt.className='text-content'; txt.contentEditable=true; txt.innerText='Enter text';
+      wrap.append(txt); paper.append(wrap);
+      initElement(wrap,false,null); select(wrap,txt); txt.focus();
+    });
+    document.getElementById('btnShape').addEventListener('click', e=>{
+      e.stopPropagation();
+      const r=e.currentTarget.getBoundingClientRect();
+      shapeMenu.style.left=r.right+8+'px';
+      shapeMenu.style.top =r.top+'px';
+      shapeMenu.style.display='flex';
+    });
+    shapeMenu.addEventListener('click', e=>{
+      const b=e.target.closest('[data-shape]'); if(!b) return;
+      shapeMenu.style.display='none';
+      const type=b.dataset.shape;
+      if(type==='rect'||type==='circle'){
+        const wrap=document.createElement('div');
+        wrap.className='element '+(type==='rect'?'shape-rect':'shape-circle');
+        wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
+        wrap.style.width='100px'; wrap.style.height='100px';
+        paper.append(wrap); initElement(wrap,false,null); select(wrap,null);
+      } else insertTriangle();
+    });
+
+    // TRIANGLE INSERT
+    function insertTriangle(){
+      const wrap=document.createElement('div'), ns="http://www.w3.org/2000/svg";
+      wrap.className='shape-wrapper';
+      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
+      wrap.style.width='100px'; wrap.style.height='80px';
+      const svg=document.createElementNS(ns,'svg'), poly=document.createElementNS(ns,'polygon');
+      svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+      poly.setAttribute('points','0,80 50,0 100,80');
+      poly.setAttribute('fill','#A8E6CF'); poly.setAttribute('stroke','#82C9A1'); poly.setAttribute('stroke-width','2');
+      svg.append(poly); wrap.append(svg);
+      paper.append(wrap);
+      initElement(wrap,true,poly);
+      select(wrap,null,poly);
+    }
+
+    // PAPER CLICK → SHOW TOOLBAR
     paper.addEventListener('mousedown',e=>{
       if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper) return;
       deselect();
       clickX=e.offsetX; clickY=e.offsetY;
       const tbW=toolbar.offsetWidth, tbH=toolbar.offsetHeight;
-      let left=e.clientX+window.scrollX-tbW/2,
-          top =e.clientY+window.scrollY-tbH-8;
+      let left=e.clientX+window.scrollX-tbW/2, top=e.clientY+window.scrollY-tbH-8;
       if(top<window.scrollY+8) top=e.clientY+window.scrollY+8;
-      toolbar.style.left=left+'px';
-      toolbar.style.top=top+'px';
+      toolbar.style.left=left+'px'; toolbar.style.top=top+'px';
       toolbar.style.display='flex';
       shapeMenu.style.display=textToolbar.style.display=shapeToolbar.style.display=fontMenu.style.display='none';
       e.stopPropagation();
@@ -666,21 +723,20 @@
         toolbar.style.display=shapeMenu.style.display=textToolbar.style.display=shapeToolbar.style.display=fontMenu.style.display='none';
       });
     });
-    // PREVENT HIDING
     [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
       el.addEventListener('mousedown',e=>e.stopPropagation());
       el.addEventListener('touchstart',e=>e.stopPropagation());
     });
 
     // TEXT TOOLBAR ACTIONS
-    document.getElementById('tbBold').onclick      =()=> selectedContent&&(selectedContent.style.fontWeight  = selectedContent.style.fontWeight==='bold'?'':'bold');
-    document.getElementById('tbItalic').onclick    =()=> selectedContent&&(selectedContent.style.fontStyle   = selectedContent.style.fontStyle==='italic'?'':'italic');
-    document.getElementById('tbUnderline').onclick =()=> selectedContent&&(selectedContent.style.textDecoration = selectedContent.style.textDecoration==='underline'?'':'underline');
-    document.getElementById('tbAlignLeft').onclick   =()=> selectedContent&&(selectedContent.style.textAlign='left');
-    document.getElementById('tbAlignCenter').onclick =()=> selectedContent&&(selectedContent.style.textAlign='center');
-    document.getElementById('tbAlignRight').onclick  =()=> selectedContent&&(selectedContent.style.textAlign='right');
-    document.getElementById('tbFontSize').addEventListener('input',e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
-    document.getElementById('tbColor').addEventListener('input',e=> selectedContent&&(selectedContent.style.color=e.target.value));
+    document.getElementById('tbBold').onclick      =()=>selectedContent&&(selectedContent.style.fontWeight  =selectedContent.style.fontWeight==='bold'?'':'bold');
+    document.getElementById('tbItalic').onclick    =()=>selectedContent&&(selectedContent.style.fontStyle   =selectedContent.style.fontStyle==='italic'?'':'italic');
+    document.getElementById('tbUnderline').onclick =()=>selectedContent&&(selectedContent.style.textDecoration=selectedContent.style.textDecoration==='underline'?'':'underline');
+    document.getElementById('tbAlignLeft').onclick   =()=>selectedContent&&(selectedContent.style.textAlign='left');
+    document.getElementById('tbAlignCenter').onclick =()=>selectedContent&&(selectedContent.style.textAlign='center');
+    document.getElementById('tbAlignRight').onclick  =()=>selectedContent&&(selectedContent.style.textAlign='right');
+    document.getElementById('tbFontSize').addEventListener('input',e=>selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
+    document.getElementById('tbColor').addEventListener('input',e=>selectedContent&&(selectedContent.style.color=e.target.value));
     tbDeleteText.addEventListener('click',()=>{ if(selectedWrapper){ selectedWrapper.remove(); deselect(); } });
 
     // FONT MENU
@@ -705,10 +761,8 @@
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('stroke',e.target.value);
         else {
-          // preserve dashed if exists
-          selectedWrapper.style.border = selectedWrapper.style.border.includes('dashed')
-            ? `${shapeStW.value}px dashed ${e.target.value}`
-            : `${shapeStW.value}px solid ${e.target.value}`;
+          const dash=selectedWrapper.style.border.includes('dashed')?'dashed':'solid';
+          selectedWrapper.style.border=`${shapeStW.value}px ${dash} ${e.target.value}`;
         }
       }
     });
@@ -717,9 +771,8 @@
       if(selectedWrapper){
         if(selectedPoly) selectedPoly.setAttribute('stroke-width',v);
         else {
-          const parts=selectedWrapper.style.border.split(' ');
-          parts[0]=v+'px';
-          selectedWrapper.style.border=parts.join(' ');
+          const dash=selectedWrapper.style.border.includes('dashed')?'dashed':'solid';
+          selectedWrapper.style.border=`${v}px ${dash} ${shapeStroke.value}`;
         }
       }
     });
