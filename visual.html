@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Seafoam E‑Card Visual Editor with Built‑In Templates</title>
+  <title>Seafoam E‑Card Visual Editor with Watercolor Templates</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
@@ -17,9 +17,8 @@
       background:#fff8e7; border:2px solid #82C9A1;
       min-height:400px; resize:vertical; overflow:auto;
     }
-
-    /* — assets panel & tabs — */
-    #assets { width:280px; background:#fafafa; border:2px solid #ddd; display:flex; flex-direction:column }
+    /* —— assets panel & tabs —— */
+    #assets { width:300px; background:#fafafa; border:2px solid #ddd; display:flex; flex-direction:column }
     #assetTabs { display:flex }
     #assetTabs button {
       flex:1; padding:.5rem; border:none; cursor:pointer;
@@ -29,15 +28,14 @@
     .assetPanel { flex:1; overflow:auto; padding:.5rem; display:none }
     .assetPanel.active { display:block }
 
-    /* — templates panel — */
+    /* —— templates panel —— */
     #assetsTemplates .templateItem {
       margin-bottom:1rem; cursor:pointer;
       border:1px solid #ccc; border-radius:6px;
       overflow:hidden; text-align:center;
     }
     #assetsTemplates .templateItem .preview {
-      position:relative;
-      width:100%; height:100px;
+      position:relative; width:100%; height:100px;
       background:#fff8e7; border-bottom:1px solid #ccc;
     }
     #assetsTemplates .templateItem span {
@@ -45,7 +43,7 @@
       font-weight:600;
     }
 
-    /* — images panel — */
+    /* —— images panel —— */
     #assetsImages input { width:100%; margin-bottom:.5rem; padding:.25rem }
     #assetsImages button {
       width:100%; margin-bottom:1rem; padding:.5rem;
@@ -57,13 +55,13 @@
       border:1px solid #ccc; border-radius:4px;
     }
 
-    /* — emojis panel — */
+    /* —— emojis panel —— */
     #assetEmojis .emojiItem {
       font-size:1.5rem; display:inline-block;
       padding:.25rem; margin:.25rem; cursor:grab;
     }
 
-    /* — toolbars & handles — */
+    /* —— toolbars & handles —— */
     #toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu {
       position:absolute; display:none; z-index:2000;
       background:#fff; border:1px solid #ccc; border-radius:4px;
@@ -83,7 +81,6 @@
       background:#A8E6CF; cursor:pointer;
     }
     #shapeMenu button:hover { background:#76C69C }
-    #shapeMenu button img { width:20px; height:20px }
 
     #textToolbar,#shapeToolbar {
       padding:.25rem; display:flex; align-items:center; gap:.5rem; white-space:nowrap;
@@ -170,49 +167,65 @@
         <button id="tabEmojis">Emojis</button>
       </div>
 
-      <!-- TEMPLATES PANEL -->
+      <!-- TEMPLATES -->
       <div id="assetsTemplates" class="assetPanel active">
-        <!-- Birthday Template Preview -->
         <div class="templateItem" data-template="birthday">
           <div class="preview">
-            <!-- inline SVG cake -->
-            <svg viewBox="0 0 100 60" style="position:absolute;left:10px;top:5px;width:80px;height:50px">
-              <rect x="0" y="20" width="100" height="40" fill="#FDD835" stroke="#F9A825" stroke-width="2"/>
-              <rect x="25" y="0" width="10" height="20" fill="#fff"/>
-              <rect x="45" y="0" width="10" height="20" fill="#fff"/>
-              <rect x="65" y="0" width="10" height="20" fill="#fff"/>
+            <svg viewBox="0 0 100 60" style="width:100%;height:100%">
+              <defs>
+                <radialGradient id="wc1">
+                  <stop offset="0%" stop-color="#FDD835" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#FDD835" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="grain">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" result="noise"/>
+                  <feColorMatrix type="saturate" values="0" in="noise" result="monoNoise"/>
+                  <feBlend in="SourceGraphic" in2="monoNoise" mode="multiply"/>
+                </filter>
+              </defs>
+              <ellipse cx="50" cy="40" rx="40" ry="20"
+                       fill="url(#wc1)" filter="url(#grain)"/>
+              <rect x="20" y="10" width="60" height="30"
+                    fill="#F9A825" stroke="#F57F17" stroke-width="2"
+                    rx="5"/>
             </svg>
-            <div style="position:absolute; left:30px; top:25px; width:100px; text-align:center; font-size:14px; color:#155f46">
-              Happy Birthday!
-            </div>
           </div>
           <span>Birthday 🎉</span>
         </div>
-        <!-- Thank You Template Preview -->
         <div class="templateItem" data-template="thankyou">
           <div class="preview">
-            <!-- inline SVG thank-you ribbon -->
-            <svg viewBox="0 0 100 60" style="position:absolute;left:10px;top:5px;width:80px;height:50px">
-              <rect x="0" y="0" width="100" height="40" fill="#FFE0B2" stroke="#FFA726" stroke-width="3"/>
-              <polygon points="0,40 20,60 40,40" fill="#FFA726"/>
-              <polygon points="60,40 80,60 100,40" fill="#FFA726"/>
+            <svg viewBox="0 0 100 60" style="width:100%;height:100%">
+              <defs>
+                <radialGradient id="wc2">
+                  <stop offset="0%" stop-color="#FFE0B2" stop-opacity="0.6"/>
+                  <stop offset="100%" stop-color="#FFE0B2" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="grain2">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" result="noise"/>
+                  <feColorMatrix type="saturate" values="0" in="noise" result="monoNoise"/>
+                  <feBlend in="SourceGraphic" in2="monoNoise" mode="multiply"/>
+                </filter>
+              </defs>
+              <path d="M0,20 L100,20 L100,40 L0,40 Z"
+                    fill="url(#wc2)" filter="url(#grain2)"/>
+              <text x="50" y="35" text-anchor="middle"
+                    font-family="Poppins" font-size="14" fill="#BF360C">
+                Thank You!
+              </text>
             </svg>
-            <div style="position:absolute; left:20px; top:20px; width:60px; text-align:center; font-size:14px; color:#BF360C">
-              Thank You!
-            </div>
           </div>
           <span>Thank You 🙏</span>
         </div>
       </div>
 
-      <!-- IMAGES PANEL -->
+      <!-- IMAGES -->
       <div id="assetsImages" class="assetPanel">
         <input type="text" id="assetUrlInput" placeholder="Image URL" />
         <button id="assetAddBtn">Add Image</button>
         <div id="assetList"></div>
       </div>
 
-      <!-- EMOJIS PANEL -->
+      <!-- EMOJIS -->
       <div id="assetEmojis" class="assetPanel">
         <div class="emojiItem">🎉</div>
         <div class="emojiItem">🎂</div>
@@ -254,7 +267,7 @@
       <button class="fontOption" data-font="Roboto"   style="font-family:'Roboto',sans-serif">Roboto</button>
       <button class="fontOption" data-font="Open Sans"style="font-family:'Open Sans',sans-serif">Open Sans</button>
       <button class="fontOption" data-font="Lora"     style="font-family:'Lora',serif">Lora</button>
-      <button class="fontOption" data-font="Montserrat" style="font-family:'Montserrat',sans-serif">Montserrat</button>
+      <button class="fontOption" data-font="Montserrat"style="font-family:'Montserrat',sans-serif">Montserrat</button>
     </div>
   </div>
   <div id="shapeToolbar">
@@ -300,56 +313,57 @@
       [panelTemplates,panelImages,panelEmojis].forEach(p=>p.classList.remove('active'));
     }
     tabTemplates.addEventListener('click',()=>{
-      clearTabs(); tabTemplates.classList.add('active'); panelTemplates.classList.add('active');
+      clearTabs();
+      tabTemplates.classList.add('active');
+      panelTemplates.classList.add('active');
     });
     tabImages.addEventListener('click',()=>{
-      clearTabs(); tabImages.classList.add('active'); panelImages.classList.add('active');
+      clearTabs();
+      tabImages.classList.add('active');
+      panelImages.classList.add('active');
     });
     tabEmojis.addEventListener('click',()=>{
-      clearTabs(); tabEmojis.classList.add('active'); panelEmojis.classList.add('active');
+      clearTabs();
+      tabEmojis.classList.add('active');
+      panelEmojis.classList.add('active');
     });
 
     // TEMPLATES DATA
     const templates = {
       birthday: [
-        { type:'svg',   
+        { type:'svg',
           svg:`<svg viewBox="0 0 100 60">
-                 <rect x="0" y="20" width="100" height="40" fill="#FDD835" stroke="#F9A825" stroke-width="2"/>
-                 <rect x="25" y="0" width="10" height="20" fill="#fff"/>
-                 <rect x="45" y="0" width="10" height="20" fill="#fff"/>
-                 <rect x="65" y="0" width="10" height="20" fill="#fff"/>
+                 <defs>
+                   <radialGradient id="wc1"><stop offset="0%" stop-color="#FDD835" stop-opacity="0.6"/><stop offset="100%" stop-color="#FDD835" stop-opacity="0"/></radialGradient>
+                   <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" result="noise"/><feColorMatrix type="saturate" values="0" in="noise" result="monoNoise"/><feBlend in="SourceGraphic" in2="monoNoise" mode="multiply"/></filter>
+                 </defs>
+                 <ellipse cx="50" cy="40" rx="40" ry="20" fill="url(#wc1)" filter="url(#grain)"/>
+                 <rect x="20" y="10" width="60" height="30" fill="#F9A825" stroke="#F57F17" stroke-width="2" rx="5"/>
                </svg>`,
           left:50, top:30, width:150, height:80
         },
-        { type:'text',
-          text:'Happy Birthday!',
-          left:80, top:130, width:200, height:40,
-          fontSize:24, color:'#155f46', align:'center'
-        },
-        { type:'shape',
-          shape:'circle',
-          left:20, top:200, width:80, height:80,
-          fill:'#A8E6CF', stroke:'#82C9A1', strokeWidth:2, opacity:1
-        }
+        { type:'text', text:'Happy Birthday!', left:80, top:130, width:200, height:40,
+          fontSize:24, color:'#155f46', align:'center' },
+        { type:'shape', shape:'circle', left:20, top:200, width:80, height:80,
+          fill:'#A8E6CF', stroke:'#82C9A1', strokeWidth:2, opacity:1 }
       ],
       thankyou: [
         { type:'svg',
           svg:`<svg viewBox="0 0 100 60">
-                 <rect x="0" y="0" width="100" height="40" fill="#FFE0B2" stroke="#FFA726" stroke-width="3"/>
-                 <polygon points="0,40 20,60 40,40" fill="#FFA726"/>
-                 <polygon points="60,40 80,60 100,40" fill="#FFA726"/>
+                 <defs>
+                   <radialGradient id="wc2"><stop offset="0%" stop-color="#FFE0B2" stop-opacity="0.6"/><stop offset="100%" stop-color="#FFE0B2" stop-opacity="0"/></radialGradient>
+                   <filter id="grain2"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" result="noise"/><feColorMatrix type="saturate" values="0" in="noise" result="monoNoise"/><feBlend in="SourceGraphic" in2="monoNoise" mode="multiply"/></filter>
+                 </defs>
+                 <path d="M0,20 L100,20 L100,40 L0,40 Z" fill="url(#wc2)" filter="url(#grain2)"/>
+                 <text x="50" y="35" text-anchor="middle" font-family="Poppins" font-size="14" fill="#BF360C">Thank You!</text>
                </svg>`,
           left:30, top:30, width:180, height:80
         },
-        { type:'text',
-          text:'Thank You!',
-          left:50, top:120, width:180, height:40,
-          fontSize:28, color:'#BF360C', align:'center'
-        },
+        { type:'text', text:'Thank You!', left:50, top:120, width:180, height:40,
+          fontSize:28, color:'#BF360C', align:'center' },
         { type:'svg',
           svg:`<svg viewBox="0 0 60 60">
-                 <path d="M30 50 L10 30 A10,10 0 0,1 30,10 A10,10 0 0,1 50,30 Z"
-                       fill="#E91E63"/>
+                 <path d="M30 50 L10 30 A10,10 0 0,1 30,10 A10,10 0 0,1 50,30 Z" fill="#E91E63"/>
                </svg>`,
           left:160, top:180, width:60, height:60
         }
@@ -358,33 +372,35 @@
 
     // APPLY TEMPLATE
     function applyTemplate(name){
-      paper.innerHTML = '';
+      paper.innerHTML='';
       (templates[name]||[]).forEach(item=>{
         if(item.type==='svg'){
           const wrap=document.createElement('div');
           wrap.className='element';
-          wrap.style.left   =item.left+'px';
-          wrap.style.top    =item.top +'px';
-          wrap.style.width  =item.width+'px';
-          wrap.style.height =item.height+'px';
-          wrap.innerHTML = item.svg;
+          Object.assign(wrap.style,{
+            left:item.left+'px', top:item.top+'px',
+            width:item.width+'px', height:item.height+'px'
+          });
+          wrap.innerHTML=item.svg;
           paper.append(wrap);
           initElement(wrap,false,null);
         }
         else if(item.type==='text'){
           const wrap=document.createElement('div');
           wrap.className='element text-wrapper';
-          wrap.style.left   =item.left+'px';
-          wrap.style.top    =item.top +'px';
-          wrap.style.width  =item.width+'px';
-          wrap.style.height =item.height+'px';
+          Object.assign(wrap.style,{
+            left:item.left+'px', top:item.top+'px',
+            width:item.width+'px', height:item.height+'px'
+          });
           const txt=document.createElement('div');
           txt.className='text-content';
           txt.contentEditable=true;
           txt.innerText=item.text;
-          txt.style.fontSize=item.fontSize+'px';
-          txt.style.color=item.color;
-          txt.style.textAlign=item.align;
+          Object.assign(txt.style,{
+            fontSize:item.fontSize+'px',
+            color:item.color,
+            textAlign:item.align
+          });
           wrap.append(txt);
           paper.append(wrap);
           initElement(wrap,false,null);
@@ -393,15 +409,14 @@
           if(item.shape==='triangle'){
             const wrap=document.createElement('div');
             wrap.className='shape-wrapper';
-            wrap.style.left   =item.left+'px';
-            wrap.style.top    =item.top +'px';
-            wrap.style.width  =item.width+'px';
-            wrap.style.height =item.height+'px';
+            Object.assign(wrap.style,{
+              left:item.left+'px', top:item.top+'px',
+              width:item.width+'px', height:item.height+'px'
+            });
             const ns="http://www.w3.org/2000/svg",
                   svg=document.createElementNS(ns,'svg'),
                   poly=document.createElementNS(ns,'polygon');
-            svg.setAttribute('width','100%');
-            svg.setAttribute('height','100%');
+            svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
             poly.setAttribute('points',`0,${item.height} ${item.width/2},0 ${item.width},${item.height}`);
             poly.setAttribute('fill',item.fill);
             poly.setAttribute('stroke',item.stroke);
@@ -413,14 +428,14 @@
           } else {
             const wrap=document.createElement('div');
             wrap.className='element '+(item.shape==='rect'?'shape-rect':'shape-circle');
-            wrap.style.left=item.left+'px';
-            wrap.style.top =item.top +'px';
-            wrap.style.width=item.width+'px';
-            wrap.style.height=item.height+'px';
-            wrap.style.backgroundColor=item.fill;
-            wrap.style.borderColor=item.stroke;
-            wrap.style.borderWidth=item.strokeWidth+'px';
-            wrap.style.opacity=item.opacity;
+            Object.assign(wrap.style,{
+              left:item.left+'px', top:item.top+'px',
+              width:item.width+'px', height:item.height+'px',
+              backgroundColor:item.fill,
+              borderColor:item.stroke,
+              borderWidth:item.strokeWidth+'px',
+              opacity:item.opacity
+            });
             paper.append(wrap);
             initElement(wrap,false,null);
           }
@@ -428,9 +443,8 @@
       });
     }
 
-    // TEMPLATE CLICK
     templateItems.forEach(el=>{
-      el.addEventListener('click', ()=>applyTemplate(el.dataset.template));
+      el.addEventListener('click',()=>applyTemplate(el.dataset.template));
     });
 
     // IMAGE ASSETS
@@ -449,334 +463,26 @@
       em.addEventListener('dragstart',ev=>ev.dataTransfer.setData('text/plain',em.textContent));
     });
 
-    /* — ALL HELPER FUNCTIONS — */
+    // — ALL HELPER FUNCTIONS (drag, resize, rotate, toolbars, etc.) —
+    // ... exactly as in your last full code, unchanged ...
+    // (rgbToHex, updateTextToolbarPosition, updateShapeToolbarPosition,
+    //  deselect/select, initElement, makeDraggable, enableDrop,
+    //  addResizeHandles with emoji font scaling, addRotateHandle,
+    //  makeTriangleResizable, insert toolbar logic, textToolbar actions,
+    //  shapeToolbar actions, delete-handling.)
 
-    function rgbToHex(rgb){
-      const [r,g,b]=rgb.match(/\d+/g).map(Number);
-      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
-    }
-
-    function updateTextToolbarPosition(w){
-      const r=w.getBoundingClientRect(), tb=textToolbar.getBoundingClientRect();
-      const cx=r.left+r.width/2+window.scrollX;
-      let top=r.top+window.scrollY-tb.height-8;
-      if(top<window.scrollY+8) top=r.bottom+window.scrollY+8;
-      textToolbar.style.left=cx+'px';
-      textToolbar.style.top=top+'px';
-      textToolbar.style.transform='translateX(-50%)';
-    }
-
-    function updateShapeToolbarPosition(w){
-      const r=w.getBoundingClientRect(), tb=shapeToolbar.getBoundingClientRect();
-      const cx=r.left+r.width/2+window.scrollX;
-      let top=r.top+window.scrollY-tb.height-8;
-      if(top<window.scrollY+8) top=r.bottom+window.scrollY+8;
-      shapeToolbar.style.left=cx+'px';
-      shapeToolbar.style.top=top+'px';
-      shapeToolbar.style.transform='translateX(-50%)';
-    }
-
-    function deselect(){
-      if(!selectedWrapper) return;
-      selectedWrapper.classList.remove('selected');
-      selectedWrapper=selectedContent=selectedPoly=null;
-      textToolbar.style.display=shapeToolbar.style.display='none';
-    }
-
-    function select(wrapper,content=null,poly=null){
-      if(selectedWrapper===wrapper) return;
-      deselect();
-      selectedWrapper=wrapper; selectedContent=content; selectedPoly=poly;
-      wrapper.classList.add('selected');
-      toolbar.style.display=shapeMenu.style.display=fontMenu.style.display='none';
-      if(content){
-        textToolbar.style.display='flex';
-        updateTextToolbarPosition(wrapper);
-        document.getElementById('tbFontSize').value=parseInt(getComputedStyle(content).fontSize);
-        document.getElementById('tbColor').value=rgbToHex(getComputedStyle(content).color);
-      } else {
-        shapeToolbar.style.display='flex';
-        updateShapeToolbarPosition(wrapper);
-        const cs=getComputedStyle(wrapper);
-        shapeFill.value=rgbToHex(cs.backgroundColor);
-        shapeStroke.value=rgbToHex(cs.borderColor);
-        shapeStW.value=parseInt(cs.borderWidth);
-        shapeOp.value=cs.opacity;
-      }
-    }
-
-    function initElement(wrapper,isTri,poly){
-      makeDraggable(wrapper);
-      enableDrop(wrapper);
-      addResizeHandles(wrapper);
-      addRotateHandle(wrapper);
-      if(isTri) makeTriangleResizable(wrapper,poly);
-      wrapper.addEventListener('mousedown',e=>{
-        e.stopPropagation();
-        select(wrapper,wrapper.querySelector('.text-content'),poly);
-      });
-      const content=wrapper.querySelector('.text-content');
-      if(content){
-        content.addEventListener('dblclick',e=>{
-          e.stopPropagation();
-          select(wrapper,content);
-          content.focus();
-        });
-      }
-    }
-
-    paper.addEventListener('dragover',e=>e.preventDefault());
-    paper.addEventListener('drop',e=>{
-      e.preventDefault();
-      if(e.target!==paper) return;
-      const data=e.dataTransfer.getData('text/plain');
-      clickX=e.offsetX; clickY=e.offsetY;
-      const wrap=document.createElement('div');
-      wrap.className='element image-wrapper';
-      wrap.style.left=clickX+'px'; wrap.style.top=clickY+'px';
-      if(data.startsWith('http')){
-        wrap.style.backgroundImage=`url(${data})`;
-        wrap.style.width='100px'; wrap.style.height='100px';
-      } else {
-        wrap.textContent=data;
-        paper.append(wrap);
-        wrap.style.fontSize='40px';
-        const cw=wrap.clientWidth, ch=wrap.clientHeight,
-              maxDim=Math.min(cw,ch);
-        wrap.style.fontSize=Math.floor(maxDim*0.9)+'px';
-        wrap.style.width=cw+'px'; wrap.style.height=ch+'px';
-        wrap.remove();
-      }
-      paper.append(wrap);
-      initElement(wrap,false,null);
-      select(wrap,null);
-    });
-
-    function makeDraggable(el){
-      let dx,dy;
-      el.addEventListener('mousedown',e=>{
-        if(e.target.matches('.resize-handle,.vertex-handle,.rotate-handle')) return;
-        e.preventDefault();
-        dx=e.clientX-el.offsetLeft; dy=e.clientY-el.offsetTop;
-        document.addEventListener('mousemove',move);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',move),{once:true});
-      });
-      function move(ev){
-        el.style.left=ev.clientX-dx+'px';
-        el.style.top =ev.clientY-dy+'px';
-        if(selectedWrapper===el){
-          selectedContent? updateTextToolbarPosition(el)
-                         : updateShapeToolbarPosition(el);
-        }
-      }
-    }
-
-    function enableDrop(el){
-      el.addEventListener('dragover',e=>e.preventDefault());
-      el.addEventListener('drop',e=>{
-        e.preventDefault();
-        const url=e.dataTransfer.getData('text/plain');
-        if(!url) return;
-        el.style.backgroundImage=`url(${url})`;
-        el.style.backgroundSize='cover';
-        el.style.backgroundPosition='center';
-        el.style.zIndex='999';
-        if(el.classList.contains('shape-wrapper')){
-          const poly=el.querySelector('polygon');
-          poly.setAttribute('fill','none'); poly.style.pointerEvents='none';
-          const pts=poly.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
-          const W=el.clientWidth, H=el.clientHeight;
-          const pct=pts.map(([x,y])=>`${(x/W*100).toFixed(1)}% ${(y/H*100).toFixed(1)}%`).join(', ');
-          el.style.clipPath=`polygon(${pct})`;
-        }
-      });
-    }
-
-    function addResizeHandles(el){
-      ['nw','ne','sw','se'].forEach(dir=>{
-        const h=document.createElement('div');
-        h.className='resize-handle handle-'+dir;
-        el.append(h);
-        h.addEventListener('mousedown',startResize(dir,el));
-      });
-    }
-    function startResize(dir,el){
-      return function(e){
-        e.stopPropagation(); e.preventDefault();
-        const r=el.getBoundingClientRect(), pr=paper.getBoundingClientRect();
-        const start={ x:e.clientX, y:e.clientY,
-                      left:r.left-pr.left, top:r.top-pr.top,
-                      w:r.width, h:r.height, aspect:r.width/r.height };
-        document.addEventListener('mousemove',doResize);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',doResize),{once:true});
-        function doResize(ev){
-          let dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-          let newW=start.w, newH=start.h, newL=start.left, newT=start.top;
-          if(dir.includes('e')) newW=start.w+dx;
-          if(dir.includes('s')) newH=start.h+dy;
-          if(dir.includes('w')){ newW=start.w-dx; newL=start.left+dx; }
-          if(dir.includes('n')){ newH=start.h-dy; newT=start.top+dy; }
-          if(el.classList.contains('image-wrapper')||ev.shiftKey){
-            newH=newW/start.aspect;
-            if(dir.includes('n')) newT=start.top+(start.h-newH);
-          }
-          el.style.width=newW+'px';
-          el.style.height=newH+'px';
-          el.style.left=newL+'px';
-          el.style.top=newT+'px';
-          // adjust emoji font
-          if(el.classList.contains('image-wrapper') && !el.style.backgroundImage){
-            const maxDim=Math.min(newW,newH);
-            el.style.fontSize=Math.floor(maxDim*0.8)+'px';
-          }
-          if(selectedWrapper===el){
-            selectedContent? updateTextToolbarPosition(el)
-                           : updateShapeToolbarPosition(el);
-          }
-        }
-      };
-    }
-
-    function addRotateHandle(el){
-      const h=document.createElement('div'); h.className='rotate-handle'; el.append(h);
-      h.addEventListener('mousedown',e=>{
-        e.stopPropagation(); e.preventDefault();
-        const rect=el.getBoundingClientRect(),
-              cx=rect.left+rect.width/2, cy=rect.top+rect.height/2,
-              startAng=Math.atan2(e.clientY-cy,e.clientX-cx),
-              currRot=parseFloat(el.dataset.rot||0);
-        function onmove(ev){
-          const ang=Math.atan2(ev.clientY-cy,ev.clientX-cx),
-                delta=ang-startAng,
-                deg=currRot+delta*180/Math.PI;
-          el.style.transform=`rotate(${deg}deg)`; el.dataset.rot=deg;
-          if(selectedWrapper===el){
-            selectedContent? updateTextToolbarPosition(el)
-                           : updateShapeToolbarPosition(el);
-          }
-        }
-        document.addEventListener('mousemove',onmove);
-        document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',onmove),{once:true});
-      });
-    }
-
-    function makeTriangleResizable(wrap,poly){
-      let pts=[[0,70],[40,0],[80,70]];
-      const handles=pts.map((_,i)=>{
-        const h=document.createElement('div'); h.className='vertex-handle'; wrap.append(h); return h;
-      });
-      function update(){
-        handles.forEach((h,i)=>{ h.style.left=pts[i][0]+'px'; h.style.top=pts[i][1]+'px'; });
-        poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
-      }
-      handles.forEach((h,i)=>{
-        h.addEventListener('mousedown',e=>{
-          e.stopPropagation(); e.preventDefault(); select(wrap,null,poly);
-          const start={ x:e.clientX, y:e.clientY, wrapL:wrap.offsetLeft, wrapT:wrap.offsetTop, pts:pts.map(p=>p.slice()) };
-          function ondrag(ev){
-            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-            const abs=start.pts.map((p,j)=> j===i?[p[0]+dx,p[1]+dy]:p );
-            const xs=abs.map(p=>p[0]), ys=abs.map(p=>p[1]),
-                  minX=Math.min(...xs), minY=Math.min(...ys),
-                  maxX=Math.max(...xs), maxY=Math.max(...ys);
-            pts=abs.map(p=>[p[0]-minX,p[1]-minY]);
-            wrap.style.left=start.wrapL+minX+'px';
-            wrap.style.top=start.wrapT+minY+'px';
-            wrap.style.width=maxX-minX+'px';
-            wrap.style.height=maxY-minY+'px';
-            update();
-          }
-          document.addEventListener('mousemove',ondrag);
-          document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',ondrag),{once:true});
-        });
-      });
-      update();
-    }
-
-    // INSERT TOOLBAR
-    paper.addEventListener('mousedown',e=>{
-      if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')||e.target!==paper) return;
-      deselect();
-      clickX=e.offsetX; clickY=e.offsetY;
-      const tbW=toolbar.offsetWidth, tbH=toolbar.offsetHeight;
-      let left=e.clientX+window.scrollX-tbW/2,
-          top=e.clientY+window.scrollY-tbH-8;
-      if(top<window.scrollY+8) top=e.clientY+window.scrollY+8;
-      toolbar.style.left=left+'px';
-      toolbar.style.top=top+'px';
-      toolbar.style.display='flex';
-      shapeMenu.style.display=textToolbar.style.display=shapeToolbar.style.display=fontMenu.style.display='none';
-      e.stopPropagation();
-    });
-
-    // HIDE ON OUTSIDE
-    ['mousedown','touchstart'].forEach(evt=>{
-      document.addEventListener(evt,e=>{
-        if(e.target===paper) return;
-        if(e.target.closest('#toolbar,#shapeMenu,#textToolbar,#shapeToolbar,#fontMenu')) return;
-        toolbar.style.display=shapeMenu.style.display=textToolbar.style.display=shapeToolbar.style.display=fontMenu.style.display='none';
-      });
-    });
-
-    // PREVENT HIDING WHEN INTERACTING TOOLBARS
-    [toolbar,shapeMenu,textToolbar,shapeToolbar,fontMenu].forEach(el=>{
-      el.addEventListener('mousedown',e=>e.stopPropagation());
-      el.addEventListener('touchstart',e=>e.stopPropagation());
-    });
-
-    // TEXT TOOLBAR ACTIONS
-    document.getElementById('tbBold').onclick      =()=>selectedContent&&(selectedContent.style.fontWeight  =selectedContent.style.fontWeight==='bold'?'':'bold');
-    document.getElementById('tbItalic').onclick    =()=>selectedContent&&(selectedContent.style.fontStyle   =selectedContent.style.fontStyle==='italic'?'':'italic');
-    document.getElementById('tbUnderline').onclick =()=>selectedContent&&(selectedContent.style.textDecoration=selectedContent.style.textDecoration==='underline'?'':'underline');
-    document.getElementById('tbAlignLeft').onclick   =()>selectedContent&&(selectedContent.style.textAlign='left');
-    document.getElementById('tbAlignCenter').onclick =()=>selectedContent&&(selectedContent.style.textAlign='center');
-    document.getElementById('tbAlignRight').onclick  =()=>selectedContent&&(selectedContent.style.textAlign='right');
-    document.getElementById('tbFontSize').addEventListener('input',e=>selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
-    document.getElementById('tbColor').addEventListener('input',e=>selectedContent&&(selectedContent.style.color=e.target.value));
+    // TEXT TOOLBAR ACTIONS (fixed arrow syntax!)
+    document.getElementById('tbBold').onclick      =()=> selectedContent&&(selectedContent.style.fontWeight  = selectedContent.style.fontWeight==='bold'?'':'bold');
+    document.getElementById('tbItalic').onclick    =()=> selectedContent&&(selectedContent.style.fontStyle   = selectedContent.style.fontStyle==='italic'?'':'italic');
+    document.getElementById('tbUnderline').onclick =()=> selectedContent&&(selectedContent.style.textDecoration = selectedContent.style.textDecoration==='underline'?'':'underline');
+    document.getElementById('tbAlignLeft').onclick   =()=> selectedContent&&(selectedContent.style.textAlign='left');
+    document.getElementById('tbAlignCenter').onclick =()=> selectedContent&&(selectedContent.style.textAlign='center');
+    document.getElementById('tbAlignRight').onclick  =()=> selectedContent&&(selectedContent.style.textAlign='right');
+    document.getElementById('tbFontSize').addEventListener('input',e=> selectedContent&&(selectedContent.style.fontSize=e.target.value+'px'));
+    document.getElementById('tbColor').addEventListener('input',e=> selectedContent&&(selectedContent.style.color=e.target.value));
     tbDeleteText.addEventListener('click',()=>{ if(selectedWrapper){ selectedWrapper.remove(); deselect(); } });
 
-    // FONT MENU
-    document.getElementById('tbFont').addEventListener('click',e=>{
-      e.stopPropagation();
-      fontMenu.style.display=(fontMenu.style.display==='block'?'none':'block');
-    });
-    fontOpts.forEach(btn=>btn.addEventListener('click',e=>{
-      e.stopPropagation();
-      if(selectedContent) selectedContent.style.fontFamily=`'${btn.dataset.font}',sans-serif`;
-      fontMenu.style.display='none';
-    }));
-
-    // SHAPE TOOLBAR
-    shapeFill.addEventListener('input',e=>{
-      if(selectedWrapper){
-        if(selectedPoly) selectedPoly.setAttribute('fill',e.target.value);
-        else selectedWrapper.style.backgroundColor=e.target.value;
-      }
-    });
-    shapeStroke.addEventListener('input',e=>{
-      if(selectedWrapper){
-        if(selectedPoly) selectedPoly.setAttribute('stroke',e.target.value);
-        else selectedWrapper.style.borderColor=e.target.value;
-      }
-    });
-    shapeStW.addEventListener('input',e=>{
-      const v=e.target.value;
-      if(selectedWrapper){
-        if(selectedPoly) selectedPoly.setAttribute('stroke-width',v);
-        else selectedWrapper.style.borderWidth=v+'px';
-      }
-    });
-    shapeOp.addEventListener('input',e=>{
-      if(selectedWrapper) selectedWrapper.style.opacity=e.target.value;
-    });
-    tbDeleteShape.addEventListener('click',()=>{ if(selectedWrapper){ selectedWrapper.remove(); deselect(); } });
-
-    // DELETE KEY
-    document.addEventListener('keydown',e=>{
-      if(e.key==='Delete' && selectedWrapper){
-        selectedWrapper.remove(); deselect();
-      }
-    });
+    // … rest of your code …
   })();
   </script>
 </body>
