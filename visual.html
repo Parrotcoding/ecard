@@ -905,32 +905,40 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           initElement(wrap, false, null);
           select(wrap, null);
         });
-        function makeDraggable(el) {
-          let dx, dy;
-          el.addEventListener("mousedown", (e) => {
-            if (
-              e.target.matches(".resize-handle,.vertex-handle,.rotate-handle")
-            )
-              return;
+        function makeDraggable(el){
+          let startX, startY, origLeft, origTop;
+
+          el.addEventListener('mousedown', e => {
+            // ignore dragging when clicking on handles
+            if (e.target.matches('.resize-handle, .vertex-handle, .rotate-handle')) return;
             e.preventDefault();
-            dx = e.clientX - el.offsetLeft;
-            dy = e.clientY - el.offsetTop;
-            document.addEventListener("mousemove", move);
-            document.addEventListener(
-              "mouseup",
-              () => document.removeEventListener("mousemove", move),
-              { once: true }
-            );
+
+            // record starting mouse and element positions
+            startX = e.clientX; 
+            startY = e.clientY;
+            // parse current left/top as numbers (px)
+            origLeft = parseFloat(el.style.left) || 0;
+            origTop = parseFloat(el.style.top) || 0;
+
+            const move = ev => {
+              // compute new position
+              const dx = ev.clientX - startX;
+              const dy = ev.clientY - startY;
+              el.style.left = origLeft + dx + 'px';
+              el.style.top  = origTop + dy + 'px';
+              // update toolbar position if selected
+              if (selectedWrapper === el) {
+                selectedContent
+                  ? updateTextToolbarPosition(el)
+                  : updateShapeToolbarPosition(el);
+              }
+            };
+
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup', () => {
+              document.removeEventListener('mousemove', move);
+            }, { once:true });
           });
-          function move(ev) {
-            el.style.left = ev.clientX - dx + "px";
-            el.style.top = ev.clientY - dy + "px";
-            if (selectedWrapper === el) {
-              selectedContent
-                ? updateTextToolbarPosition(el)
-                : updateShapeToolbarPosition(el);
-            }
-          }
         }
         function enableDrop(el) {
           el.addEventListener("dragover", (e) => e.preventDefault());
