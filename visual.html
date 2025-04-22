@@ -905,27 +905,30 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           initElement(wrap, false, null);
           select(wrap, null);
         });
-        function makeDraggable(el){
+        function makeDraggable(el) {
           let startX, startY, origLeft, origTop;
 
-          el.addEventListener('mousedown', e => {
+          el.addEventListener("mousedown", (e) => {
             // ignore dragging when clicking on handles
-            if (e.target.matches('.resize-handle, .vertex-handle, .rotate-handle')) return;
+            if (
+              e.target.matches(".resize-handle, .vertex-handle, .rotate-handle")
+            )
+              return;
             e.preventDefault();
 
             // record starting mouse and element positions
-            startX = e.clientX; 
+            startX = e.clientX;
             startY = e.clientY;
             // parse current left/top as numbers (px)
             origLeft = parseFloat(el.style.left) || 0;
             origTop = parseFloat(el.style.top) || 0;
 
-            const move = ev => {
+            const move = (ev) => {
               // compute new position
               const dx = ev.clientX - startX;
               const dy = ev.clientY - startY;
-              el.style.left = origLeft + dx + 'px';
-              el.style.top  = origTop + dy + 'px';
+              el.style.left = origLeft + dx + "px";
+              el.style.top = origTop + dy + "px";
               // update toolbar position if selected
               if (selectedWrapper === el) {
                 selectedContent
@@ -934,10 +937,14 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
               }
             };
 
-            document.addEventListener('mousemove', move);
-            document.addEventListener('mouseup', () => {
-              document.removeEventListener('mousemove', move);
-            }, { once:true });
+            document.addEventListener("mousemove", move);
+            document.addEventListener(
+              "mouseup",
+              () => {
+                document.removeEventListener("mousemove", move);
+              },
+              { once: true }
+            );
           });
         }
         function enableDrop(el) {
@@ -1327,6 +1334,10 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
           );
         tbDeleteText.addEventListener("click", () => {
           if (selectedWrapper) {
+            // remove corresponding layer item
+            document.querySelectorAll("#layersList .layerItem").forEach(li => {
+              if (li._wrapper === selectedWrapper) li.remove();
+            });
             selectedWrapper.remove();
             deselect();
           }
@@ -1383,6 +1394,10 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         });
         tbDeleteShape.addEventListener("click", () => {
           if (selectedWrapper) {
+            // remove corresponding layer item
+            document.querySelectorAll("#layersList .layerItem").forEach(li => {
+              if (li._wrapper === selectedWrapper) li.remove();
+            });
             selectedWrapper.remove();
             deselect();
           }
@@ -1391,6 +1406,10 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         // Delete key
         document.addEventListener("keydown", (e) => {
           if (e.key === "Delete" && selectedWrapper) {
+            // remove corresponding layer item
+            document.querySelectorAll("#layersList .layerItem").forEach(li => {
+              if (li._wrapper === selectedWrapper) li.remove();
+            });
             selectedWrapper.remove();
             deselect();
           }
