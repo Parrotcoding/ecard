@@ -910,10 +910,7 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
 
           el.addEventListener("mousedown", (e) => {
             // ignore dragging when clicking on handles
-            if (
-              e.target.matches(".resize-handle, .vertex-handle, .rotate-handle")
-            )
-              return;
+            if (e.target.matches(".resize-handle, .vertex-handle, .rotate-handle")) return;
             e.preventDefault();
 
             // record starting mouse and element positions
@@ -923,7 +920,7 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
             origLeft = parseFloat(el.style.left) || 0;
             origTop = parseFloat(el.style.top) || 0;
 
-            const move = (ev) => {
+            const doMove = (ev) => {
               // compute new position
               const dx = ev.clientX - startX;
               const dy = ev.clientY - startY;
@@ -931,20 +928,15 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
               el.style.top = origTop + dy + "px";
               // update toolbar position if selected
               if (selectedWrapper === el) {
-                selectedContent
-                  ? updateTextToolbarPosition(el)
-                  : updateShapeToolbarPosition(el);
+                if (selectedContent) updateTextToolbarPosition(el);
+                else updateShapeToolbarPosition(el);
               }
             };
 
-            document.addEventListener("mousemove", move);
-            document.addEventListener(
-              "mouseup",
-              () => {
-                document.removeEventListener("mousemove", move);
-              },
-              { once: true }
-            );
+            document.addEventListener("mousemove", doMove);
+            document.addEventListener("mouseup", () => {
+              document.removeEventListener("mousemove", doMove);
+            }, { once: true });
           });
         }
         function enableDrop(el) {
@@ -1335,9 +1327,11 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         tbDeleteText.addEventListener("click", () => {
           if (selectedWrapper) {
             // remove corresponding layer item
-            document.querySelectorAll("#layersList .layerItem").forEach(li => {
-              if (li._wrapper === selectedWrapper) li.remove();
-            });
+            document
+              .querySelectorAll("#layersList .layerItem")
+              .forEach((li) => {
+                if (li._wrapper === selectedWrapper) li.remove();
+              });
             selectedWrapper.remove();
             deselect();
           }
@@ -1395,9 +1389,11 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         tbDeleteShape.addEventListener("click", () => {
           if (selectedWrapper) {
             // remove corresponding layer item
-            document.querySelectorAll("#layersList .layerItem").forEach(li => {
-              if (li._wrapper === selectedWrapper) li.remove();
-            });
+            document
+              .querySelectorAll("#layersList .layerItem")
+              .forEach((li) => {
+                if (li._wrapper === selectedWrapper) li.remove();
+              });
             selectedWrapper.remove();
             deselect();
           }
@@ -1407,9 +1403,11 @@ family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap"
         document.addEventListener("keydown", (e) => {
           if (e.key === "Delete" && selectedWrapper) {
             // remove corresponding layer item
-            document.querySelectorAll("#layersList .layerItem").forEach(li => {
-              if (li._wrapper === selectedWrapper) li.remove();
-            });
+            document
+              .querySelectorAll("#layersList .layerItem")
+              .forEach((li) => {
+                if (li._wrapper === selectedWrapper) li.remove();
+              });
             selectedWrapper.remove();
             deselect();
           }
